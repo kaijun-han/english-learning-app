@@ -1,0 +1,8 @@
+node_modules/
+flutter/
+appdata/
+.DS_Store
+.env
+build/
+dist/
+*.log
