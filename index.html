@@ -950,44 +950,116 @@
             container.innerHTML = `
                 <div style="text-align: center; padding: 40px;">
                     <div style="font-size: 48px;">🤖</div>
-                    <p style="margin-top: 16px; color: #667eea;">AI正在分析您的英语水平...</p>
+                    <p style="margin-top: 16px; color: #667eea;">AI正在生成综合测试题...</p>
+                    <p style="font-size: 14px; color: #9ca3af;">预计15-20道题，涵盖词汇、语法、阅读理解</p>
                 </div>
             `;
             document.getElementById('test-modal').classList.remove('hidden');
 
             try {
-                const prompt = `请为英语学习者生成5道水平测试题，涵盖不同难度级别（初级到高级）。题型为选择题，考察词汇和基础语法。请返回JSON格式，包含questions数组，每个题目包含：question（题目）、options（4个选项数组）、answer（正确答案的索引，0-3）。确保返回纯JSON，不要包含其他文字。`;
+                const prompt = `请为英语学习者生成15道综合水平测试题，涵盖以下题型和难度：
+- 词汇题（5题）：考察核心词汇的理解和使用，难度从基础到高级
+- 语法题（5题）：考察时态、语态、从句等语法知识
+- 完形填空（3题）：给出上下文，选择最合适的词填空
+- 阅读理解（2题）：给出短文，回答相关问题
+
+每个题目包含：
+- question（题目描述）
+- options（4个选项数组）
+- answer（正确答案的索引，0-3）
+- difficulty（难度等级1-5）
+- type（题型：vocabulary/grammar/cloze/reading）
+
+请返回纯JSON格式，包含questions数组，不要添加任何额外文字。`;
 
                 const response = await callAI(prompt, '你是一个专业的英语水平测试出题助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
                 const levelQuestions = JSON.parse(response);
 
                 currentTestAnswers = new Array(levelQuestions.questions.length).fill(null);
-                container.innerHTML = levelQuestions.questions.map((q, i) => `
-                    <div style="margin-bottom: 20px;">
-                        <h4>问题 ${i + 1}: ${q.question}</h4>
-                        ${q.options.map((opt, j) => `
-                            <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
-                                ${String.fromCharCode(65 + j)}. ${opt}
-                            </div>
-                        `).join('')}
+                const total = levelQuestions.questions.length;
+
+                container.innerHTML = `
+                    <div style="margin-bottom: 20px; padding: 12px; background: #f3f4f6; border-radius: 8px; text-align: center;">
+                        <span id="test-progress">问题 1/${total}</span>
                     </div>
-                `).join('');
+                    ${levelQuestions.questions.map((q, i) => `
+                        <div id="test-question-${i}" class="${i === 0 ? '' : 'hidden'}" style="margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <h4>问题 ${i + 1}: ${q.question}</h4>
+                                <span style="font-size: 12px; padding: 4px 8px; background: #e5e7eb; border-radius: 4px;">${getTypeLabel(q.type)} · 难度 ${q.difficulty}</span>
+                            </div>
+                            ${q.options.map((opt, j) => `
+                                <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
+                                    ${String.fromCharCode(65 + j)}. ${opt}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `).join('')}
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" onclick="prevTestQuestion()" id="test-prev-btn" disabled>上一题</button>
+                        <button class="btn btn-primary" onclick="nextTestQuestion()" id="test-next-btn">下一题</button>
+                    </div>
+                `;
                 window.levelTestData = levelQuestions.questions;
+                window.currentTestIndex = 0;
             } catch (error) {
                 console.error('AI Level Test Error:', error);
-                const levelQuestions = generateRandomQuestions(5);
+                const levelQuestions = generateRandomQuestions(10);
                 currentTestAnswers = new Array(levelQuestions.length).fill(null);
-                container.innerHTML = levelQuestions.map((q, i) => `
-                    <div style="margin-bottom: 20px;">
-                        <h4>问题 ${i + 1}: ${q.question}</h4>
-                        ${q.options.map((opt, j) => `
-                            <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
-                                ${String.fromCharCode(65 + j)}. ${opt}
-                            </div>
-                        `).join('')}
+                const total = levelQuestions.length;
+
+                container.innerHTML = `
+                    <div style="margin-bottom: 20px; padding: 12px; background: #f3f4f6; border-radius: 8px; text-align: center;">
+                        <span id="test-progress">问题 1/${total}</span>
                     </div>
-                `).join('');
+                    ${levelQuestions.map((q, i) => `
+                        <div id="test-question-${i}" class="${i === 0 ? '' : 'hidden'}" style="margin-bottom: 20px;">
+                            <h4>问题 ${i + 1}: ${q.question}</h4>
+                            ${q.options.map((opt, j) => `
+                                <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
+                                    ${String.fromCharCode(65 + j)}. ${opt}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `).join('')}
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" onclick="prevTestQuestion()" id="test-prev-btn" disabled>上一题</button>
+                        <button class="btn btn-primary" onclick="nextTestQuestion()" id="test-next-btn">下一题</button>
+                    </div>
+                `;
                 window.levelTestData = levelQuestions;
+                window.currentTestIndex = 0;
+            }
+        }
+
+        function getTypeLabel(type) {
+            const labels = { vocabulary: '词汇', grammar: '语法', cloze: '完形填空', reading: '阅读理解' };
+            return labels[type] || type;
+        }
+
+        function prevTestQuestion() {
+            if (window.currentTestIndex > 0) {
+                document.getElementById(`test-question-${window.currentTestIndex}`).classList.add('hidden');
+                window.currentTestIndex--;
+                document.getElementById(`test-question-${window.currentTestIndex}`).classList.remove('hidden');
+                document.getElementById('test-progress').textContent = `问题 ${window.currentTestIndex + 1}/${window.levelTestData.length}`;
+                document.getElementById('test-prev-btn').disabled = window.currentTestIndex === 0;
+                document.getElementById('test-next-btn').textContent = '下一题';
+            }
+        }
+
+        function nextTestQuestion() {
+            if (window.currentTestIndex < window.levelTestData.length - 1) {
+                document.getElementById(`test-question-${window.currentTestIndex}`).classList.add('hidden');
+                window.currentTestIndex++;
+                document.getElementById(`test-question-${window.currentTestIndex}`).classList.remove('hidden');
+                document.getElementById('test-progress').textContent = `问题 ${window.currentTestIndex + 1}/${window.levelTestData.length}`;
+                document.getElementById('test-prev-btn').disabled = false;
+                if (window.currentTestIndex === window.levelTestData.length - 1) {
+                    document.getElementById('test-next-btn').textContent = '完成测试';
+                }
+            } else {
+                submitTest();
             }
         }
 
@@ -997,26 +1069,124 @@
             document.getElementById(`test-${questionIdx}-${optionIdx}`).classList.add('selected');
         }
 
-        function submitTest() {
+        async function submitTest() {
             if (!window.levelTestData) return;
+
+            const container = document.getElementById('test-questions');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px;">🤖</div>
+                    <p style="margin-top: 16px; color: #667eea;">AI正在分析您的测试结果...</p>
+                    <p style="font-size: 14px; color: #9ca3af; margin-top: 8px;">生成详细评估报告中...</p>
+                </div>
+            `;
+
             let correct = 0;
-            window.levelTestData.forEach((q, i) => {
-                if (currentTestAnswers[i] === q.answer) {
-                    correct++;
-                }
-            });
+            const results = window.levelTestData.map((q, i) => ({
+                question: q.question,
+                type: q.type,
+                difficulty: q.difficulty,
+                userAnswer: currentTestAnswers[i],
+                correctAnswer: q.answer,
+                isCorrect: currentTestAnswers[i] === q.answer,
+                options: q.options
+            }));
+            results.forEach(r => { if (r.isCorrect) correct++; });
             const total = window.levelTestData.length;
-            let newLevel = 1;
-            if (correct <= 1) newLevel = 1;
-            else if (correct <= 2) newLevel = 2;
-            else if (correct <= 3) newLevel = 3;
-            else if (correct <= 4) newLevel = 4;
-            else newLevel = 5;
-            currentUser.level = newLevel;
-            saveUser();
-            alert(`测试完成！\n得分：${correct}/${total}\n评定等级：Level ${newLevel}`);
-            closeTestModal();
-            loadOverview();
+
+            try {
+                const prompt = `请分析以下英语水平测试结果，生成详细的评估报告。
+
+测试结果：
+- 总分：${correct}/${total}
+- 正确率：${Math.round(correct / total * 100)}%
+- 题目详情：${JSON.stringify(results)}
+
+请返回JSON格式，包含：
+- overallLevel（综合评定等级1-5，1为初级，5为高级）
+- levelDescription（等级描述，如"初级入门"、"中级进阶"等）
+- strengths（优势领域，如词汇、语法等）
+- weaknesses（薄弱领域）
+- recommendations（学习建议，具体可行）
+- breakdown（各题型得分情况，包含词汇、语法、完形填空、阅读理解）
+
+确保返回纯JSON，不要添加任何额外文字。`;
+
+                const response = await callAI(prompt, '你是一个专业的英语学习评估专家。请根据测试结果给出准确的等级评定和详细的学习建议。');
+                const assessment = JSON.parse(response);
+
+                currentUser.level = assessment.overallLevel;
+                saveUser();
+
+                container.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <div style="font-size: 64px;">${getLevelEmoji(assessment.overallLevel)}</div>
+                        <h2 style="margin-top: 16px;">${assessment.levelDescription}</h2>
+                        <p style="font-size: 24px; font-weight: bold; color: #667eea;">得分：${correct}/${total}</p>
+                        <p style="color: #6b7280;">正确率：${Math.round(correct / total * 100)}%</p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #10b981; margin-bottom: 8px;">💪 优势领域</h3>
+                        <ul style="padding-left: 20px; color: #4b5563;">
+                            ${assessment.strengths.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #f59e0b; margin-bottom: 8px;">📝 薄弱领域</h3>
+                        <ul style="padding-left: 20px; color: #4b5563;">
+                            ${assessment.weaknesses.map(w => `<li>${w}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 8px;">🎯 学习建议</h3>
+                        <ul style="padding-left: 20px; color: #4b5563;">
+                            ${assessment.recommendations.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    ${assessment.breakdown ? `
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #8b5cf6; margin-bottom: 8px;">📊 各题型得分</h3>
+                        <div style="display: grid; gap: 8px;">
+                            ${Object.entries(assessment.breakdown).map(([type, score]) => `
+                                <div style="display: flex; justify-content: space-between; padding: 8px; background: #f3f4f6; border-radius: 4px;">
+                                    <span>${getTypeLabel(type) || type}</span>
+                                    <span style="font-weight: bold;">${score}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <button class="btn btn-primary" onclick="closeTestModal()" style="width: 100%;">完成</button>
+                `;
+            } catch (error) {
+                console.error('AI Assessment Error:', error);
+                let newLevel = Math.max(1, Math.min(5, Math.round(correct / total * 5)));
+                currentUser.level = newLevel;
+                saveUser();
+
+                container.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <div style="font-size: 64px;">${getLevelEmoji(newLevel)}</div>
+                        <h2 style="margin-top: 16px;">评定等级：Level ${newLevel}</h2>
+                        <p style="font-size: 24px; font-weight: bold; color: #667eea;">得分：${correct}/${total}</p>
+                        <p style="color: #6b7280;">正确率：${Math.round(correct / total * 100)}%</p>
+                    </div>
+                    <div style="padding: 16px; background: #fffbeb; border-radius: 8px; margin-bottom: 20px;">
+                        <p style="color: #92400e;">AI评估服务暂时不可用，已使用基础评分算法。</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="closeTestModal()" style="width: 100%;">完成</button>
+                `;
+            }
+        }
+
+        function getLevelEmoji(level) {
+            const emojis = { 1: '🌱', 2: '📚', 3: '📖', 4: '🎓', 5: '🌟' };
+            return emojis[level] || '📚';
         }
 
         function closeTestModal() {
