@@ -1,0 +1,8 @@
+[build]
+builder = "NIXPACKS"
+
+[nixpacks]
+phases = ["setup", "install", "build", "start"]
+
+[nixpacks.env]
+NODE_VERSION = "18"
