@@ -215,6 +215,24 @@
             border-color: #ef4444;
             background: #fee2e2;
         }
+
+        .quiz-option-dontknow {
+            border-style: dashed;
+            border-color: #9ca3af;
+            color: #6b7280;
+            background: #f9fafb;
+        }
+
+        .quiz-option-dontknow:hover {
+            border-color: #6b7280;
+            background: #f3f4f6;
+        }
+
+        .quiz-option-dontknow.selected {
+            border-style: solid;
+            border-color: #9ca3af;
+            background: #f3f4f6;
+        }
     </style>
 </head>
 
@@ -993,6 +1011,9 @@
                                     ${String.fromCharCode(65 + j)}. ${opt}
                                 </div>
                             `).join('')}
+                            <div class="quiz-option quiz-option-dontknow" onclick="selectTestAnswer(${i}, -1)" id="test-${i}--1">
+                                🤔 这题不会
+                            </div>
                         </div>
                     `).join('')}
                     <div style="display: flex; gap: 12px;">
@@ -1020,6 +1041,9 @@
                                     ${String.fromCharCode(65 + j)}. ${opt}
                                 </div>
                             `).join('')}
+                            <div class="quiz-option quiz-option-dontknow" onclick="selectTestAnswer(${i}, -1)" id="test-${i}--1">
+                                🤔 这题不会
+                            </div>
                         </div>
                     `).join('')}
                     <div style="display: flex; gap: 12px;">
@@ -1082,16 +1106,24 @@
             `;
 
             let correct = 0;
-            const results = window.levelTestData.map((q, i) => ({
-                question: q.question,
-                type: q.type,
-                difficulty: q.difficulty,
-                userAnswer: currentTestAnswers[i],
-                correctAnswer: q.answer,
-                isCorrect: currentTestAnswers[i] === q.answer,
-                options: q.options
-            }));
-            results.forEach(r => { if (r.isCorrect) correct++; });
+            let unknownCount = 0;
+            const results = window.levelTestData.map((q, i) => {
+                const userAnswer = currentTestAnswers[i];
+                const isUnknown = userAnswer === -1;
+                const isCorrect = !isUnknown && userAnswer === q.answer;
+                if (isCorrect) correct++;
+                if (isUnknown) unknownCount++;
+                return {
+                    question: q.question,
+                    type: q.type,
+                    difficulty: q.difficulty,
+                    userAnswer: userAnswer,
+                    correctAnswer: q.answer,
+                    isCorrect: isCorrect,
+                    isUnknown: isUnknown,
+                    options: q.options
+                };
+            });
             const total = window.levelTestData.length;
 
             try {
@@ -1100,14 +1132,21 @@
 测试结果：
 - 总分：${correct}/${total}
 - 正确率：${Math.round(correct / total * 100)}%
-- 题目详情：${JSON.stringify(results)}
+- 未作答（选择"这题不会"）：${unknownCount}题
+
+重要说明：
+- userAnswer为-1表示用户选择了"这题不会"，这代表知识空白，与答错（选错答案）性质不同
+- 评估时应将"不会"视为比"答错"更严重的薄弱环节
+- 学习建议应优先针对用户选择"不会"的题型和难度级别
+
+题目详情：${JSON.stringify(results)}
 
 请返回JSON格式，包含：
 - overallLevel（综合评定等级1-5，1为初级，5为高级）
 - levelDescription（等级描述，如"初级入门"、"中级进阶"等）
 - strengths（优势领域，如词汇、语法等）
-- weaknesses（薄弱领域）
-- recommendations（学习建议，具体可行）
+- weaknesses（薄弱领域，特别关注选择"不会"的题目类型）
+- recommendations（学习建议，具体可行，优先建议学习"不会"相关的内容）
 - breakdown（各题型得分情况，包含词汇、语法、完形填空、阅读理解）
 
 确保返回纯JSON，不要添加任何额外文字。`;
