@@ -253,7 +253,8 @@
                 <button class="nav-btn active" onclick="switchTab('home')">首页</button>
                 <button class="nav-btn" onclick="switchTab('words')">单词学习</button>
                 <button class="nav-btn" onclick="switchTab('lessons')">课文学习</button>
-                <button class="nav-btn" onclick="switchTab('ai-words')">✨ AI单词</button>
+                <button class="nav-btn" onclick="switchTab('ai-words')">✨ AI单词 <span id="ai-words-count"
+                        style="display: none; padding: 2px 6px; background: #ef4444; color: white; border-radius: 10px; font-size: 12px;">0</span></button>
                 <button class="nav-btn" onclick="switchTab('ai-lessons')">✨ AI课文</button>
                 <button class="nav-btn" onclick="switchTab('ai-quiz')">✨ AI测试</button>
                 <button class="nav-btn" onclick="switchTab('ai-chat')">✨ AI对话</button>
@@ -447,6 +448,16 @@
             apiUrl: 'https://api.deepseek.com/v1/chat/completions',
             model: 'deepseek-chat'
         };
+
+        const LEVEL_DESCRIPTIONS = {
+            1: '非常简单，小学3-4年级水平，使用最基础的日常词汇（如apple, book, happy），简单句型（主谓宾结构），每篇课文不超过50词',
+            2: '简单，小学5-6年级水平，使用基础日常词汇和常用短语，简单时态（一般现在时、一般过去时），每篇课文不超过80词',
+            3: '中等，初中1-2年级水平，使用常用词汇和固定搭配，掌握基本时态和句型，每篇课文不超过120词',
+            4: '较难，初中3年级-高中1年级水平，使用较复杂词汇和从句，掌握多种时态和语态，每篇课文不超过180词',
+            5: '困难，高中及以上水平，使用高级词汇和复杂句型，包含复合句和非谓语动词，每篇课文不超过250词'
+        };
+
+        let generatedWordsHistory = [];
 
         async function callAI(prompt, systemMessage = '你是一个专业的英语学习助手，帮助用户学习英语词汇、语法和对话。请用中文回复，内容清晰易懂。') {
             try {
@@ -669,6 +680,7 @@
             document.getElementById('login-page').classList.add('hidden');
             document.getElementById('main-page').classList.remove('hidden');
             loadOverview();
+            updateAIWordsCount();
         }
 
         function switchTab(tab) {
@@ -719,7 +731,9 @@
 
         function loadWords() {
             const level = parseInt(document.getElementById('word-level').value);
-            const filtered = words.filter(w => w.level === level);
+            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const allWords = [...words, ...aiWords];
+            const filtered = allWords.filter(w => w.level === level);
             const list = document.getElementById('words-list');
             if (filtered.length === 0) {
                 list.innerHTML = '<p style="color: #9ca3af; text-align: center;">该级别暂无单词，请选择其他级别</p>';
@@ -730,6 +744,7 @@
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="word">${w.word}</div>
                         <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                        ${w.addedByAI ? '<span style="padding: 2px 6px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px;">AI</span>' : ''}
                     </div>
                     <div class="phonetic">${w.phonetic}</div>
                     <div class="meaning">${w.meaning}</div>
@@ -1250,33 +1265,48 @@
 
         async function generateAIWords() {
             const level = currentUser.level || 1;
+            const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
             const loadingDiv = document.getElementById('ai-words-loading');
             const resultDiv = document.getElementById('ai-words-result');
+            const topics = ['日常用品', '食物', '动物', '天气', '学校', '家庭', '运动', '旅行', '时间', '颜色'];
+            const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
             loadingDiv.style.display = 'block';
             resultDiv.innerHTML = '';
 
             try {
-                const prompt = `请为英语水平为Level ${level}的学习者生成5个适合的英语单词。请返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。`;
+                const excludeWords = generatedWordsHistory.join(', ') || '无';
+                const prompt = `请为英语水平为"${levelDesc}"的学习者生成12个适合的英语单词，主题为"${randomTopic}"。请避免重复以下已生成的单词：${excludeWords}。请返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。`;
 
                 const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
                 aiWordCache = JSON.parse(response);
 
-                resultDiv.innerHTML = aiWordCache.map((w, idx) => `
-                    <div class="word-card">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="word">${w.word}</div>
-                            <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
-                        </div>
-                        <div class="phonetic">${w.phonetic}</div>
-                        <div class="meaning">${w.meaning}</div>
-                        <div class="example">${w.example}</div>
-                        <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
-                            💡 记忆技巧：${w.tips}
-                        </div>
-                        <button class="btn btn-success" onclick="addAIWord(${idx})" style="margin-top: 12px;">添加到学习列表</button>
+                aiWordCache.forEach(w => {
+                    if (!generatedWordsHistory.includes(w.word)) {
+                        generatedWordsHistory.push(w.word);
+                    }
+                });
+
+                resultDiv.innerHTML = `
+                    <div style="margin-bottom: 16px; padding: 12px; background: #f0fdf4; border-radius: 8px; text-align: center;">
+                        <span>📚 本次生成主题：${randomTopic} · 共 ${aiWordCache.length} 个单词</span>
                     </div>
-                `).join('');
+                    ${aiWordCache.map((w, idx) => `
+                        <div class="word-card">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="word">${w.word}</div>
+                                <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                            </div>
+                            <div class="phonetic">${w.phonetic}</div>
+                            <div class="meaning">${w.meaning}</div>
+                            <div class="example">${w.example}</div>
+                            <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
+                                💡 记忆技巧：${w.tips}
+                            </div>
+                            <button class="btn btn-success" onclick="addAIWord(${idx})" style="margin-top: 12px;">添加到学习列表</button>
+                        </div>
+                    `).join('')}
+                `;
             } catch (error) {
                 resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">生成失败，请重试</p>`;
             } finally {
@@ -1287,21 +1317,65 @@
         function addAIWord(index) {
             const w = aiWordCache[index];
             if (!w) return;
-            const newId = words.length + 1;
-            words.push({
-                id: newId,
+
+            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            if (aiWords.some(aw => aw.word === w.word)) {
+                showToast('这个单词已经在学习列表中了');
+                return;
+            }
+
+            const newWord = {
+                id: Date.now(),
                 word: w.word,
                 phonetic: w.phonetic,
                 meaning: w.meaning,
                 example: w.example,
-                level: currentUser.level || 1
-            });
-            alert(`已添加单词 "${w.word}"`);
-            generateAIWords();
+                level: currentUser.level || 1,
+                addedByAI: true,
+                addedDate: new Date().toISOString()
+            };
+
+            aiWords.push(newWord);
+            localStorage.setItem('english-learning-ai-words', JSON.stringify(aiWords));
+
+            showToast(`✅ 已添加单词 "${w.word}" 到学习列表`);
+            updateAIWordsCount();
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                z-index: 9999;
+                font-size: 16px;
+                animation: fadeIn 0.3s;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 2000);
+        }
+
+        function updateAIWordsCount() {
+            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const countBadge = document.getElementById('ai-words-count');
+            if (countBadge) {
+                countBadge.textContent = aiWords.length;
+                countBadge.style.display = aiWords.length > 0 ? 'inline-block' : 'none';
+            }
         }
 
         async function generateAILesson() {
             const level = currentUser.level || 1;
+            const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
             const topic = document.getElementById('ai-lesson-topic').value || '日常生活';
             const loadingDiv = document.getElementById('ai-lesson-loading');
             const resultDiv = document.getElementById('ai-lesson-result');
@@ -1310,7 +1384,7 @@
             resultDiv.innerHTML = '';
 
             try {
-                const prompt = `请为英语水平为Level ${level}的学习者写一篇关于"${topic}"的课文。要求：1. 字数约150-200词；2. 包含5-8个重点单词；3. 语言简单易懂；4. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，包含word和meaning）。确保返回纯JSON，不要包含其他文字。`;
+                const prompt = `请为英语水平为"${levelDesc}"的学习者写一篇关于"${topic}"的课文。要求：1. 根据难度描述控制课文长度和难度；2. 包含5-8个重点单词；3. 语言简单易懂；4. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，包含word和meaning）。确保返回纯JSON，不要包含其他文字。`;
 
                 const response = await callAI(prompt, '你是一个专业的英语课文生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
                 const lesson = JSON.parse(response);
