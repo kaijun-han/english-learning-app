@@ -6,3 +6,6 @@ phases = ["setup", "install", "build", "start"]
 
 [nixpacks.env]
 NODE_VERSION = "18"
+
+[deploy]
+startCommand = "npm start"
