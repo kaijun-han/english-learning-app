@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI鑻辫瀛︿範鏅鸿兘浣?/title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+
+        .input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .word-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .word {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .phonetic {
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .meaning {
+            font-size: 18px;
+            color: #374151;
+            margin: 8px 0;
+        }
+
+        .example {
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s;
+        }
+
+        .nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+        }
+
+        .nav-btn.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .rating {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .star {
+            font-size: 32px;
+            cursor: pointer;
+            color: #e5e7eb;
+            transition: color 0.2s;
+        }
+
+        .star:hover,
+        .star.selected {
+            color: #fbbf24;
+        }
+
+        .speak-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .speak-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .quiz-option {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+
+        .quiz-option:hover {
+            border-color: #667eea;
+            background: #f8fafc;
+        }
+
+        .quiz-option.selected {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+
+        .quiz-option.correct {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .quiz-option.wrong {
+            border-color: #ef4444;
+            background: #fee2e2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="login-page">
+            <div class="card">
+                <h1 style="text-align: center; color: #667eea; margin-bottom: 24px;">AI鑻辫瀛︿範鏅鸿兘浣?/h1>
+                <input type="text" id="username" class="input" placeholder="鐢ㄦ埛鍚? />
+                <input type="password" id="password" class="input" placeholder="瀵嗙爜" />
+                <button class="btn btn-primary" onclick="login()">鐧诲綍</button>
+                <button class="btn btn-outline" onclick="register()" style="width: 100%;">娉ㄥ唽鏂扮敤鎴?/button>
+            </div>
+        </div>
+
+        <div id="main-page" class="hidden">
+            <div class="nav">
+                <button class="nav-btn active" onclick="switchTab('home')">棣栭〉</button>
+                <button class="nav-btn" onclick="switchTab('words')">鍗曡瘝瀛︿範</button>
+                <button class="nav-btn" onclick="switchTab('lessons')">璇炬枃瀛︿範</button>
+                <button class="nav-btn" onclick="switchTab('quiz')">AI娴嬭瘯</button>
+                <button class="nav-btn" onclick="switchTab('progress')">瀛︿範杩涘害</button>
+                <button class="nav-btn" onclick="logout()" style="margin-left: auto;">閫€鍑?/button>
+            </div>
+
+            <div id="tab-home">
+                <div class="card">
+                    <h2>馃憢 娆㈣繋鍥炴潵锛?/h2>
+                    <p id="greeting" style="margin: 12px 0; color: #6b7280;">浠婂ぉ涔熻鍔姏瀛︿範鍝︼紒</p>
+                    <button class="btn btn-primary" onclick="startLevelTest()">馃摑 鑻辫姘村钩娴嬭瘯</button>
+                    <button class="btn btn-success" onclick="startDailyLearning()" style="margin-left: 12px;">馃摎
+                        寮€濮嬩粖鏃ュ涔?/button>
+                </div>
+                <div class="card">
+                    <h3>馃搳 瀛︿範姒傝</h3>
+                    <div id="overview-stats"
+                        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 16px;">
+                        <div style="text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                            <div id="stat-total" style="font-size: 24px; font-weight: bold; color: #667eea;">0</div>
+                            <div style="color: #6b7280; font-size: 14px;">宸插鍗曡瘝</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                            <div id="stat-mastered" style="font-size: 24px; font-weight: bold; color: #10b981;">0</div>
+                            <div style="color: #6b7280; font-size: 14px;">宸叉帉鎻?/div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                            <div id="stat-streak" style="font-size: 24px; font-weight: bold; color: #f59e0b;">0</div>
+                            <div style="color: #6b7280; font-size: 14px;">杩炵画澶╂暟</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                            <div id="stat-level" style="font-size: 24px; font-weight: bold; color: #8b5cf6;">1</div>
+                            <div style="color: #6b7280; font-size: 14px;">褰撳墠绛夌骇</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-words" class="hidden">
+                <div class="card">
+                    <h2>馃摎 鍗曡瘝瀛︿範</h2>
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <select id="word-level" class="input" style="width: auto;">
+                            <option value="1">Level 1 - 鍏ラ棬</option>
+                            <option value="2">Level 2 - 鍩虹</option>
+                            <option value="3">Level 3 - 杩涢樁</option>
+                            <option value="4">Level 4 - 楂樼骇</option>
+                            <option value="5">Level 5 - 绮鹃€?/option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadWords()">鍔犺浇鍗曡瘝</button>
+                    </div>
+                    <div id="words-list"></div>
+                </div>
+            </div>
+
+            <div id="tab-lessons" class="hidden">
+                <div class="card">
+                    <h2>馃摉 璇炬枃瀛︿範</h2>
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <select id="lesson-level" class="input" style="width: auto;">
+                            <option value="1">Level 1 - 鍏ラ棬</option>
+                            <option value="2">Level 2 - 鍩虹</option>
+                            <option value="3">Level 3 - 杩涢樁</option>
+                            <option value="4">Level 4 - 楂樼骇</option>
+                            <option value="5">Level 5 - 绮鹃€?/option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadLessons()">鍔犺浇璇炬枃</button>
+                    </div>
+                    <div id="lessons-list"></div>
+                </div>
+            </div>
+
+            <div id="tab-quiz" class="hidden">
+                <div class="card">
+                    <h2>馃 AI娴嬭瘯</h2>
+                    <button class="btn btn-primary" onclick="generateQuiz()">鐢熸垚娴嬭瘯棰?/button>
+                    <div id="quiz-container"></div>
+                </div>
+            </div>
+
+            <div id="tab-progress" class="hidden">
+                <div class="card">
+                    <h2>馃搳 瀛︿範杩涘害</h2>
+                    <div id="progress-details"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="learning-modal" class="hidden"
+            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+            <div class="card" style="max-width: 500px; width: 90%;">
+                <button class="btn btn-danger" onclick="closeLearningModal()" style="float: right;">鉁?/button>
+                <h2 id="learning-word-title">鍗曡瘝瀛︿範</h2>
+                <div id="learning-word-content" style="margin: 20px 0;"></div>
+                <div class="rating" id="rating-stars">
+                    <span class="star" onclick="selectRating(1)">鈽?/span>
+                    <span class="star" onclick="selectRating(2)">鈽?/span>
+                    <span class="star" onclick="selectRating(3)">鈽?/span>
+                    <span class="star" onclick="selectRating(4)">鈽?/span>
+                    <span class="star" onclick="selectRating(5)">鈽?/span>
+                </div>
+                <button class="btn btn-primary" onclick="submitRating()"
+                    style="margin-top: 16px; width: 100%;">鎻愪氦璇勫垎</button>
+            </div>
+        </div>
+
+        <div id="test-modal" class="hidden"
+            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+            <div class="card" style="max-width: 600px; width: 90%;">
+                <button class="btn btn-danger" onclick="closeTestModal()" style="float: right;">鉁?/button>
+                <h2>馃摑 鑻辫姘村钩娴嬭瘯</h2>
+                <div id="test-questions"></div>
+                <button class="btn btn-primary" onclick="submitTest()"
+                    style="margin-top: 16px; width: 100%;">鎻愪氦娴嬭瘯</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('token');
+        let currentUserId = localStorage.getItem('userId');
+        let currentLearningWord = null;
+        let currentRating = 0;
+        let currentTestAnswers = [];
+
+        if (token) {
+            showMainPage();
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (data.token) {
+                token = data.token;
+                currentUserId = data.user.id;
+                localStorage.setItem('token', token);
+                localStorage.setItem('userId', currentUserId);
+                showMainPage();
+            } else {
+                alert(data.message || '鐧诲綍澶辫触');
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (data.user) {
+                alert('娉ㄥ唽鎴愬姛锛岃鐧诲綍');
+            } else {
+                alert(data.message || '娉ㄥ唽澶辫触');
+            }
+        }
+
+        function logout() {
+            token = null;
+            currentUserId = null;
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            document.getElementById('login-page').classList.remove('hidden');
+            document.getElementById('main-page').classList.add('hidden');
+        }
+
+        function showMainPage() {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('main-page').classList.remove('hidden');
+            loadOverview();
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            if (tab === 'progress') loadProgress();
+        }
+
+        async function loadOverview() {
+            const res = await fetch('/api/users/progress', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            if (data.user) {
+                document.getElementById('stat-total').textContent = data.user.totalWordsLearned || 0;
+                document.getElementById('stat-mastered').textContent = data.user.progress?.mastered || 0;
+                document.getElementById('stat-streak').textContent = data.user.streak || 0;
+                document.getElementById('stat-level').textContent = data.user.level || 1;
+            }
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.8;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('鎮ㄧ殑娴忚鍣ㄤ笉鏀寔璇煶鍔熻兘');
+            }
+        }
+
+        async function loadWords() {
+            const level = document.getElementById('word-level').value;
+            const res = await fetch('/api/words?level=' + level);
+            const words = await res.json();
+            const list = document.getElementById('words-list');
+            list.innerHTML = words.map(w => `
+                <div class="word-card">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="word">${w.word}</div>
+                        <button class="speak-btn" onclick="speak('${w.word}')" title="鍙戦煶">馃攰</button>
+                    </div>
+                    <div class="phonetic">${w.phonetic}</div>
+                    <div class="meaning">${w.meaning}</div>
+                    <div class="example">${w.example}</div>
+                    <button class="btn btn-success" onclick="startLearning(${w.id})" style="margin-top: 12px;">寮€濮嬪涔?/button>
+                </div>
+            `).join('');
+        }
+
+        async function loadLessons() {
+            const level = document.getElementById('lesson-level').value;
+            const res = await fetch('/api/lessons?level=' + level);
+            const lessons = await res.json();
+            const list = document.getElementById('lessons-list');
+            list.innerHTML = lessons.map(l => `
+                <div class="word-card">
+                    <h3>${l.title}</h3>
+                    <p style="margin: 12px 0; line-height: 1.6;">${l.content}</p>
+                    <h4>鍏抽敭璇嶆眹锛?/h4>
+                    <div style="margin: 8px 0;">
+                        ${l.words?.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; margin-right: 8px; cursor: pointer;" onclick="speak('${w.word}')" title="鐐瑰嚮鍙戦煶">${w.word} - ${w.meaning} 馃攰</span>`).join('') || ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function startLearning(wordId) {
+            const res = await fetch('/api/words/' + wordId);
+            currentLearningWord = await res.json();
+            document.getElementById('learning-word-title').innerHTML = `${currentLearningWord.word} <button class="speak-btn" onclick="speak('${currentLearningWord.word}')" title="鍙戦煶">馃攰</button>`;
+            document.getElementById('learning-word-content').innerHTML = `
+                <div class="phonetic">${currentLearningWord.phonetic}</div>
+                <div class="meaning">${currentLearningWord.meaning}</div>
+                <div class="example">${currentLearningWord.example}</div>
+            `;
+            currentRating = 0;
+            document.querySelectorAll('.star').forEach(s => s.classList.remove('selected'));
+            document.getElementById('learning-modal').classList.remove('hidden');
+        }
+
+        function selectRating(rating) {
+            currentRating = rating;
+            document.querySelectorAll('.star').forEach((s, i) => {
+                s.classList.toggle('selected', i < rating);
+            });
+        }
+
+        async function submitRating() {
+            if (!currentRating) {
+                alert('璇烽€夋嫨璇勫垎');
+                return;
+            }
+            await fetch('/api/words/learn', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ wordId: currentLearningWord.id, quality: currentRating })
+            });
+            closeLearningModal();
+            loadOverview();
+            alert('瀛︿範璁板綍宸蹭繚瀛橈紒');
+        }
+
+        function closeLearningModal() {
+            document.getElementById('learning-modal').classList.add('hidden');
+            currentLearningWord = null;
+        }
+
+        async function generateQuiz() {
+            const res = await fetch('/api/ai/generate-quiz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ type: 'vocabulary', count: 5 })
+            });
+            const data = await res.json();
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = `
+                <div id="quiz-questions">
+                    ${data.questions.map((q, i) => `
+                        <div style="margin-bottom: 20px;">
+                            <h4>闂 ${i + 1}: ${q.question}</h4>
+                            ${q.options.map((opt, j) => `
+                                <div class="quiz-option" onclick="selectQuizAnswer(${i}, ${j})" id="quiz-${i}-${j}">
+                                    ${String.fromCharCode(65 + j)}. ${opt}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="btn btn-primary" onclick="submitQuiz('${data.quizId}')">鎻愪氦绛旀</button>
+            `;
+        }
+
+        let quizAnswers = [];
+
+        function selectQuizAnswer(questionIdx, optionIdx) {
+            quizAnswers[questionIdx] = optionIdx;
+            document.querySelectorAll(`[id^="quiz-${questionIdx}-"]`).forEach(el => el.classList.remove('selected'));
+            document.getElementById(`quiz-${questionIdx}-${optionIdx}`).classList.add('selected');
+        }
+
+        async function submitQuiz(quizId) {
+            const res = await fetch('/api/ai/evaluate-quiz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ quizId, answers: quizAnswers })
+            });
+            const data = await res.json();
+            alert(`娴嬭瘯瀹屾垚锛佸緱鍒嗭細${data.score}/${data.totalQuestions} (${data.percentage}%)`);
+            loadOverview();
+        }
+
+        async function loadProgress() {
+            const res = await fetch('/api/users/progress', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            const details = document.getElementById('progress-details');
+            if (data.user) {
+                const total = data.user.progress?.learning + data.user.progress?.mastered || 0;
+                const mastered = data.user.progress?.mastered || 0;
+                details.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <h3>鍗曡瘝鎺屾彙杩涘害</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${total ? (mastered / total * 100) : 0}%"></div>
+                        </div>
+                        <p style="margin-top: 8px;">宸叉帉鎻?${mastered} / ${total} 涓崟璇?/p>
+                    </div>
+                    <div>
+                        <h3>瀛︿範缁熻</h3>
+                        <p>杩炵画瀛︿範锛?{data.user.streak || 0} 澶?/p>
+                        <p>褰撳墠绛夌骇锛歀evel ${data.user.level || 1}</p>
+                        <p>绱瀛︿範鍗曡瘝锛?{data.user.totalWordsLearned || 0} 涓?/p>
+                    </div>
+                `;
+            }
+        }
+
+        async function startLevelTest() {
+            const res = await fetch('/api/users/level-test', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            currentTestAnswers = new Array(data.questions.length).fill(null);
+            const container = document.getElementById('test-questions');
+            container.innerHTML = data.questions.map((q, i) => `
+                <div style="margin-bottom: 20px;">
+                    <h4>闂 ${i + 1}: ${q.question}</h4>
+                    ${q.options.map((opt, j) => `
+                        <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
+                            ${String.fromCharCode(65 + j)}. ${opt}
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+            document.getElementById('test-modal').classList.remove('hidden');
+        }
+
+        function selectTestAnswer(questionIdx, optionIdx) {
+            currentTestAnswers[questionIdx] = optionIdx;
+            document.querySelectorAll(`[id^="test-${questionIdx}-"]`).forEach(el => el.classList.remove('selected'));
+            document.getElementById(`test-${questionIdx}-${optionIdx}`).classList.add('selected');
+        }
+
+        async function submitTest() {
+            const res = await fetch('/api/users/level-test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ answers: currentTestAnswers })
+            });
+            const data = await res.json();
+            alert(`娴嬭瘯瀹屾垚锛乗n寰楀垎锛?{data.score}/${data.total}\n璇勫畾绛夌骇锛歀evel ${data.newLevel}`);
+            closeTestModal();
+            loadOverview();
+        }
+
+        function closeTestModal() {
+            document.getElementById('test-modal').classList.add('hidden');
+            currentTestAnswers = [];
+        }
+
+        async function startDailyLearning() {
+            const res = await fetch('/api/words/daily', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            alert(`浠婃棩瀛︿範浠诲姟锛歕n- 澶嶄範鍗曡瘝锛?{data.reviewCount || 0} 涓猏n- 鏂板鍗曡瘝锛?{data.newCount || 0} 涓猔);
+            document.getElementById('word-level').value = localStorage.getItem('userLevel') || 1;
+            switchTab('words');
+            loadWords();
+        }
+    </script>
+</body>
+
+</html>
