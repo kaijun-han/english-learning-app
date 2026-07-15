@@ -513,10 +513,10 @@ app.post('/api/users/level-test', (req, res) => {
   }
 });
 
-app.use(express.static(path.join(__dirname, '../frontend/web')));
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/web', 'index.html'));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
