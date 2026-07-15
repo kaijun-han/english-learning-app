@@ -30,6 +30,8 @@
             padding: 24px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .btn {
@@ -357,21 +359,51 @@
             { id: 3, word: 'cat', phonetic: '/kæt/', meaning: '猫', example: 'The cat is sleeping.', level: 1 },
             { id: 4, word: 'dog', phonetic: '/dɒɡ/', meaning: '狗', example: 'I have a pet dog.', level: 1 },
             { id: 5, word: 'elephant', phonetic: '/ˈelɪfənt/', meaning: '大象', example: 'Elephants are very big.', level: 1 },
-            { id: 6, word: 'friend', phonetic: '/frend/', meaning: '朋友', example: 'She is my best friend.', level: 2 },
-            { id: 7, word: 'garden', phonetic: '/ˈɡɑːdn/', meaning: '花园', example: 'We have a beautiful garden.', level: 2 },
-            { id: 8, word: 'happy', phonetic: '/ˈhæpi/', meaning: '快乐的', example: 'I am very happy today.', level: 2 },
-            { id: 9, word: 'important', phonetic: '/ɪmˈpɔːtnt/', meaning: '重要的', example: 'This is very important.', level: 3 },
-            { id: 10, word: 'journey', phonetic: '/ˈdʒɜːni/', meaning: '旅程', example: 'It was a long journey.', level: 3 },
-            { id: 11, word: 'knowledge', phonetic: '/ˈnɒlɪdʒ/', meaning: '知识', example: 'Knowledge is power.', level: 4 },
-            { id: 12, word: 'language', phonetic: '/ˈlæŋɡwɪdʒ/', meaning: '语言', example: 'English is a global language.', level: 4 },
-            { id: 13, word: 'mysterious', phonetic: '/mɪˈstɪəriəs/', meaning: '神秘的', example: 'It was a mysterious event.', level: 5 },
-            { id: 14, word: 'necessary', phonetic: '/ˈnesəsəri/', meaning: '必要的', example: 'It is necessary to study.', level: 4 },
-            { id: 15, word: 'opportunity', phonetic: '/ˌɒpəˈtjuːnəti/', meaning: '机会', example: 'This is a great opportunity.', level: 5 },
-            { id: 16, word: 'beautiful', phonetic: '/ˈbjuːtɪfl/', meaning: '美丽的', example: 'What a beautiful day!', level: 2 },
-            { id: 17, word: 'computer', phonetic: '/kəmˈpjuːtər/', meaning: '电脑', example: 'I use my computer every day.', level: 2 },
-            { id: 18, word: 'different', phonetic: '/ˈdɪfrənt/', meaning: '不同的', example: 'We have different opinions.', level: 3 },
-            { id: 19, word: 'experience', phonetic: '/ɪkˈspɪəriəns/', meaning: '经验', example: 'She has rich experience.', level: 4 },
-            { id: 20, word: 'fantastic', phonetic: '/fænˈtæstɪk/', meaning: '极好的', example: 'That was a fantastic movie.', level: 3 }
+            { id: 6, word: 'fish', phonetic: '/fɪʃ/', meaning: '鱼', example: 'Fish can swim in water.', level: 1 },
+            { id: 7, word: 'girl', phonetic: '/ɡɜːl/', meaning: '女孩', example: 'She is a beautiful girl.', level: 1 },
+            { id: 8, word: 'hand', phonetic: '/hænd/', meaning: '手', example: 'Wash your hands before eating.', level: 1 },
+            { id: 9, word: 'ice', phonetic: '/aɪs/', meaning: '冰', example: 'Water turns to ice in winter.', level: 1 },
+            { id: 10, word: 'juice', phonetic: '/dʒuːs/', meaning: '果汁', example: 'I drink orange juice for breakfast.', level: 1 },
+            { id: 11, word: 'friend', phonetic: '/frend/', meaning: '朋友', example: 'She is my best friend.', level: 2 },
+            { id: 12, word: 'garden', phonetic: '/ˈɡɑːdn/', meaning: '花园', example: 'We have a beautiful garden.', level: 2 },
+            { id: 13, word: 'happy', phonetic: '/ˈhæpi/', meaning: '快乐的', example: 'I am very happy today.', level: 2 },
+            { id: 14, word: 'beautiful', phonetic: '/ˈbjuːtɪfl/', meaning: '美丽的', example: 'What a beautiful day!', level: 2 },
+            { id: 15, word: 'computer', phonetic: '/kəmˈpjuːtər/', meaning: '电脑', example: 'I use my computer every day.', level: 2 },
+            { id: 16, word: 'school', phonetic: '/skuːl/', meaning: '学校', example: 'I go to school every morning.', level: 2 },
+            { id: 17, word: 'teacher', phonetic: '/ˈtiːtʃər/', meaning: '老师', example: 'My teacher is very kind.', level: 2 },
+            { id: 18, word: 'student', phonetic: '/ˈstjuːdnt/', meaning: '学生', example: 'I am a student.', level: 2 },
+            { id: 19, word: 'family', phonetic: '/ˈfæməli/', meaning: '家庭', example: 'I love my family.', level: 2 },
+            { id: 20, word: 'home', phonetic: '/həʊm/', meaning: '家', example: 'Welcome to my home.', level: 2 },
+            { id: 21, word: 'important', phonetic: '/ɪmˈpɔːtnt/', meaning: '重要的', example: 'This is very important.', level: 3 },
+            { id: 22, word: 'journey', phonetic: '/ˈdʒɜːni/', meaning: '旅程', example: 'It was a long journey.', level: 3 },
+            { id: 23, word: 'different', phonetic: '/ˈdɪfrənt/', meaning: '不同的', example: 'We have different opinions.', level: 3 },
+            { id: 24, word: 'fantastic', phonetic: '/fænˈtæstɪk/', meaning: '极好的', example: 'That was a fantastic movie.', level: 3 },
+            { id: 25, word: 'communicate', phonetic: '/kəˈmjuːnɪkeɪt/', meaning: '交流', example: 'We need to communicate better.', level: 3 },
+            { id: 26, word: 'practice', phonetic: '/ˈpræktɪs/', meaning: '练习', example: 'Practice makes perfect.', level: 3 },
+            { id: 27, word: 'improve', phonetic: '/ɪmˈpruːv/', meaning: '改善', example: 'I want to improve my English.', level: 3 },
+            { id: 28, word: 'challenge', phonetic: '/ˈtʃælɪndʒ/', meaning: '挑战', example: 'This is a big challenge.', level: 3 },
+            { id: 29, word: 'success', phonetic: '/səkˈses/', meaning: '成功', example: 'Success comes from hard work.', level: 3 },
+            { id: 30, word: 'education', phonetic: '/ˌedʒuˈkeɪʃn/', meaning: '教育', example: 'Education is very important.', level: 3 },
+            { id: 31, word: 'knowledge', phonetic: '/ˈnɒlɪdʒ/', meaning: '知识', example: 'Knowledge is power.', level: 4 },
+            { id: 32, word: 'language', phonetic: '/ˈlæŋɡwɪdʒ/', meaning: '语言', example: 'English is a global language.', level: 4 },
+            { id: 33, word: 'necessary', phonetic: '/ˈnesəsəri/', meaning: '必要的', example: 'It is necessary to study.', level: 4 },
+            { id: 34, word: 'experience', phonetic: '/ɪkˈspɪəriəns/', meaning: '经验', example: 'She has rich experience.', level: 4 },
+            { id: 35, word: 'opportunity', phonetic: '/ˌɒpəˈtjuːnəti/', meaning: '机会', example: 'This is a great opportunity.', level: 4 },
+            { id: 36, word: 'development', phonetic: '/dɪˈveləpmənt/', meaning: '发展', example: 'Economic development is important.', level: 4 },
+            { id: 37, word: 'technology', phonetic: '/tekˈnɒlədʒi/', meaning: '技术', example: 'Technology changes our lives.', level: 4 },
+            { id: 38, word: 'environment', phonetic: '/ɪnˈvaɪrənmənt/', meaning: '环境', example: 'Protect the environment.', level: 4 },
+            { id: 39, word: 'society', phonetic: '/səˈsaɪəti/', meaning: '社会', example: 'We live in a modern society.', level: 4 },
+            { id: 40, word: 'culture', phonetic: '/ˈkʌltʃər/', meaning: '文化', example: 'Different countries have different cultures.', level: 4 },
+            { id: 41, word: 'mysterious', phonetic: '/mɪˈstɪəriəs/', meaning: '神秘的', example: 'It was a mysterious event.', level: 5 },
+            { id: 42, word: 'accomplish', phonetic: '/əˈkʌmplɪʃ/', meaning: '完成', example: 'I accomplished my goal.', level: 5 },
+            { id: 43, word: 'perspective', phonetic: '/pəˈspektɪv/', meaning: '视角', example: 'Try to see things from a different perspective.', level: 5 },
+            { id: 44, word: 'phenomenon', phonetic: '/fɪˈnɒmɪnən/', meaning: '现象', example: 'This is a natural phenomenon.', level: 5 },
+            { id: 45, word: 'consequence', phonetic: '/ˈkɒnsɪkwəns/', meaning: '后果', example: 'Every action has its consequences.', level: 5 },
+            { id: 46, word: 'fundamental', phonetic: '/ˌfʌndəˈmentl/', meaning: '基本的', example: 'This is a fundamental principle.', level: 5 },
+            { id: 47, word: 'controversy', phonetic: '/ˈkɒntrəvɜːsi/', meaning: '争议', example: 'This issue caused much controversy.', level: 5 },
+            { id: 48, word: 'comprehensive', phonetic: '/ˌkɒmprɪˈhensɪv/', meaning: '全面的', example: 'We need a comprehensive solution.', level: 5 },
+            { id: 49, word: 'sophisticated', phonetic: '/səˈfɪstɪkeɪtɪd/', meaning: '复杂的', example: 'This is a sophisticated system.', level: 5 },
+            { id: 50, word: 'inevitable', phonetic: '/ɪnˈevɪtəbl/', meaning: '不可避免的', example: 'Change is inevitable.', level: 5 }
         ];
 
         const lessons = [
@@ -548,8 +580,12 @@
 
         function loadWords() {
             const level = parseInt(document.getElementById('word-level').value);
-            const filtered = words.filter(w => w.level <= level);
+            const filtered = words.filter(w => w.level === level);
             const list = document.getElementById('words-list');
+            if (filtered.length === 0) {
+                list.innerHTML = '<p style="color: #9ca3af; text-align: center;">该级别暂无单词，请选择其他级别</p>';
+                return;
+            }
             list.innerHTML = filtered.map(w => `
                 <div class="word-card">
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -681,6 +717,24 @@
             currentLearningWord = null;
         }
 
+        function generateRandomQuestions(count) {
+            const shuffled = [...words].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, count);
+
+            return selected.map(word => {
+                const otherWords = words.filter(w => w.id !== word.id);
+                const wrongOptions = [...otherWords].sort(() => Math.random() - 0.5).slice(0, 3);
+                const options = [...wrongOptions, { meaning: word.meaning }].sort(() => Math.random() - 0.5);
+                const answerIndex = options.findIndex(o => o.meaning === word.meaning);
+
+                return {
+                    question: `What is the meaning of "${word.word}"?`,
+                    options: options.map(o => o.meaning),
+                    answer: answerIndex
+                };
+            });
+        }
+
         function generateQuiz() {
             const level = currentUser.level || 1;
             const availableWords = words.filter(w => w.level <= level);
@@ -771,13 +825,7 @@
         }
 
         function startLevelTest() {
-            const levelQuestions = [
-                { question: 'What is the meaning of "apple"?', options: ['苹果', '香蕉', '橙子', '梨'], answer: 0 },
-                { question: 'What is the meaning of "book"?', options: ['书', '笔', '桌子', '椅子'], answer: 0 },
-                { question: 'What is the meaning of "happy"?', options: ['悲伤的', '快乐的', '愤怒的', '疲惫的'], answer: 1 },
-                { question: 'What is the meaning of "important"?', options: ['重要的', '简单的', '困难的', '无聊的'], answer: 0 },
-                { question: 'What is the meaning of "knowledge"?', options: ['力量', '知识', '金钱', '时间'], answer: 1 }
-            ];
+            const levelQuestions = generateRandomQuestions(5);
 
             currentTestAnswers = new Array(levelQuestions.length).fill(null);
             const container = document.getElementById('test-questions');
