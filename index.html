@@ -1243,6 +1243,7 @@
                 btn.innerHTML = '🎤';
                 btn.classList.remove('btn-danger');
                 btn.classList.add('btn-secondary');
+                updateVoiceStatus('已停止');
                 return;
             }
 
@@ -1258,6 +1259,7 @@
                 btn.classList.remove('btn-secondary');
                 btn.classList.add('btn-danger');
                 document.getElementById('chat-input').placeholder = '正在听您说话...';
+                updateVoiceStatus('✅ 麦克风已开启，请开始说话（说英语）');
             };
 
             voiceRecognition.onresult = function (event) {
@@ -1266,7 +1268,7 @@
                     transcript += event.results[i][0].transcript;
                 }
                 document.getElementById('chat-input').value = transcript;
-                document.getElementById('chat-input').placeholder = '输入英语句子...';
+                updateVoiceStatus('📝 识别中：' + transcript);
             };
 
             voiceRecognition.onend = function () {
@@ -1275,6 +1277,12 @@
                 btn.classList.remove('btn-danger');
                 btn.classList.add('btn-secondary');
                 document.getElementById('chat-input').placeholder = '输入英语句子...';
+                const finalText = document.getElementById('chat-input').value;
+                if (!finalText) {
+                    updateVoiceStatus('⚠️ 未识别到语音，请检查麦克风权限或网络连接');
+                } else {
+                    updateVoiceStatus('✅ 识别完成');
+                }
             };
 
             voiceRecognition.onerror = function (event) {
@@ -1284,16 +1292,51 @@
                 btn.classList.remove('btn-danger');
                 btn.classList.add('btn-secondary');
                 document.getElementById('chat-input').placeholder = '输入英语句子...';
-                if (event.error === 'not-allowed') {
-                    alert('请允许麦克风权限以使用语音输入');
+
+                let errorMsg = '语音识别出错';
+                switch (event.error) {
+                    case 'not-allowed':
+                        errorMsg = '❌ 请允许麦克风权限：点击浏览器地址栏左侧的锁图标 → 允许麦克风';
+                        break;
+                    case 'no-speech':
+                        errorMsg = '❌ 未检测到语音，请尝试大声说话';
+                        break;
+                    case 'network':
+                        errorMsg = '❌ 网络错误：语音识别需要访问Google服务器，可能需要使用VPN';
+                        break;
+                    case 'service-not-allowed':
+                        errorMsg = '❌ 语音服务不可用，可能需要使用VPN或更换浏览器';
+                        break;
+                    case 'audio-capture':
+                        errorMsg = '❌ 无法访问麦克风，请检查设备是否有麦克风';
+                        break;
+                    default:
+                        errorMsg = '❌ 错误：' + event.error;
                 }
+                updateVoiceStatus(errorMsg);
+                alert(errorMsg);
             };
 
             try {
                 voiceRecognition.start();
+                updateVoiceStatus('🔄 正在启动语音识别...');
             } catch (error) {
                 console.error('启动语音识别失败:', error);
+                updateVoiceStatus('❌ 启动失败：' + error.message);
+                alert('启动语音识别失败：' + error.message);
             }
+        }
+
+        function updateVoiceStatus(msg) {
+            let statusDiv = document.getElementById('voice-status');
+            if (!statusDiv) {
+                const chatArea = document.querySelector('#tab-ai-chat .card');
+                statusDiv = document.createElement('div');
+                statusDiv.id = 'voice-status';
+                statusDiv.style.cssText = 'margin-top: 8px; padding: 8px 12px; background: #f8fafc; border-radius: 8px; font-size: 13px; color: #6b7280; text-align: center;';
+                chatArea.appendChild(statusDiv);
+            }
+            statusDiv.textContent = msg;
         }
 
         async function sendChatMessage() {
