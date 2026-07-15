@@ -235,7 +235,10 @@
                 <button class="nav-btn active" onclick="switchTab('home')">首页</button>
                 <button class="nav-btn" onclick="switchTab('words')">单词学习</button>
                 <button class="nav-btn" onclick="switchTab('lessons')">课文学习</button>
-                <button class="nav-btn" onclick="switchTab('quiz')">AI测试</button>
+                <button class="nav-btn" onclick="switchTab('ai-words')">✨ AI单词</button>
+                <button class="nav-btn" onclick="switchTab('ai-lessons')">✨ AI课文</button>
+                <button class="nav-btn" onclick="switchTab('ai-quiz')">✨ AI测试</button>
+                <button class="nav-btn" onclick="switchTab('ai-chat')">✨ AI对话</button>
                 <button class="nav-btn" onclick="switchTab('progress')">学习进度</button>
                 <button class="nav-btn" onclick="logout()" style="margin-left: auto;">退出</button>
             </div>
@@ -350,9 +353,107 @@
                     style="margin-top: 16px; width: 100%;">提交测试</button>
             </div>
         </div>
+
+        <div id="tab-ai-words" class="hidden">
+            <div class="card">
+                <h2>✨ AI智能单词生成</h2>
+                <p style="color: #6b7280; margin-bottom: 16px;">根据您的英语水平，AI自动生成适合的单词和记忆技巧</p>
+                <button class="btn btn-primary" onclick="generateAIWords()">🎲 生成单词</button>
+                <div id="ai-words-loading" style="display: none; text-align: center; margin-top: 20px;">
+                    <div style="font-size: 32px;">⏳</div>
+                    <p>AI正在生成单词...</p>
+                </div>
+                <div id="ai-words-result"></div>
+            </div>
+        </div>
+
+        <div id="tab-ai-lessons" class="hidden">
+            <div class="card">
+                <h2>✨ AI智能课文生成</h2>
+                <p style="color: #6b7280; margin-bottom: 16px;">根据您的兴趣和水平，AI自动生成个性化课文</p>
+                <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <input type="text" id="ai-lesson-topic" class="input" placeholder="输入课文主题（如：旅游、科技、美食）"
+                        style="flex: 1;">
+                    <button class="btn btn-primary" onclick="generateAILesson()">📝 生成课文</button>
+                </div>
+                <div id="ai-lesson-loading" style="display: none; text-align: center; margin-top: 20px;">
+                    <div style="font-size: 32px;">⏳</div>
+                    <p>AI正在创作课文...</p>
+                </div>
+                <div id="ai-lesson-result"></div>
+            </div>
+        </div>
+
+        <div id="tab-ai-quiz" class="hidden">
+            <div class="card">
+                <h2>✨ AI智能测试</h2>
+                <p style="color: #6b7280; margin-bottom: 16px;">AI根据您的水平生成多样化测试题（选择、填空、翻译）</p>
+                <button class="btn btn-primary" onclick="generateAIQuiz()">🎯 生成测试</button>
+                <div id="ai-quiz-loading" style="display: none; text-align: center; margin-top: 20px;">
+                    <div style="font-size: 32px;">⏳</div>
+                    <p>AI正在出题...</p>
+                </div>
+                <div id="ai-quiz-container"></div>
+            </div>
+        </div>
+
+        <div id="tab-ai-chat" class="hidden">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>✨ AI英语对话练习</h2>
+                    <button class="btn btn-outline" onclick="clearChat()">清空对话</button>
+                </div>
+                <p style="color: #6b7280; margin-bottom: 16px;">用英语与AI进行自然对话，提升口语能力</p>
+                <div id="chat-messages"
+                    style="height: 400px; overflow-y: auto; background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <input type="text" id="chat-input" class="input" placeholder="输入英语句子..." style="flex: 1;"
+                        onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                    <button class="btn btn-primary" onclick="sendChatMessage()">发送</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        const AI_CONFIG = {
+            apiKey: 'sk-a3a7d3678f8148b2b487c879a034a2d4',
+            apiUrl: 'https://api.deepseek.com/v1/chat/completions',
+            model: 'deepseek-chat'
+        };
+
+        async function callAI(prompt, systemMessage = '你是一个专业的英语学习助手，帮助用户学习英语词汇、语法和对话。请用中文回复，内容清晰易懂。') {
+            try {
+                const response = await fetch(AI_CONFIG.apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AI_CONFIG.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: AI_CONFIG.model,
+                        messages: [
+                            { role: 'system', content: systemMessage },
+                            { role: 'user', content: prompt }
+                        ],
+                        max_tokens: 2000,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error('AI API Error:', error);
+                throw error;
+            }
+        }
+
         const words = [
             { id: 1, word: 'apple', phonetic: '/ˈæpl/', meaning: '苹果', example: 'I eat an apple every day.', level: 1 },
             { id: 2, word: 'book', phonetic: '/bʊk/', meaning: '书', example: 'This is a good book.', level: 1 },
@@ -548,7 +649,7 @@
         function switchTab(tab) {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             const btns = document.querySelectorAll('.nav-btn');
-            const tabNames = ['home', 'words', 'lessons', 'quiz', 'progress'];
+            const tabNames = ['home', 'words', 'lessons', 'ai-words', 'ai-lessons', 'ai-quiz', 'ai-chat', 'progress'];
             const idx = tabNames.indexOf(tab);
             if (idx >= 0 && idx < btns.length) {
                 btns[idx].classList.add('active');
@@ -887,6 +988,227 @@
             document.getElementById('word-level').value = level;
             switchTab('words');
             loadWords();
+        }
+
+        async function generateAIWords() {
+            const level = currentUser.level || 1;
+            const loadingDiv = document.getElementById('ai-words-loading');
+            const resultDiv = document.getElementById('ai-words-result');
+
+            loadingDiv.style.display = 'block';
+            resultDiv.innerHTML = '';
+
+            try {
+                const prompt = `请为英语水平为Level ${level}的学习者生成5个适合的英语单词。请返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。`;
+
+                const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
+                const aiWords = JSON.parse(response);
+
+                resultDiv.innerHTML = aiWords.map(w => `
+                    <div class="word-card">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="word">${w.word}</div>
+                            <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                        </div>
+                        <div class="phonetic">${w.phonetic}</div>
+                        <div class="meaning">${w.meaning}</div>
+                        <div class="example">${w.example}</div>
+                        <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
+                            💡 记忆技巧：${w.tips}
+                        </div>
+                        <button class="btn btn-success" onclick="addAIWord(${JSON.stringify(w).replace(/'/g, "\\'")})" style="margin-top: 12px;">添加到学习列表</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">生成失败，请重试</p>`;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        function addAIWord(word) {
+            const newId = words.length + 1;
+            words.push({
+                id: newId,
+                word: word.word,
+                phonetic: word.phonetic,
+                meaning: word.meaning,
+                example: word.example,
+                level: currentUser.level || 1
+            });
+            alert(`已添加单词 "${word.word}"`);
+            generateAIWords();
+        }
+
+        async function generateAILesson() {
+            const level = currentUser.level || 1;
+            const topic = document.getElementById('ai-lesson-topic').value || '日常生活';
+            const loadingDiv = document.getElementById('ai-lesson-loading');
+            const resultDiv = document.getElementById('ai-lesson-result');
+
+            loadingDiv.style.display = 'block';
+            resultDiv.innerHTML = '';
+
+            try {
+                const prompt = `请为英语水平为Level ${level}的学习者写一篇关于"${topic}"的课文。要求：1. 字数约150-200词；2. 包含5-8个重点单词；3. 语言简单易懂；4. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，包含word和meaning）。确保返回纯JSON，不要包含其他文字。`;
+
+                const response = await callAI(prompt, '你是一个专业的英语课文生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
+                const lesson = JSON.parse(response);
+
+                resultDiv.innerHTML = `
+                    <div class="card">
+                        <h3>${lesson.title}</h3>
+                        <p style="margin: 12px 0; line-height: 1.8;">${lesson.content}</p>
+                        <h4>📖 重点单词：</h4>
+                        <div style="margin: 8px 0;">
+                            ${lesson.keyWords.map(w => `
+                                <span class="word-tag" onclick="speak('${w.word}')">${w.word} (${w.meaning})</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">生成失败，请重试</p>`;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        async function generateAIQuiz() {
+            const level = currentUser.level || 1;
+            const loadingDiv = document.getElementById('ai-quiz-loading');
+            const container = document.getElementById('ai-quiz-container');
+
+            loadingDiv.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const prompt = `请为英语水平为Level ${level}的学习者生成5道多样化的英语测试题。题型包括：选择题、填空题、翻译题。请返回JSON格式，包含questions数组，每个题目包含：type（题型：choice/fill/translate）、question（题目）、options（选项，选择题用）、answer（正确答案）。确保返回纯JSON，不要包含其他文字。`;
+
+                const response = await callAI(prompt, '你是一个专业的英语测试题生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
+                const quizData = JSON.parse(response);
+
+                window.aiQuizData = quizData.questions;
+                window.aiQuizAnswers = [];
+
+                container.innerHTML = `
+                    <div id="ai-quiz-questions">
+                        ${quizData.questions.map((q, i) => {
+                    if (q.type === 'choice') {
+                        return `
+                                    <div style="margin-bottom: 20px;">
+                                        <h4>问题 ${i + 1} (选择题): ${q.question}</h4>
+                                        ${q.options.map((opt, j) => `
+                                            <div class="quiz-option" onclick="selectAIQuizAnswer(${i}, '${opt}')" id="ai-quiz-${i}-${j}">
+                                                ${String.fromCharCode(65 + j)}. ${opt}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                `;
+                    } else if (q.type === 'fill') {
+                        return `
+                                    <div style="margin-bottom: 20px;">
+                                        <h4>问题 ${i + 1} (填空题): ${q.question}</h4>
+                                        <input type="text" class="input" onchange="selectAIQuizAnswer(${i}, this.value)" placeholder="请输入答案" style="width: 100%;">
+                                    </div>
+                                `;
+                    } else {
+                        return `
+                                    <div style="margin-bottom: 20px;">
+                                        <h4>问题 ${i + 1} (翻译题): ${q.question}</h4>
+                                        <textarea class="input" onchange="selectAIQuizAnswer(${i}, this.value)" placeholder="请输入翻译" style="width: 100%; height: 80px;"></textarea>
+                                    </div>
+                                `;
+                    }
+                }).join('')}
+                    </div>
+                    <button class="btn btn-primary" onclick="submitAIQuiz()" style="margin-top: 20px;">提交答案</button>
+                `;
+            } catch (error) {
+                container.innerHTML = `<p style="color: #ef4444; text-align: center;">生成失败，请重试</p>`;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        function selectAIQuizAnswer(idx, answer) {
+            window.aiQuizAnswers[idx] = answer;
+        }
+
+        async function submitAIQuiz() {
+            if (!window.aiQuizData) return;
+
+            let correct = 0;
+            window.aiQuizData.forEach((q, i) => {
+                const userAnswer = window.aiQuizAnswers[i];
+                if (userAnswer && userAnswer.toLowerCase().includes(q.answer.toLowerCase())) {
+                    correct++;
+                }
+            });
+
+            const total = window.aiQuizData.length;
+            const percentage = Math.round((correct / total) * 100);
+            alert(`AI测试完成！得分：${correct}/${total} (${percentage}%)`);
+
+            if (percentage >= 80 && currentUser.level < 5) {
+                currentUser.level++;
+                saveUser();
+                alert(`🎉 恭喜！您的等级已提升到 Level ${currentUser.level}`);
+            }
+
+            loadOverview();
+        }
+
+        let chatMessages = [];
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const container = document.getElementById('chat-messages');
+            chatMessages.push({ role: 'user', content: message });
+
+            container.innerHTML += `
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+                    <div style="background: #667eea; color: white; padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%;">
+                        ${message}
+                    </div>
+                </div>
+            `;
+
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const prompt = `用户说：${message}\n请用英语回复，保持对话自然。如果用户水平较低，请使用简单的词汇和句子。用户当前等级：Level ${currentUser.level || 1}`;
+                const response = await callAI(prompt, '你是一个英语对话练习伙伴，用英语与用户进行自然对话。根据用户水平调整语言难度。');
+
+                chatMessages.push({ role: 'assistant', content: response });
+
+                container.innerHTML += `
+                    <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                        <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
+                            ${response}
+                        </div>
+                    </div>
+                `;
+
+                container.scrollTop = container.scrollHeight;
+            } catch (error) {
+                container.innerHTML += `
+                    <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                        <div style="background: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 16px 16px 16px 0;">
+                            对话失败，请重试
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function clearChat() {
+            chatMessages = [];
+            document.getElementById('chat-messages').innerHTML = '';
         }
     </script>
 </body>
