@@ -679,6 +679,19 @@
             }
         }
 
+        function speakLesson(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.7;
+                utterance.pitch = 1;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('您的浏览器不支持语音功能');
+            }
+        }
+
         function loadWords() {
             const level = parseInt(document.getElementById('word-level').value);
             const filtered = words.filter(w => w.level === level);
@@ -925,23 +938,50 @@
             `;
         }
 
-        function startLevelTest() {
-            const levelQuestions = generateRandomQuestions(5);
-
-            currentTestAnswers = new Array(levelQuestions.length).fill(null);
+        async function startLevelTest() {
             const container = document.getElementById('test-questions');
-            container.innerHTML = levelQuestions.map((q, i) => `
-                <div style="margin-bottom: 20px;">
-                    <h4>问题 ${i + 1}: ${q.question}</h4>
-                    ${q.options.map((opt, j) => `
-                        <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
-                            ${String.fromCharCode(65 + j)}. ${opt}
-                        </div>
-                    `).join('')}
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px;">🤖</div>
+                    <p style="margin-top: 16px; color: #667eea;">AI正在分析您的英语水平...</p>
                 </div>
-            `).join('');
-            window.levelTestData = levelQuestions;
+            `;
             document.getElementById('test-modal').classList.remove('hidden');
+
+            try {
+                const prompt = `请为英语学习者生成5道水平测试题，涵盖不同难度级别（初级到高级）。题型为选择题，考察词汇和基础语法。请返回JSON格式，包含questions数组，每个题目包含：question（题目）、options（4个选项数组）、answer（正确答案的索引，0-3）。确保返回纯JSON，不要包含其他文字。`;
+
+                const response = await callAI(prompt, '你是一个专业的英语水平测试出题助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
+                const levelQuestions = JSON.parse(response);
+
+                currentTestAnswers = new Array(levelQuestions.questions.length).fill(null);
+                container.innerHTML = levelQuestions.questions.map((q, i) => `
+                    <div style="margin-bottom: 20px;">
+                        <h4>问题 ${i + 1}: ${q.question}</h4>
+                        ${q.options.map((opt, j) => `
+                            <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
+                                ${String.fromCharCode(65 + j)}. ${opt}
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('');
+                window.levelTestData = levelQuestions.questions;
+            } catch (error) {
+                console.error('AI Level Test Error:', error);
+                const levelQuestions = generateRandomQuestions(5);
+                currentTestAnswers = new Array(levelQuestions.length).fill(null);
+                container.innerHTML = levelQuestions.map((q, i) => `
+                    <div style="margin-bottom: 20px;">
+                        <h4>问题 ${i + 1}: ${q.question}</h4>
+                        ${q.options.map((opt, j) => `
+                            <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
+                                ${String.fromCharCode(65 + j)}. ${opt}
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('');
+                window.levelTestData = levelQuestions;
+            }
         }
 
         function selectTestAnswer(questionIdx, optionIdx) {
@@ -990,6 +1030,8 @@
             loadWords();
         }
 
+        let aiWordCache = [];
+
         async function generateAIWords() {
             const level = currentUser.level || 1;
             const loadingDiv = document.getElementById('ai-words-loading');
@@ -1002,9 +1044,9 @@
                 const prompt = `请为英语水平为Level ${level}的学习者生成5个适合的英语单词。请返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。`;
 
                 const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
-                const aiWords = JSON.parse(response);
+                aiWordCache = JSON.parse(response);
 
-                resultDiv.innerHTML = aiWords.map(w => `
+                resultDiv.innerHTML = aiWordCache.map((w, idx) => `
                     <div class="word-card">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div class="word">${w.word}</div>
@@ -1016,7 +1058,7 @@
                         <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
                             💡 记忆技巧：${w.tips}
                         </div>
-                        <button class="btn btn-success" onclick="addAIWord(${JSON.stringify(w).replace(/'/g, "\\'")})" style="margin-top: 12px;">添加到学习列表</button>
+                        <button class="btn btn-success" onclick="addAIWord(${idx})" style="margin-top: 12px;">添加到学习列表</button>
                     </div>
                 `).join('');
             } catch (error) {
@@ -1026,17 +1068,19 @@
             }
         }
 
-        function addAIWord(word) {
+        function addAIWord(index) {
+            const w = aiWordCache[index];
+            if (!w) return;
             const newId = words.length + 1;
             words.push({
                 id: newId,
-                word: word.word,
-                phonetic: word.phonetic,
-                meaning: word.meaning,
-                example: word.example,
+                word: w.word,
+                phonetic: w.phonetic,
+                meaning: w.meaning,
+                example: w.example,
                 level: currentUser.level || 1
             });
-            alert(`已添加单词 "${word.word}"`);
+            alert(`已添加单词 "${w.word}"`);
             generateAIWords();
         }
 
@@ -1055,14 +1099,27 @@
                 const response = await callAI(prompt, '你是一个专业的英语课文生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
                 const lesson = JSON.parse(response);
 
+                let contentWithAudio = lesson.content;
+                lesson.keyWords.forEach(w => {
+                    const regex = new RegExp(`\\b(${w.word})\\b`, 'gi');
+                    contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}')" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
+                });
+
                 resultDiv.innerHTML = `
                     <div class="card">
-                        <h3>${lesson.title}</h3>
-                        <p style="margin: 12px 0; line-height: 1.8;">${lesson.content}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3>${lesson.title}</h3>
+                            <button class="btn btn-success" onclick="speakLesson('${lesson.content.replace(/'/g, "\\'")}')" style="padding: 8px 16px; font-size: 14px;">
+                                🔊 朗读课文
+                            </button>
+                        </div>
+                        <p style="margin: 12px 0; line-height: 1.8;">${contentWithAudio}</p>
                         <h4>📖 重点单词：</h4>
                         <div style="margin: 8px 0;">
                             ${lesson.keyWords.map(w => `
-                                <span class="word-tag" onclick="speak('${w.word}')">${w.word} (${w.meaning})</span>
+                                <span class="word-tag" onclick="speak('${w.word}')" style="display: inline-block; padding: 6px 12px; background: #eef2ff; color: #4338ca; border-radius: 20px; margin: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#ddd6fe'" onmouseout="this.style.background='#eef2ff'">
+                                    🔊 ${w.word} (${w.meaning})
+                                </span>
                             `).join('')}
                         </div>
                     </div>
