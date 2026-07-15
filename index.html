@@ -716,16 +716,46 @@
             }
         }
 
-        function speakLesson(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'en-US';
-                utterance.rate = 0.7;
-                utterance.pitch = 1;
-                window.speechSynthesis.speak(utterance);
-            } else {
+        let currentLessonText = '';
+        let isSpeaking = false;
+
+        function toggleLessonSpeech(text) {
+            if (!('speechSynthesis' in window)) {
                 alert('您的浏览器不支持语音功能');
+                return;
+            }
+
+            const btn = document.querySelector('[onclick^="toggleLessonSpeech"]');
+            if (!btn) return;
+
+            if (isSpeaking) {
+                window.speechSynthesis.pause();
+                isSpeaking = false;
+                btn.innerHTML = '▶️ 继续';
+            } else {
+                if (window.speechSynthesis.paused) {
+                    window.speechSynthesis.resume();
+                    isSpeaking = true;
+                    btn.innerHTML = '⏸️ 暂停';
+                } else {
+                    window.speechSynthesis.cancel();
+                    currentLessonText = text;
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.7;
+                    utterance.pitch = 1;
+                    utterance.onend = () => {
+                        isSpeaking = false;
+                        if (btn) btn.innerHTML = '🔊 朗读课文';
+                    };
+                    utterance.onerror = () => {
+                        isSpeaking = false;
+                        if (btn) btn.innerHTML = '🔊 朗读课文';
+                    };
+                    window.speechSynthesis.speak(utterance);
+                    isSpeaking = true;
+                    btn.innerHTML = '⏸️ 暂停';
+                }
             }
         }
 
@@ -1342,6 +1372,35 @@
             updateAIWordsCount();
         }
 
+        function addLessonWord(index) {
+            const keyWords = window.currentLessonKeyWords || [];
+            const w = keyWords[index];
+            if (!w) return;
+
+            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            if (aiWords.some(aw => aw.word === w.word)) {
+                showToast('这个单词已经在学习列表中了');
+                return;
+            }
+
+            const newWord = {
+                id: Date.now(),
+                word: w.word,
+                phonetic: w.phonetic,
+                meaning: w.chineseMeaning,
+                example: w.example,
+                level: currentUser.level || 1,
+                addedByAI: true,
+                addedDate: new Date().toISOString()
+            };
+
+            aiWords.push(newWord);
+            localStorage.setItem('english-learning-ai-words', JSON.stringify(aiWords));
+
+            showToast(`✅ 已添加单词 "${w.word}" 到生词本`);
+            updateAIWordsCount();
+        }
+
         function showToast(message) {
             const toast = document.createElement('div');
             toast.style.cssText = `
@@ -1382,9 +1441,10 @@
 
             loadingDiv.style.display = 'block';
             resultDiv.innerHTML = '';
+            isSpeaking = false;
 
             try {
-                const prompt = `请为英语水平为"${levelDesc}"的学习者写一篇关于"${topic}"的课文。要求：1. 根据难度描述控制课文长度和难度；2. 包含5-8个重点单词；3. 语言简单易懂；4. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，包含word和meaning）。确保返回纯JSON，不要包含其他文字。`;
+                const prompt = `请为英语水平为"${levelDesc}"的学习者写一篇关于"${topic}"的课文。要求：1. 根据难度描述控制课文长度和难度；2. 包含5-8个重点单词；3. 语言简单易懂；4. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）。确保返回纯JSON，不要包含其他文字。`;
 
                 const response = await callAI(prompt, '你是一个专业的英语课文生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
                 const lesson = JSON.parse(response);
@@ -1399,21 +1459,30 @@
                     <div class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                             <h3>${lesson.title}</h3>
-                            <button class="btn btn-success" onclick="speakLesson('${lesson.content.replace(/'/g, "\\'")}')" style="padding: 8px 16px; font-size: 14px;">
+                            <button class="btn btn-success" onclick="toggleLessonSpeech('${lesson.content.replace(/'/g, "\\'")}')" style="padding: 8px 16px; font-size: 14px;">
                                 🔊 朗读课文
                             </button>
                         </div>
                         <p style="margin: 12px 0; line-height: 1.8;">${contentWithAudio}</p>
                         <h4>📖 重点单词：</h4>
                         <div style="margin: 8px 0;">
-                            ${lesson.keyWords.map(w => `
-                                <span class="word-tag" onclick="speak('${w.word}')" style="display: inline-block; padding: 6px 12px; background: #eef2ff; color: #4338ca; border-radius: 20px; margin: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#ddd6fe'" onmouseout="this.style.background='#eef2ff'">
-                                    🔊 ${w.word} (${w.meaning})
-                                </span>
+                            ${lesson.keyWords.map((w, idx) => `
+                                <div class="word-card" style="margin-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="word">${w.word}</div>
+                                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                                        <span style="font-size: 12px; padding: 2px 6px; background: #e0e7ff; color: #4338ca; border-radius: 4px;">${w.partOfSpeech}</span>
+                                    </div>
+                                    <div class="phonetic">${w.phonetic}</div>
+                                    <div class="meaning">${w.chineseMeaning}</div>
+                                    <div class="example">${w.example}</div>
+                                    <button class="btn btn-success" onclick="addLessonWord(${idx})" style="margin-top: 12px;">➕ 添加到生词本</button>
+                                </div>
                             `).join('')}
                         </div>
                     </div>
                 `;
+                window.currentLessonKeyWords = lesson.keyWords;
             } catch (error) {
                 resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">生成失败，请重试</p>`;
             } finally {
