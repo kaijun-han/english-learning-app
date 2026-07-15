@@ -127,6 +127,7 @@
             display: flex;
             gap: 12px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .nav-btn {
@@ -136,6 +137,7 @@
             background: rgba(255, 255, 255, 0.2);
             color: white;
             cursor: pointer;
+            font-size: 14px;
         }
 
         .nav-btn.active {
@@ -271,7 +273,7 @@
             <div id="tab-words" class="hidden">
                 <div class="card">
                     <h2>馃摎 鍗曡瘝瀛︿範</h2>
-                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
                         <select id="word-level" class="input" style="width: auto;">
                             <option value="1">Level 1 - 鍏ラ棬</option>
                             <option value="2">Level 2 - 鍩虹</option>
@@ -288,7 +290,7 @@
             <div id="tab-lessons" class="hidden">
                 <div class="card">
                     <h2>馃摉 璇炬枃瀛︿範</h2>
-                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
                         <select id="lesson-level" class="input" style="width: auto;">
                             <option value="1">Level 1 - 鍏ラ棬</option>
                             <option value="2">Level 2 - 鍩虹</option>
@@ -349,57 +351,158 @@
     </div>
 
     <script>
-        let token = localStorage.getItem('token');
-        let currentUserId = localStorage.getItem('userId');
+        const words = [
+            { id: 1, word: 'apple', phonetic: '/藞忙pl/', meaning: '鑻规灉', example: 'I eat an apple every day.', level: 1 },
+            { id: 2, word: 'book', phonetic: '/b蕣k/', meaning: '涔?, example: 'This is a good book.', level: 1 },
+            { id: 3, word: 'cat', phonetic: '/k忙t/', meaning: '鐚?, example: 'The cat is sleeping.', level: 1 },
+            { id: 4, word: 'dog', phonetic: '/d蓲伞/', meaning: '鐙?, example: 'I have a pet dog.', level: 1 },
+            { id: 5, word: 'elephant', phonetic: '/藞el瑟f蓹nt/', meaning: '澶ц薄', example: 'Elephants are very big.', level: 1 },
+            { id: 6, word: 'friend', phonetic: '/frend/', meaning: '鏈嬪弸', example: 'She is my best friend.', level: 2 },
+            { id: 7, word: 'garden', phonetic: '/藞伞蓱藧dn/', meaning: '鑺卞洯', example: 'We have a beautiful garden.', level: 2 },
+            { id: 8, word: 'happy', phonetic: '/藞h忙pi/', meaning: '蹇箰鐨?, example: 'I am very happy today.', level: 2 },
+            { id: 9, word: 'important', phonetic: '/瑟m藞p蓴藧tnt/', meaning: '閲嶈鐨?, example: 'This is very important.', level: 3 },
+            { id: 10, word: 'journey', phonetic: '/藞d蕭蓽藧ni/', meaning: '鏃呯▼', example: 'It was a long journey.', level: 3 },
+            { id: 11, word: 'knowledge', phonetic: '/藞n蓲l瑟d蕭/', meaning: '鐭ヨ瘑', example: 'Knowledge is power.', level: 4 },
+            { id: 12, word: 'language', phonetic: '/藞l忙艐伞w瑟d蕭/', meaning: '璇█', example: 'English is a global language.', level: 4 },
+            { id: 13, word: 'mysterious', phonetic: '/m瑟藞st瑟蓹ri蓹s/', meaning: '绁炵鐨?, example: 'It was a mysterious event.', level: 5 },
+            { id: 14, word: 'necessary', phonetic: '/藞nes蓹s蓹ri/', meaning: '蹇呰鐨?, example: 'It is necessary to study.', level: 4 },
+            { id: 15, word: 'opportunity', phonetic: '/藢蓲p蓹藞tju藧n蓹ti/', meaning: '鏈轰細', example: 'This is a great opportunity.', level: 5 },
+            { id: 16, word: 'beautiful', phonetic: '/藞bju藧t瑟fl/', meaning: '缇庝附鐨?, example: 'What a beautiful day!', level: 2 },
+            { id: 17, word: 'computer', phonetic: '/k蓹m藞pju藧t蓹r/', meaning: '鐢佃剳', example: 'I use my computer every day.', level: 2 },
+            { id: 18, word: 'different', phonetic: '/藞d瑟fr蓹nt/', meaning: '涓嶅悓鐨?, example: 'We have different opinions.', level: 3 },
+            { id: 19, word: 'experience', phonetic: '/瑟k藞sp瑟蓹ri蓹ns/', meaning: '缁忛獙', example: 'She has rich experience.', level: 4 },
+            { id: 20, word: 'fantastic', phonetic: '/f忙n藞t忙st瑟k/', meaning: '鏋佸ソ鐨?, example: 'That was a fantastic movie.', level: 3 }
+        ];
+
+        const lessons = [
+            {
+                id: 1,
+                title: 'My Daily Life',
+                content: 'I wake up early every morning. After breakfast, I go to school. I study English every day because it is very important. In the afternoon, I play sports with my friends.',
+                level: 1,
+                words: [
+                    { word: 'morning', meaning: '鏃╂櫒' },
+                    { word: 'breakfast', meaning: '鏃╅' },
+                    { word: 'school', meaning: '瀛︽牎' },
+                    { word: 'afternoon', meaning: '涓嬪崍' },
+                    { word: 'friends', meaning: '鏈嬪弸' }
+                ]
+            },
+            {
+                id: 2,
+                title: 'The Beautiful Garden',
+                content: 'There is a beautiful garden in our neighborhood. It has many colorful flowers and tall trees. I like to walk in the garden every evening. It makes me feel happy and relaxed.',
+                level: 2,
+                words: [
+                    { word: 'beautiful', meaning: '缇庝附鐨? },
+                    { word: 'garden', meaning: '鑺卞洯' },
+                    { word: 'colorful', meaning: '褰╄壊鐨? },
+                    { word: 'flowers', meaning: '鑺? },
+                    { word: 'relaxed', meaning: '鏀炬澗鐨? }
+                ]
+            },
+            {
+                id: 3,
+                title: 'Learning English',
+                content: 'Learning English is very important in today\'s world. It opens many doors to new opportunities. With English, you can communicate with people from all over the world. Practice makes perfect!',
+                level: 3,
+                words: [
+                    { word: 'important', meaning: '閲嶈鐨? },
+                    { word: 'opportunities', meaning: '鏈轰細' },
+                    { word: 'communicate', meaning: '浜ゆ祦' },
+                    { word: 'practice', meaning: '缁冧範' },
+                    { word: 'perfect', meaning: '瀹岀編鐨? }
+                ]
+            },
+            {
+                id: 4,
+                title: 'Knowledge is Power',
+                content: 'Knowledge is power. The more you learn, the more you know. Reading books is a great way to gain knowledge. It helps you understand the world better and make better decisions.',
+                level: 4,
+                words: [
+                    { word: 'knowledge', meaning: '鐭ヨ瘑' },
+                    { word: 'power', meaning: '鍔涢噺' },
+                    { word: 'reading', meaning: '闃呰' },
+                    { word: 'understand', meaning: '鐞嗚В' },
+                    { word: 'decisions', meaning: '鍐冲畾' }
+                ]
+            },
+            {
+                id: 5,
+                title: 'The Journey of Life',
+                content: 'Life is a long journey full of mysterious experiences. Every day brings new challenges and opportunities. It is necessary to embrace change and keep learning. The journey itself is the reward.',
+                level: 5,
+                words: [
+                    { word: 'journey', meaning: '鏃呯▼' },
+                    { word: 'mysterious', meaning: '绁炵鐨? },
+                    { word: 'challenges', meaning: '鎸戞垬' },
+                    { word: 'necessary', meaning: '蹇呰鐨? },
+                    { word: 'embrace', meaning: '鎷ユ姳' }
+                ]
+            }
+        ];
+
+        let currentUser = null;
         let currentLearningWord = null;
         let currentRating = 0;
         let currentTestAnswers = [];
 
-        if (token) {
-            showMainPage();
+        function init() {
+            const savedUser = localStorage.getItem('english-learning-user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainPage();
+            }
         }
 
-        async function login() {
+        init();
+
+        function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-            if (data.token) {
-                token = data.token;
-                currentUserId = data.user.id;
-                localStorage.setItem('token', token);
-                localStorage.setItem('userId', currentUserId);
+            const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('english-learning-user', JSON.stringify(user));
                 showMainPage();
             } else {
-                alert(data.message || '鐧诲綍澶辫触');
+                alert('鐢ㄦ埛鍚嶆垨瀵嗙爜閿欒');
             }
         }
 
-        async function register() {
+        function register() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const res = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-            if (data.user) {
-                alert('娉ㄥ唽鎴愬姛锛岃鐧诲綍');
-            } else {
-                alert(data.message || '娉ㄥ唽澶辫触');
+            if (!username || !password) {
+                alert('璇疯緭鍏ョ敤鎴峰悕鍜屽瘑鐮?);
+                return;
             }
+            const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
+            if (users.find(u => u.username === username)) {
+                alert('鐢ㄦ埛鍚嶅凡瀛樺湪');
+                return;
+            }
+            const newUser = {
+                id: Date.now(),
+                username,
+                password,
+                level: 1,
+                streak: 0,
+                lastStudyDate: null,
+                totalWordsLearned: 0,
+                progress: { learning: 0, mastered: 0 },
+                wordProgress: {},
+                createdAt: new Date().toISOString()
+            };
+            users.push(newUser);
+            localStorage.setItem('english-learning-users', JSON.stringify(users));
+            alert('娉ㄥ唽鎴愬姛锛岃鐧诲綍');
         }
 
         function logout() {
-            token = null;
-            currentUserId = null;
-            localStorage.removeItem('token');
-            localStorage.removeItem('userId');
+            currentUser = null;
+            localStorage.removeItem('english-learning-user');
             document.getElementById('login-page').classList.remove('hidden');
             document.getElementById('main-page').classList.add('hidden');
         }
@@ -418,17 +521,12 @@
             if (tab === 'progress') loadProgress();
         }
 
-        async function loadOverview() {
-            const res = await fetch('/api/users/progress', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const data = await res.json();
-            if (data.user) {
-                document.getElementById('stat-total').textContent = data.user.totalWordsLearned || 0;
-                document.getElementById('stat-mastered').textContent = data.user.progress?.mastered || 0;
-                document.getElementById('stat-streak').textContent = data.user.streak || 0;
-                document.getElementById('stat-level').textContent = data.user.level || 1;
-            }
+        function loadOverview() {
+            if (!currentUser) return;
+            document.getElementById('stat-total').textContent = currentUser.totalWordsLearned || 0;
+            document.getElementById('stat-mastered').textContent = currentUser.progress?.mastered || 0;
+            document.getElementById('stat-streak').textContent = currentUser.streak || 0;
+            document.getElementById('stat-level').textContent = currentUser.level || 1;
         }
 
         function speak(text) {
@@ -443,12 +541,11 @@
             }
         }
 
-        async function loadWords() {
-            const level = document.getElementById('word-level').value;
-            const res = await fetch('/api/words?level=' + level);
-            const words = await res.json();
+        function loadWords() {
+            const level = parseInt(document.getElementById('word-level').value);
+            const filtered = words.filter(w => w.level <= level);
             const list = document.getElementById('words-list');
-            list.innerHTML = words.map(w => `
+            list.innerHTML = filtered.map(w => `
                 <div class="word-card">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="word">${w.word}</div>
@@ -462,12 +559,11 @@
             `).join('');
         }
 
-        async function loadLessons() {
-            const level = document.getElementById('lesson-level').value;
-            const res = await fetch('/api/lessons?level=' + level);
-            const lessons = await res.json();
+        function loadLessons() {
+            const level = parseInt(document.getElementById('lesson-level').value);
+            const filtered = lessons.filter(l => l.level <= level);
             const list = document.getElementById('lessons-list');
-            list.innerHTML = lessons.map(l => `
+            list.innerHTML = filtered.map(l => `
                 <div class="word-card">
                     <h3>${l.title}</h3>
                     <p style="margin: 12px 0; line-height: 1.6;">${l.content}</p>
@@ -479,9 +575,9 @@
             `).join('');
         }
 
-        async function startLearning(wordId) {
-            const res = await fetch('/api/words/' + wordId);
-            currentLearningWord = await res.json();
+        function startLearning(wordId) {
+            currentLearningWord = words.find(w => w.id === wordId);
+            if (!currentLearningWord) return;
             document.getElementById('learning-word-title').innerHTML = `${currentLearningWord.word} <button class="speak-btn" onclick="speak('${currentLearningWord.word}')" title="鍙戦煶">馃攰</button>`;
             document.getElementById('learning-word-content').innerHTML = `
                 <div class="phonetic">${currentLearningWord.phonetic}</div>
@@ -500,22 +596,79 @@
             });
         }
 
-        async function submitRating() {
+        function submitRating() {
             if (!currentRating) {
                 alert('璇烽€夋嫨璇勫垎');
                 return;
             }
-            await fetch('/api/words/learn', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ wordId: currentLearningWord.id, quality: currentRating })
-            });
+            const wordId = currentLearningWord.id;
+            if (!currentUser.wordProgress[wordId]) {
+                currentUser.wordProgress[wordId] = {
+                    repetitions: 0,
+                    interval: 1,
+                    easeFactor: 2.5,
+                    nextReviewDate: new Date().toISOString(),
+                    status: 'learning'
+                };
+                currentUser.totalWordsLearned++;
+                currentUser.progress.learning++;
+            }
+
+            const progress = currentUser.wordProgress[wordId];
+            if (currentRating >= 4) {
+                if (progress.repetitions === 0) {
+                    progress.interval = 1;
+                } else if (progress.repetitions === 1) {
+                    progress.interval = 6;
+                } else {
+                    progress.interval = Math.round(progress.interval * progress.easeFactor);
+                }
+                progress.easeFactor = Math.max(1.3, progress.easeFactor + (0.1 - (5 - currentRating) * (0.08 + (5 - currentRating) * 0.02)));
+                progress.repetitions++;
+                if (progress.repetitions >= 3 && currentRating >= 4) {
+                    progress.status = 'mastered';
+                    currentUser.progress.mastered++;
+                    currentUser.progress.learning--;
+                }
+            } else {
+                progress.repetitions = 0;
+                progress.interval = 1;
+                progress.status = 'learning';
+            }
+
+            const nextDate = new Date();
+            nextDate.setDate(nextDate.getDate() + progress.interval);
+            progress.nextReviewDate = nextDate.toISOString();
+
+            updateStreak();
+            saveUser();
             closeLearningModal();
             loadOverview();
             alert('瀛︿範璁板綍宸蹭繚瀛橈紒');
+        }
+
+        function updateStreak() {
+            const today = new Date().toDateString();
+            if (currentUser.lastStudyDate !== today) {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                if (currentUser.lastStudyDate === yesterday.toDateString()) {
+                    currentUser.streak++;
+                } else if (currentUser.lastStudyDate !== today) {
+                    currentUser.streak = 1;
+                }
+                currentUser.lastStudyDate = today;
+            }
+        }
+
+        function saveUser() {
+            localStorage.setItem('english-learning-user', JSON.stringify(currentUser));
+            const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
+            const index = users.findIndex(u => u.id === currentUser.id);
+            if (index !== -1) {
+                users[index] = currentUser;
+                localStorage.setItem('english-learning-users', JSON.stringify(users));
+            }
         }
 
         function closeLearningModal() {
@@ -523,20 +676,27 @@
             currentLearningWord = null;
         }
 
-        async function generateQuiz() {
-            const res = await fetch('/api/ai/generate-quiz', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ type: 'vocabulary', count: 5 })
+        function generateQuiz() {
+            const level = currentUser.level || 1;
+            const availableWords = words.filter(w => w.level <= level);
+            const shuffled = [...availableWords].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, 5);
+
+            const questions = selected.map(word => {
+                const otherWords = words.filter(w => w.id !== word.id && w.level <= level);
+                const wrongOptions = [...otherWords].sort(() => Math.random() - 0.5).slice(0, 3);
+                const options = [...wrongOptions, { meaning: word.meaning }].sort(() => Math.random() - 0.5);
+                return {
+                    question: `What does "${word.word}" mean?`,
+                    options: options.map(o => o.meaning),
+                    correctAnswer: word.meaning
+                };
             });
-            const data = await res.json();
+
             const container = document.getElementById('quiz-container');
             container.innerHTML = `
                 <div id="quiz-questions">
-                    ${data.questions.map((q, i) => `
+                    ${questions.map((q, i) => `
                         <div style="margin-bottom: 20px;">
                             <h4>闂 ${i + 1}: ${q.question}</h4>
                             ${q.options.map((opt, j) => `
@@ -547,8 +707,9 @@
                         </div>
                     `).join('')}
                 </div>
-                <button class="btn btn-primary" onclick="submitQuiz('${data.quizId}')">鎻愪氦绛旀</button>
+                <button class="btn btn-primary" onclick="submitQuiz()">鎻愪氦绛旀</button>
             `;
+            window.quizData = questions;
         }
 
         let quizAnswers = [];
@@ -559,55 +720,63 @@
             document.getElementById(`quiz-${questionIdx}-${optionIdx}`).classList.add('selected');
         }
 
-        async function submitQuiz(quizId) {
-            const res = await fetch('/api/ai/evaluate-quiz', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ quizId, answers: quizAnswers })
+        function submitQuiz() {
+            if (!window.quizData) return;
+            let correct = 0;
+            window.quizData.forEach((q, i) => {
+                const selectedOption = q.options[quizAnswers[i]];
+                if (selectedOption === q.correctAnswer) {
+                    correct++;
+                    document.getElementById(`quiz-${i}-${quizAnswers[i]}`).classList.add('correct');
+                } else {
+                    document.getElementById(`quiz-${i}-${quizAnswers[i]}`).classList.add('wrong');
+                }
             });
-            const data = await res.json();
-            alert(`娴嬭瘯瀹屾垚锛佸緱鍒嗭細${data.score}/${data.totalQuestions} (${data.percentage}%)`);
+            const total = window.quizData.length;
+            const percentage = Math.round((correct / total) * 100);
+            alert(`娴嬭瘯瀹屾垚锛佸緱鍒嗭細${correct}/${total} (${percentage}%)`);
+            if (percentage >= 80 && currentUser.level < 5) {
+                currentUser.level++;
+                saveUser();
+                alert(`馃帀 鎭枩锛佹偍鐨勭瓑绾у凡鎻愬崌鍒?Level ${currentUser.level}`);
+            }
             loadOverview();
         }
 
-        async function loadProgress() {
-            const res = await fetch('/api/users/progress', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const data = await res.json();
+        function loadProgress() {
+            if (!currentUser) return;
             const details = document.getElementById('progress-details');
-            if (data.user) {
-                const total = data.user.progress?.learning + data.user.progress?.mastered || 0;
-                const mastered = data.user.progress?.mastered || 0;
-                details.innerHTML = `
-                    <div style="margin-bottom: 20px;">
-                        <h3>鍗曡瘝鎺屾彙杩涘害</h3>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${total ? (mastered / total * 100) : 0}%"></div>
-                        </div>
-                        <p style="margin-top: 8px;">宸叉帉鎻?${mastered} / ${total} 涓崟璇?/p>
+            const total = currentUser.progress?.learning + currentUser.progress?.mastered || 0;
+            const mastered = currentUser.progress?.mastered || 0;
+            details.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h3>鍗曡瘝鎺屾彙杩涘害</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${total ? (mastered / total * 100) : 0}%"></div>
                     </div>
-                    <div>
-                        <h3>瀛︿範缁熻</h3>
-                        <p>杩炵画瀛︿範锛?{data.user.streak || 0} 澶?/p>
-                        <p>褰撳墠绛夌骇锛歀evel ${data.user.level || 1}</p>
-                        <p>绱瀛︿範鍗曡瘝锛?{data.user.totalWordsLearned || 0} 涓?/p>
-                    </div>
-                `;
-            }
+                    <p style="margin-top: 8px;">宸叉帉鎻?${mastered} / ${total} 涓崟璇?/p>
+                </div>
+                <div>
+                    <h3>瀛︿範缁熻</h3>
+                    <p>杩炵画瀛︿範锛?{currentUser.streak || 0} 澶?/p>
+                    <p>褰撳墠绛夌骇锛歀evel ${currentUser.level || 1}</p>
+                    <p>绱瀛︿範鍗曡瘝锛?{currentUser.totalWordsLearned || 0} 涓?/p>
+                </div>
+            `;
         }
 
-        async function startLevelTest() {
-            const res = await fetch('/api/users/level-test', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const data = await res.json();
-            currentTestAnswers = new Array(data.questions.length).fill(null);
+        function startLevelTest() {
+            const levelQuestions = [
+                { question: 'What is the meaning of "apple"?', options: ['鑻规灉', '棣欒晧', '姗欏瓙', '姊?], answer: 0 },
+                { question: 'What is the meaning of "book"?', options: ['涔?, '绗?, '妗屽瓙', '妞呭瓙'], answer: 0 },
+                { question: 'What is the meaning of "happy"?', options: ['鎮蹭激鐨?, '蹇箰鐨?, '鎰ゆ€掔殑', '鐤叉儷鐨?], answer: 1 },
+                { question: 'What is the meaning of "important"?', options: ['閲嶈鐨?, '绠€鍗曠殑', '鍥伴毦鐨?, '鏃犺亰鐨?], answer: 0 },
+                { question: 'What is the meaning of "knowledge"?', options: ['鍔涢噺', '鐭ヨ瘑', '閲戦挶', '鏃堕棿'], answer: 1 }
+            ];
+
+            currentTestAnswers = new Array(levelQuestions.length).fill(null);
             const container = document.getElementById('test-questions');
-            container.innerHTML = data.questions.map((q, i) => `
+            container.innerHTML = levelQuestions.map((q, i) => `
                 <div style="margin-bottom: 20px;">
                     <h4>闂 ${i + 1}: ${q.question}</h4>
                     ${q.options.map((opt, j) => `
@@ -617,6 +786,7 @@
                     `).join('')}
                 </div>
             `).join('');
+            window.levelTestData = levelQuestions;
             document.getElementById('test-modal').classList.remove('hidden');
         }
 
@@ -626,17 +796,24 @@
             document.getElementById(`test-${questionIdx}-${optionIdx}`).classList.add('selected');
         }
 
-        async function submitTest() {
-            const res = await fetch('/api/users/level-test', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ answers: currentTestAnswers })
+        function submitTest() {
+            if (!window.levelTestData) return;
+            let correct = 0;
+            window.levelTestData.forEach((q, i) => {
+                if (currentTestAnswers[i] === q.answer) {
+                    correct++;
+                }
             });
-            const data = await res.json();
-            alert(`娴嬭瘯瀹屾垚锛乗n寰楀垎锛?{data.score}/${data.total}\n璇勫畾绛夌骇锛歀evel ${data.newLevel}`);
+            const total = window.levelTestData.length;
+            let newLevel = 1;
+            if (correct <= 1) newLevel = 1;
+            else if (correct <= 2) newLevel = 2;
+            else if (correct <= 3) newLevel = 3;
+            else if (correct <= 4) newLevel = 4;
+            else newLevel = 5;
+            currentUser.level = newLevel;
+            saveUser();
+            alert(`娴嬭瘯瀹屾垚锛乗n寰楀垎锛?{correct}/${total}\n璇勫畾绛夌骇锛歀evel ${newLevel}`);
             closeTestModal();
             loadOverview();
         }
@@ -646,13 +823,15 @@
             currentTestAnswers = [];
         }
 
-        async function startDailyLearning() {
-            const res = await fetch('/api/words/daily', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const data = await res.json();
-            alert(`浠婃棩瀛︿範浠诲姟锛歕n- 澶嶄範鍗曡瘝锛?{data.reviewCount || 0} 涓猏n- 鏂板鍗曡瘝锛?{data.newCount || 0} 涓猔);
-            document.getElementById('word-level').value = localStorage.getItem('userLevel') || 1;
+        function startDailyLearning() {
+            const level = currentUser.level || 1;
+            const reviewCount = Object.values(currentUser.wordProgress || {}).filter(p => {
+                if (!p.nextReviewDate) return false;
+                return new Date(p.nextReviewDate) <= new Date();
+            }).length;
+            const newCount = 5;
+            alert(`浠婃棩瀛︿範浠诲姟锛歕n- 澶嶄範鍗曡瘝锛?{reviewCount} 涓猏n- 鏂板鍗曡瘝锛?{newCount} 涓猔);
+            document.getElementById('word-level').value = level;
             switchTab('words');
             loadWords();
         }
