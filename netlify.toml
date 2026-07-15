@@ -1,0 +1,9 @@
+[build]
+  command = "npm install && cp -r frontend/web public"
+  publish = "public"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/app/:splat"
+  status = 200
