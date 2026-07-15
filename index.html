@@ -258,6 +258,7 @@
                 <button class="nav-btn" onclick="switchTab('ai-lessons')">✨ AI课文</button>
                 <button class="nav-btn" onclick="switchTab('ai-quiz')">✨ AI测试</button>
                 <button class="nav-btn" onclick="switchTab('ai-chat')">✨ AI对话</button>
+                <button class="nav-btn" onclick="switchTab('vocab')">📖 生词本</button>
                 <button class="nav-btn" onclick="switchTab('progress')">学习进度</button>
                 <button class="nav-btn" onclick="logout()" style="margin-left: auto;">退出</button>
             </div>
@@ -333,6 +334,73 @@
                     <h2>🧠 AI测试</h2>
                     <button class="btn btn-primary" onclick="generateQuiz()">生成测试题</button>
                     <div id="quiz-container"></div>
+                </div>
+            </div>
+
+            <div id="tab-vocab" class="hidden">
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2>📖 生词本</h2>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-success" onclick="startVocabReview()">🎯 开始复习</button>
+                            <button class="btn btn-primary" onclick="startVocabQuiz()">📝 AI测验</button>
+                        </div>
+                    </div>
+                    <div id="vocab-stats" style="display: flex; gap: 16px; margin-bottom: 16px;">
+                        <div style="padding: 12px; background: #eff6ff; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">0</div>
+                            <div style="font-size: 12px; color: #6b7280;">待复习</div>
+                        </div>
+                        <div style="padding: 12px; background: #f0fdf4; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #10b981;">0</div>
+                            <div style="font-size: 12px; color: #6b7280;">已掌握</div>
+                        </div>
+                        <div style="padding: 12px; background: #fffbeb; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">0</div>
+                            <div style="font-size: 12px; color: #6b7280;">学习中</div>
+                        </div>
+                        <div style="padding: 12px; background: #fef2f2; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #ef4444;">0</div>
+                            <div style="font-size: 12px; color: #6b7280;">新词</div>
+                        </div>
+                    </div>
+                    <div id="vocab-list"></div>
+                </div>
+            </div>
+
+            <div id="vocab-review-modal" class="hidden"
+                style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+                <div class="card" style="max-width: 500px; width: 90%;">
+                    <button class="btn btn-danger" onclick="closeVocabReview()" style="float: right;">✕</button>
+                    <h2 style="text-align: center;">🎯 生词复习</h2>
+                    <div id="vocab-review-progress" style="text-align: center; margin-bottom: 16px;">进度：0/0</div>
+                    <div id="vocab-flashcard" style="perspective: 1000px; height: 300px; margin-bottom: 20px;">
+                        <div id="flashcard-inner"
+                            style="position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d;"
+                            onclick="flipFlashcard()">
+                            <div id="flashcard-front"
+                                style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: #667eea; color: white; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+                                <div id="flashcard-word" style="font-size: 36px; font-weight: bold;"></div>
+                                <div id="flashcard-phonetic" style="font-size: 18px; margin-top: 8px;"></div>
+                                <p style="font-size: 14px; margin-top: 20px; opacity: 0.8;">点击卡片查看释义</p>
+                            </div>
+                            <div id="flashcard-back"
+                                style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border: 2px solid #667eea; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transform: rotateY(180deg);">
+                                <div id="flashcard-meaning" style="font-size: 24px; font-weight: bold; color: #667eea;">
+                                </div>
+                                <div id="flashcard-example"
+                                    style="font-size: 16px; margin-top: 12px; color: #4b5563; text-align: center;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                        <button class="btn btn-danger" onclick="rateVocabWord(0)" style="flex: 1;">😫 不会</button>
+                        <button class="btn btn-warning" onclick="rateVocabWord(2)" style="flex: 1;">😕 困难</button>
+                        <button class="btn btn-info" onclick="rateVocabWord(3)" style="flex: 1;">😊 良好</button>
+                        <button class="btn btn-success" onclick="rateVocabWord(5)" style="flex: 1;">😄 简单</button>
+                    </div>
                 </div>
             </div>
 
@@ -686,7 +754,7 @@
         function switchTab(tab) {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             const btns = document.querySelectorAll('.nav-btn');
-            const tabNames = ['home', 'words', 'lessons', 'ai-words', 'ai-lessons', 'ai-quiz', 'ai-chat', 'progress'];
+            const tabNames = ['home', 'words', 'lessons', 'ai-words', 'ai-lessons', 'ai-quiz', 'ai-chat', 'vocab', 'progress'];
             const idx = tabNames.indexOf(tab);
             if (idx >= 0 && idx < btns.length) {
                 btns[idx].classList.add('active');
@@ -694,6 +762,7 @@
             document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
             document.getElementById('tab-' + tab).classList.remove('hidden');
             if (tab === 'progress') loadProgress();
+            if (tab === 'vocab') loadVocab();
         }
 
         function loadOverview() {
@@ -1362,13 +1431,19 @@
                 example: w.example,
                 level: currentUser.level || 1,
                 addedByAI: true,
-                addedDate: new Date().toISOString()
+                addedDate: new Date().toISOString(),
+                repetitions: 0,
+                easeFactor: 2.5,
+                interval: 0,
+                nextReviewDate: new Date().toISOString(),
+                lastReviewDate: null,
+                status: 'new'
             };
 
             aiWords.push(newWord);
             localStorage.setItem('english-learning-ai-words', JSON.stringify(aiWords));
 
-            showToast(`✅ 已添加单词 "${w.word}" 到学习列表`);
+            showToast(`✅ 已添加单词 "${w.word}" 到生词本`);
             updateAIWordsCount();
         }
 
@@ -1391,7 +1466,13 @@
                 example: w.example,
                 level: currentUser.level || 1,
                 addedByAI: true,
-                addedDate: new Date().toISOString()
+                addedDate: new Date().toISOString(),
+                repetitions: 0,
+                easeFactor: 2.5,
+                interval: 0,
+                nextReviewDate: new Date().toISOString(),
+                lastReviewDate: null,
+                status: 'new'
             };
 
             aiWords.push(newWord);
@@ -1399,6 +1480,261 @@
 
             showToast(`✅ 已添加单词 "${w.word}" 到生词本`);
             updateAIWordsCount();
+        }
+
+        let vocabReviewWords = [];
+        let vocabReviewIndex = 0;
+
+        function loadVocab() {
+            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const now = new Date();
+            const dueForReview = aiWords.filter(w => new Date(w.nextReviewDate) <= now);
+            const mastered = aiWords.filter(w => w.status === 'mastered');
+            const learning = aiWords.filter(w => w.status === 'learning');
+            const newWords = aiWords.filter(w => w.status === 'new');
+
+            const statsDiv = document.getElementById('vocab-stats');
+            statsDiv.innerHTML = `
+                <div style="padding: 12px; background: #eff6ff; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${dueForReview.length}</div>
+                    <div style="font-size: 12px; color: #6b7280;">待复习</div>
+                </div>
+                <div style="padding: 12px; background: #f0fdf4; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #10b981;">${mastered.length}</div>
+                    <div style="font-size: 12px; color: #6b7280;">已掌握</div>
+                </div>
+                <div style="padding: 12px; background: #fffbeb; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${learning.length}</div>
+                    <div style="font-size: 12px; color: #6b7280;">学习中</div>
+                </div>
+                <div style="padding: 12px; background: #fef2f2; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #ef4444;">${newWords.length}</div>
+                    <div style="font-size: 12px; color: #6b7280;">新词</div>
+                </div>
+            `;
+
+            const listDiv = document.getElementById('vocab-list');
+            if (aiWords.length === 0) {
+                listDiv.innerHTML = '<p style="color: #9ca3af; text-align: center;">生词本为空，请先添加单词</p>';
+                return;
+            }
+
+            listDiv.innerHTML = aiWords.map(w => `
+                <div class="word-card" style="margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="word">${w.word}</div>
+                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                        <span style="font-size: 12px; padding: 2px 6px; background: ${getStatusColor(w.status)}; color: white; border-radius: 4px;">${getStatusLabel(w.status)}</span>
+                    </div>
+                    <div class="phonetic">${w.phonetic}</div>
+                    <div class="meaning">${w.meaning}</div>
+                    <div class="example">${w.example}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; color: #6b7280;">
+                        <span>重复次数：${w.repetitions}次</span>
+                        <span>下次复习：${formatDate(w.nextReviewDate)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusColor(status) {
+            const colors = { new: '#ef4444', learning: '#f59e0b', mastered: '#10b981' };
+            return colors[status] || '#6b7280';
+        }
+
+        function getStatusLabel(status) {
+            const labels = { new: '新词', learning: '学习中', mastered: '已掌握' };
+            return labels[status] || status;
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = date.getTime() - now.getTime();
+            const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            if (days < 0) return '今天';
+            if (days === 0) return '今天';
+            if (days === 1) return '明天';
+            return `${days}天后`;
+        }
+
+        function startVocabReview() {
+            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const now = new Date();
+            vocabReviewWords = aiWords.filter(w => new Date(w.nextReviewDate) <= now);
+
+            if (vocabReviewWords.length === 0) {
+                showToast('🎉 没有需要复习的单词！');
+                return;
+            }
+
+            vocabReviewIndex = 0;
+            document.getElementById('vocab-review-modal').classList.remove('hidden');
+            showVocabFlashcard();
+        }
+
+        function showVocabFlashcard() {
+            if (vocabReviewIndex >= vocabReviewWords.length) {
+                closeVocabReview();
+                showToast('🎉 复习完成！');
+                loadVocab();
+                return;
+            }
+
+            const w = vocabReviewWords[vocabReviewIndex];
+            document.getElementById('vocab-review-progress').textContent = `进度：${vocabReviewIndex + 1}/${vocabReviewWords.length}`;
+            document.getElementById('flashcard-word').textContent = w.word;
+            document.getElementById('flashcard-phonetic').textContent = w.phonetic;
+            document.getElementById('flashcard-meaning').textContent = w.meaning;
+            document.getElementById('flashcard-example').textContent = w.example;
+
+            const cardInner = document.getElementById('flashcard-inner');
+            cardInner.style.transform = 'rotateY(0deg)';
+        }
+
+        function flipFlashcard() {
+            const cardInner = document.getElementById('flashcard-inner');
+            const currentTransform = cardInner.style.transform;
+            cardInner.style.transform = currentTransform === 'rotateY(180deg)' ? 'rotateY(0deg)' : 'rotateY(180deg)';
+        }
+
+        function rateVocabWord(rating) {
+            const w = vocabReviewWords[vocabReviewIndex];
+            updateVocabSM2(w, rating);
+            vocabReviewIndex++;
+            showVocabFlashcard();
+        }
+
+        function updateVocabSM2(word, rating) {
+            if (rating >= 3) {
+                if (word.repetitions === 0) {
+                    word.interval = 1;
+                } else if (word.repetitions === 1) {
+                    word.interval = 6;
+                } else {
+                    word.interval = Math.round(word.interval * word.easeFactor);
+                }
+                word.easeFactor = Math.max(1.3, word.easeFactor + (0.1 - (5 - rating) * (0.08 + (5 - rating) * 0.02)));
+                word.repetitions++;
+                if (word.repetitions >= 3 && rating >= 4) {
+                    word.status = 'mastered';
+                } else if (word.status === 'new') {
+                    word.status = 'learning';
+                }
+            } else {
+                word.repetitions = 0;
+                word.interval = 1;
+                word.status = 'learning';
+            }
+
+            const nextDate = new Date();
+            nextDate.setDate(nextDate.getDate() + word.interval);
+            word.nextReviewDate = nextDate.toISOString();
+            word.lastReviewDate = new Date().toISOString();
+
+            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const idx = aiWords.findIndex(w => w.id === word.id);
+            if (idx >= 0) {
+                aiWords[idx] = word;
+                localStorage.setItem('english-learning-ai-words', JSON.stringify(aiWords));
+            }
+        }
+
+        function closeVocabReview() {
+            document.getElementById('vocab-review-modal').classList.add('hidden');
+        }
+
+        async function startVocabQuiz() {
+            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const now = new Date();
+            const dueWords = aiWords.filter(w => new Date(w.nextReviewDate) <= now);
+
+            if (dueWords.length === 0) {
+                showToast('🎉 没有需要测验的单词！');
+                return;
+            }
+
+            const wordsForQuiz = dueWords.slice(0, 5);
+            const wordsStr = wordsForQuiz.map(w => `${w.word}(${w.meaning})`).join(', ');
+
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'vocab-quiz-loading';
+            loadingDiv.style.cssText = 'text-align: center; padding: 40px;';
+            loadingDiv.innerHTML = '<div style="font-size: 48px;">🤖</div><p style="margin-top: 16px;">AI正在生成测验题...</p>';
+
+            const container = document.getElementById('tab-vocab').querySelector('.card');
+            container.innerHTML = '';
+            container.appendChild(loadingDiv);
+
+            try {
+                const prompt = `请根据以下单词生成5道测验题：${wordsStr}。题目类型包括选择题、填空题。请返回JSON格式，包含questions数组，每个题目包含：question（题目）、options（4个选项数组）、answer（正确答案的索引，0-3）、word（考察的单词）。确保返回纯JSON，不要包含其他文字。`;
+
+                const response = await callAI(prompt, '你是一个专业的英语测验出题助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
+                const quiz = JSON.parse(response);
+
+                let score = 0;
+                const results = [];
+
+                container.innerHTML = `
+                    <h2>📝 生词本测验</h2>
+                    <div id="vocab-quiz-questions">
+                        ${quiz.questions.map((q, i) => `
+                            <div style="margin-bottom: 20px;">
+                                <h4>问题 ${i + 1}: ${q.question}</h4>
+                                ${q.options.map((opt, j) => `
+                                    <div class="quiz-option" onclick="selectVocabQuizAnswer(${i}, ${j})" id="vocab-quiz-${i}-${j}">
+                                        ${String.fromCharCode(65 + j)}. ${opt}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="btn btn-primary" onclick="submitVocabQuiz()" style="width: 100%;">提交答案</button>
+                `;
+
+                window.vocabQuizData = quiz.questions;
+                window.vocabQuizAnswers = new Array(quiz.questions.length).fill(null);
+                window.vocabQuizWords = wordsForQuiz;
+            } catch (error) {
+                container.innerHTML = '<p style="color: #ef4444; text-align: center;">生成失败，请重试</p>';
+            }
+        }
+
+        function selectVocabQuizAnswer(questionIdx, optionIdx) {
+            window.vocabQuizAnswers[questionIdx] = optionIdx;
+            document.querySelectorAll(`[id^="vocab-quiz-${questionIdx}-"]`).forEach(el => el.classList.remove('selected'));
+            document.getElementById(`vocab-quiz-${questionIdx}-${optionIdx}`).classList.add('selected');
+        }
+
+        function submitVocabQuiz() {
+            const quizData = window.vocabQuizData;
+            const answers = window.vocabQuizAnswers;
+            const words = window.vocabQuizWords;
+
+            let score = 0;
+            quizData.forEach((q, i) => {
+                if (answers[i] === q.answer) score++;
+            });
+
+            quizData.forEach((q, i) => {
+                const word = words.find(w => w.word === q.word);
+                if (word) {
+                    const rating = answers[i] === q.answer ? 5 : 0;
+                    updateVocabSM2(word, rating);
+                }
+            });
+
+            const container = document.getElementById('tab-vocab').querySelector('.card');
+            container.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 64px;">${score === quizData.length ? '🎉' : '💪'}</div>
+                    <h2>测验完成！</h2>
+                    <p style="font-size: 24px; font-weight: bold; color: #667eea;">得分：${score}/${quizData.length}</p>
+                    <button class="btn btn-primary" onclick="loadVocab()" style="margin-top: 16px;">返回生词本</button>
+                </div>
+            `;
+
+            showToast(`测验完成！得分：${score}/${quizData.length}`);
         }
 
         function showToast(message) {
