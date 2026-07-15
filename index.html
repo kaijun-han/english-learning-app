@@ -515,7 +515,12 @@
 
         function switchTab(tab) {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+            const btns = document.querySelectorAll('.nav-btn');
+            const tabNames = ['home', 'words', 'lessons', 'quiz', 'progress'];
+            const idx = tabNames.indexOf(tab);
+            if (idx >= 0 && idx < btns.length) {
+                btns[idx].classList.add('active');
+            }
             document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
             document.getElementById('tab-' + tab).classList.remove('hidden');
             if (tab === 'progress') loadProgress();
