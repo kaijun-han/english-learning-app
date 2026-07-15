@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI鑻辫瀛︿範鏅鸿兘浣?/title>
+    <title>AI英语学习智能体</title>
     <style>
         * {
             margin: 0;
@@ -220,51 +220,51 @@
     <div class="container">
         <div id="login-page">
             <div class="card">
-                <h1 style="text-align: center; color: #667eea; margin-bottom: 24px;">AI鑻辫瀛︿範鏅鸿兘浣?/h1>
-                <input type="text" id="username" class="input" placeholder="鐢ㄦ埛鍚? />
-                <input type="password" id="password" class="input" placeholder="瀵嗙爜" />
-                <button class="btn btn-primary" onclick="login()">鐧诲綍</button>
-                <button class="btn btn-outline" onclick="register()" style="width: 100%;">娉ㄥ唽鏂扮敤鎴?/button>
+                <h1 style="text-align: center; color: #667eea; margin-bottom: 24px;">AI英语学习智能体</h1>
+                <input type="text" id="username" class="input" placeholder="用户名" />
+                <input type="password" id="password" class="input" placeholder="密码" />
+                <button class="btn btn-primary" onclick="login()">登录</button>
+                <button class="btn btn-outline" onclick="register()" style="width: 100%;">注册新用户</button>
             </div>
         </div>
 
         <div id="main-page" class="hidden">
             <div class="nav">
-                <button class="nav-btn active" onclick="switchTab('home')">棣栭〉</button>
-                <button class="nav-btn" onclick="switchTab('words')">鍗曡瘝瀛︿範</button>
-                <button class="nav-btn" onclick="switchTab('lessons')">璇炬枃瀛︿範</button>
-                <button class="nav-btn" onclick="switchTab('quiz')">AI娴嬭瘯</button>
-                <button class="nav-btn" onclick="switchTab('progress')">瀛︿範杩涘害</button>
-                <button class="nav-btn" onclick="logout()" style="margin-left: auto;">閫€鍑?/button>
+                <button class="nav-btn active" onclick="switchTab('home')">首页</button>
+                <button class="nav-btn" onclick="switchTab('words')">单词学习</button>
+                <button class="nav-btn" onclick="switchTab('lessons')">课文学习</button>
+                <button class="nav-btn" onclick="switchTab('quiz')">AI测试</button>
+                <button class="nav-btn" onclick="switchTab('progress')">学习进度</button>
+                <button class="nav-btn" onclick="logout()" style="margin-left: auto;">退出</button>
             </div>
 
             <div id="tab-home">
                 <div class="card">
-                    <h2>馃憢 娆㈣繋鍥炴潵锛?/h2>
-                    <p id="greeting" style="margin: 12px 0; color: #6b7280;">浠婂ぉ涔熻鍔姏瀛︿範鍝︼紒</p>
-                    <button class="btn btn-primary" onclick="startLevelTest()">馃摑 鑻辫姘村钩娴嬭瘯</button>
-                    <button class="btn btn-success" onclick="startDailyLearning()" style="margin-left: 12px;">馃摎
-                        寮€濮嬩粖鏃ュ涔?/button>
+                    <h2>👋 欢迎回来！</h2>
+                    <p id="greeting" style="margin: 12px 0; color: #6b7280;">今天也要努力学习哦！</p>
+                    <button class="btn btn-primary" onclick="startLevelTest()">📝 英语水平测试</button>
+                    <button class="btn btn-success" onclick="startDailyLearning()" style="margin-left: 12px;">📚
+                        开始今日学习</button>
                 </div>
                 <div class="card">
-                    <h3>馃搳 瀛︿範姒傝</h3>
+                    <h3>📊 学习概览</h3>
                     <div id="overview-stats"
                         style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 16px;">
                         <div style="text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px;">
                             <div id="stat-total" style="font-size: 24px; font-weight: bold; color: #667eea;">0</div>
-                            <div style="color: #6b7280; font-size: 14px;">宸插鍗曡瘝</div>
+                            <div style="color: #6b7280; font-size: 14px;">已学单词</div>
                         </div>
                         <div style="text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px;">
                             <div id="stat-mastered" style="font-size: 24px; font-weight: bold; color: #10b981;">0</div>
-                            <div style="color: #6b7280; font-size: 14px;">宸叉帉鎻?/div>
+                            <div style="color: #6b7280; font-size: 14px;">已掌握</div>
                         </div>
                         <div style="text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px;">
                             <div id="stat-streak" style="font-size: 24px; font-weight: bold; color: #f59e0b;">0</div>
-                            <div style="color: #6b7280; font-size: 14px;">杩炵画澶╂暟</div>
+                            <div style="color: #6b7280; font-size: 14px;">连续天数</div>
                         </div>
                         <div style="text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px;">
                             <div id="stat-level" style="font-size: 24px; font-weight: bold; color: #8b5cf6;">1</div>
-                            <div style="color: #6b7280; font-size: 14px;">褰撳墠绛夌骇</div>
+                            <div style="color: #6b7280; font-size: 14px;">当前等级</div>
                         </div>
                     </div>
                 </div>
@@ -272,16 +272,16 @@
 
             <div id="tab-words" class="hidden">
                 <div class="card">
-                    <h2>馃摎 鍗曡瘝瀛︿範</h2>
+                    <h2>📚 单词学习</h2>
                     <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
                         <select id="word-level" class="input" style="width: auto;">
-                            <option value="1">Level 1 - 鍏ラ棬</option>
-                            <option value="2">Level 2 - 鍩虹</option>
-                            <option value="3">Level 3 - 杩涢樁</option>
-                            <option value="4">Level 4 - 楂樼骇</option>
-                            <option value="5">Level 5 - 绮鹃€?/option>
+                            <option value="1">Level 1 - 入门</option>
+                            <option value="2">Level 2 - 基础</option>
+                            <option value="3">Level 3 - 进阶</option>
+                            <option value="4">Level 4 - 高级</option>
+                            <option value="5">Level 5 - 精通</option>
                         </select>
-                        <button class="btn btn-primary" onclick="loadWords()">鍔犺浇鍗曡瘝</button>
+                        <button class="btn btn-primary" onclick="loadWords()">加载单词</button>
                     </div>
                     <div id="words-list"></div>
                 </div>
@@ -289,16 +289,16 @@
 
             <div id="tab-lessons" class="hidden">
                 <div class="card">
-                    <h2>馃摉 璇炬枃瀛︿範</h2>
+                    <h2>📖 课文学习</h2>
                     <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
                         <select id="lesson-level" class="input" style="width: auto;">
-                            <option value="1">Level 1 - 鍏ラ棬</option>
-                            <option value="2">Level 2 - 鍩虹</option>
-                            <option value="3">Level 3 - 杩涢樁</option>
-                            <option value="4">Level 4 - 楂樼骇</option>
-                            <option value="5">Level 5 - 绮鹃€?/option>
+                            <option value="1">Level 1 - 入门</option>
+                            <option value="2">Level 2 - 基础</option>
+                            <option value="3">Level 3 - 进阶</option>
+                            <option value="4">Level 4 - 高级</option>
+                            <option value="5">Level 5 - 精通</option>
                         </select>
-                        <button class="btn btn-primary" onclick="loadLessons()">鍔犺浇璇炬枃</button>
+                        <button class="btn btn-primary" onclick="loadLessons()">加载课文</button>
                     </div>
                     <div id="lessons-list"></div>
                 </div>
@@ -306,15 +306,15 @@
 
             <div id="tab-quiz" class="hidden">
                 <div class="card">
-                    <h2>馃 AI娴嬭瘯</h2>
-                    <button class="btn btn-primary" onclick="generateQuiz()">鐢熸垚娴嬭瘯棰?/button>
+                    <h2>🧠 AI测试</h2>
+                    <button class="btn btn-primary" onclick="generateQuiz()">生成测试题</button>
                     <div id="quiz-container"></div>
                 </div>
             </div>
 
             <div id="tab-progress" class="hidden">
                 <div class="card">
-                    <h2>馃搳 瀛︿範杩涘害</h2>
+                    <h2>📊 学习进度</h2>
                     <div id="progress-details"></div>
                 </div>
             </div>
@@ -323,55 +323,55 @@
         <div id="learning-modal" class="hidden"
             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
             <div class="card" style="max-width: 500px; width: 90%;">
-                <button class="btn btn-danger" onclick="closeLearningModal()" style="float: right;">鉁?/button>
-                <h2 id="learning-word-title">鍗曡瘝瀛︿範</h2>
+                <button class="btn btn-danger" onclick="closeLearningModal()" style="float: right;">✕</button>
+                <h2 id="learning-word-title">单词学习</h2>
                 <div id="learning-word-content" style="margin: 20px 0;"></div>
                 <div class="rating" id="rating-stars">
-                    <span class="star" onclick="selectRating(1)">鈽?/span>
-                    <span class="star" onclick="selectRating(2)">鈽?/span>
-                    <span class="star" onclick="selectRating(3)">鈽?/span>
-                    <span class="star" onclick="selectRating(4)">鈽?/span>
-                    <span class="star" onclick="selectRating(5)">鈽?/span>
+                    <span class="star" onclick="selectRating(1)">★</span>
+                    <span class="star" onclick="selectRating(2)">★</span>
+                    <span class="star" onclick="selectRating(3)">★</span>
+                    <span class="star" onclick="selectRating(4)">★</span>
+                    <span class="star" onclick="selectRating(5)">★</span>
                 </div>
                 <button class="btn btn-primary" onclick="submitRating()"
-                    style="margin-top: 16px; width: 100%;">鎻愪氦璇勫垎</button>
+                    style="margin-top: 16px; width: 100%;">提交评分</button>
             </div>
         </div>
 
         <div id="test-modal" class="hidden"
             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
             <div class="card" style="max-width: 600px; width: 90%;">
-                <button class="btn btn-danger" onclick="closeTestModal()" style="float: right;">鉁?/button>
-                <h2>馃摑 鑻辫姘村钩娴嬭瘯</h2>
+                <button class="btn btn-danger" onclick="closeTestModal()" style="float: right;">✕</button>
+                <h2>📝 英语水平测试</h2>
                 <div id="test-questions"></div>
                 <button class="btn btn-primary" onclick="submitTest()"
-                    style="margin-top: 16px; width: 100%;">鎻愪氦娴嬭瘯</button>
+                    style="margin-top: 16px; width: 100%;">提交测试</button>
             </div>
         </div>
     </div>
 
     <script>
         const words = [
-            { id: 1, word: 'apple', phonetic: '/藞忙pl/', meaning: '鑻规灉', example: 'I eat an apple every day.', level: 1 },
-            { id: 2, word: 'book', phonetic: '/b蕣k/', meaning: '涔?, example: 'This is a good book.', level: 1 },
-            { id: 3, word: 'cat', phonetic: '/k忙t/', meaning: '鐚?, example: 'The cat is sleeping.', level: 1 },
-            { id: 4, word: 'dog', phonetic: '/d蓲伞/', meaning: '鐙?, example: 'I have a pet dog.', level: 1 },
-            { id: 5, word: 'elephant', phonetic: '/藞el瑟f蓹nt/', meaning: '澶ц薄', example: 'Elephants are very big.', level: 1 },
-            { id: 6, word: 'friend', phonetic: '/frend/', meaning: '鏈嬪弸', example: 'She is my best friend.', level: 2 },
-            { id: 7, word: 'garden', phonetic: '/藞伞蓱藧dn/', meaning: '鑺卞洯', example: 'We have a beautiful garden.', level: 2 },
-            { id: 8, word: 'happy', phonetic: '/藞h忙pi/', meaning: '蹇箰鐨?, example: 'I am very happy today.', level: 2 },
-            { id: 9, word: 'important', phonetic: '/瑟m藞p蓴藧tnt/', meaning: '閲嶈鐨?, example: 'This is very important.', level: 3 },
-            { id: 10, word: 'journey', phonetic: '/藞d蕭蓽藧ni/', meaning: '鏃呯▼', example: 'It was a long journey.', level: 3 },
-            { id: 11, word: 'knowledge', phonetic: '/藞n蓲l瑟d蕭/', meaning: '鐭ヨ瘑', example: 'Knowledge is power.', level: 4 },
-            { id: 12, word: 'language', phonetic: '/藞l忙艐伞w瑟d蕭/', meaning: '璇█', example: 'English is a global language.', level: 4 },
-            { id: 13, word: 'mysterious', phonetic: '/m瑟藞st瑟蓹ri蓹s/', meaning: '绁炵鐨?, example: 'It was a mysterious event.', level: 5 },
-            { id: 14, word: 'necessary', phonetic: '/藞nes蓹s蓹ri/', meaning: '蹇呰鐨?, example: 'It is necessary to study.', level: 4 },
-            { id: 15, word: 'opportunity', phonetic: '/藢蓲p蓹藞tju藧n蓹ti/', meaning: '鏈轰細', example: 'This is a great opportunity.', level: 5 },
-            { id: 16, word: 'beautiful', phonetic: '/藞bju藧t瑟fl/', meaning: '缇庝附鐨?, example: 'What a beautiful day!', level: 2 },
-            { id: 17, word: 'computer', phonetic: '/k蓹m藞pju藧t蓹r/', meaning: '鐢佃剳', example: 'I use my computer every day.', level: 2 },
-            { id: 18, word: 'different', phonetic: '/藞d瑟fr蓹nt/', meaning: '涓嶅悓鐨?, example: 'We have different opinions.', level: 3 },
-            { id: 19, word: 'experience', phonetic: '/瑟k藞sp瑟蓹ri蓹ns/', meaning: '缁忛獙', example: 'She has rich experience.', level: 4 },
-            { id: 20, word: 'fantastic', phonetic: '/f忙n藞t忙st瑟k/', meaning: '鏋佸ソ鐨?, example: 'That was a fantastic movie.', level: 3 }
+            { id: 1, word: 'apple', phonetic: '/ˈæpl/', meaning: '苹果', example: 'I eat an apple every day.', level: 1 },
+            { id: 2, word: 'book', phonetic: '/bʊk/', meaning: '书', example: 'This is a good book.', level: 1 },
+            { id: 3, word: 'cat', phonetic: '/kæt/', meaning: '猫', example: 'The cat is sleeping.', level: 1 },
+            { id: 4, word: 'dog', phonetic: '/dɒɡ/', meaning: '狗', example: 'I have a pet dog.', level: 1 },
+            { id: 5, word: 'elephant', phonetic: '/ˈelɪfənt/', meaning: '大象', example: 'Elephants are very big.', level: 1 },
+            { id: 6, word: 'friend', phonetic: '/frend/', meaning: '朋友', example: 'She is my best friend.', level: 2 },
+            { id: 7, word: 'garden', phonetic: '/ˈɡɑːdn/', meaning: '花园', example: 'We have a beautiful garden.', level: 2 },
+            { id: 8, word: 'happy', phonetic: '/ˈhæpi/', meaning: '快乐的', example: 'I am very happy today.', level: 2 },
+            { id: 9, word: 'important', phonetic: '/ɪmˈpɔːtnt/', meaning: '重要的', example: 'This is very important.', level: 3 },
+            { id: 10, word: 'journey', phonetic: '/ˈdʒɜːni/', meaning: '旅程', example: 'It was a long journey.', level: 3 },
+            { id: 11, word: 'knowledge', phonetic: '/ˈnɒlɪdʒ/', meaning: '知识', example: 'Knowledge is power.', level: 4 },
+            { id: 12, word: 'language', phonetic: '/ˈlæŋɡwɪdʒ/', meaning: '语言', example: 'English is a global language.', level: 4 },
+            { id: 13, word: 'mysterious', phonetic: '/mɪˈstɪəriəs/', meaning: '神秘的', example: 'It was a mysterious event.', level: 5 },
+            { id: 14, word: 'necessary', phonetic: '/ˈnesəsəri/', meaning: '必要的', example: 'It is necessary to study.', level: 4 },
+            { id: 15, word: 'opportunity', phonetic: '/ˌɒpəˈtjuːnəti/', meaning: '机会', example: 'This is a great opportunity.', level: 5 },
+            { id: 16, word: 'beautiful', phonetic: '/ˈbjuːtɪfl/', meaning: '美丽的', example: 'What a beautiful day!', level: 2 },
+            { id: 17, word: 'computer', phonetic: '/kəmˈpjuːtər/', meaning: '电脑', example: 'I use my computer every day.', level: 2 },
+            { id: 18, word: 'different', phonetic: '/ˈdɪfrənt/', meaning: '不同的', example: 'We have different opinions.', level: 3 },
+            { id: 19, word: 'experience', phonetic: '/ɪkˈspɪəriəns/', meaning: '经验', example: 'She has rich experience.', level: 4 },
+            { id: 20, word: 'fantastic', phonetic: '/fænˈtæstɪk/', meaning: '极好的', example: 'That was a fantastic movie.', level: 3 }
         ];
 
         const lessons = [
@@ -381,11 +381,11 @@
                 content: 'I wake up early every morning. After breakfast, I go to school. I study English every day because it is very important. In the afternoon, I play sports with my friends.',
                 level: 1,
                 words: [
-                    { word: 'morning', meaning: '鏃╂櫒' },
-                    { word: 'breakfast', meaning: '鏃╅' },
-                    { word: 'school', meaning: '瀛︽牎' },
-                    { word: 'afternoon', meaning: '涓嬪崍' },
-                    { word: 'friends', meaning: '鏈嬪弸' }
+                    { word: 'morning', meaning: '早晨' },
+                    { word: 'breakfast', meaning: '早餐' },
+                    { word: 'school', meaning: '学校' },
+                    { word: 'afternoon', meaning: '下午' },
+                    { word: 'friends', meaning: '朋友' }
                 ]
             },
             {
@@ -394,11 +394,11 @@
                 content: 'There is a beautiful garden in our neighborhood. It has many colorful flowers and tall trees. I like to walk in the garden every evening. It makes me feel happy and relaxed.',
                 level: 2,
                 words: [
-                    { word: 'beautiful', meaning: '缇庝附鐨? },
-                    { word: 'garden', meaning: '鑺卞洯' },
-                    { word: 'colorful', meaning: '褰╄壊鐨? },
-                    { word: 'flowers', meaning: '鑺? },
-                    { word: 'relaxed', meaning: '鏀炬澗鐨? }
+                    { word: 'beautiful', meaning: '美丽的' },
+                    { word: 'garden', meaning: '花园' },
+                    { word: 'colorful', meaning: '彩色的' },
+                    { word: 'flowers', meaning: '花' },
+                    { word: 'relaxed', meaning: '放松的' }
                 ]
             },
             {
@@ -407,11 +407,11 @@
                 content: 'Learning English is very important in today\'s world. It opens many doors to new opportunities. With English, you can communicate with people from all over the world. Practice makes perfect!',
                 level: 3,
                 words: [
-                    { word: 'important', meaning: '閲嶈鐨? },
-                    { word: 'opportunities', meaning: '鏈轰細' },
-                    { word: 'communicate', meaning: '浜ゆ祦' },
-                    { word: 'practice', meaning: '缁冧範' },
-                    { word: 'perfect', meaning: '瀹岀編鐨? }
+                    { word: 'important', meaning: '重要的' },
+                    { word: 'opportunities', meaning: '机会' },
+                    { word: 'communicate', meaning: '交流' },
+                    { word: 'practice', meaning: '练习' },
+                    { word: 'perfect', meaning: '完美的' }
                 ]
             },
             {
@@ -420,11 +420,11 @@
                 content: 'Knowledge is power. The more you learn, the more you know. Reading books is a great way to gain knowledge. It helps you understand the world better and make better decisions.',
                 level: 4,
                 words: [
-                    { word: 'knowledge', meaning: '鐭ヨ瘑' },
-                    { word: 'power', meaning: '鍔涢噺' },
-                    { word: 'reading', meaning: '闃呰' },
-                    { word: 'understand', meaning: '鐞嗚В' },
-                    { word: 'decisions', meaning: '鍐冲畾' }
+                    { word: 'knowledge', meaning: '知识' },
+                    { word: 'power', meaning: '力量' },
+                    { word: 'reading', meaning: '阅读' },
+                    { word: 'understand', meaning: '理解' },
+                    { word: 'decisions', meaning: '决定' }
                 ]
             },
             {
@@ -433,11 +433,11 @@
                 content: 'Life is a long journey full of mysterious experiences. Every day brings new challenges and opportunities. It is necessary to embrace change and keep learning. The journey itself is the reward.',
                 level: 5,
                 words: [
-                    { word: 'journey', meaning: '鏃呯▼' },
-                    { word: 'mysterious', meaning: '绁炵鐨? },
-                    { word: 'challenges', meaning: '鎸戞垬' },
-                    { word: 'necessary', meaning: '蹇呰鐨? },
-                    { word: 'embrace', meaning: '鎷ユ姳' }
+                    { word: 'journey', meaning: '旅程' },
+                    { word: 'mysterious', meaning: '神秘的' },
+                    { word: 'challenges', meaning: '挑战' },
+                    { word: 'necessary', meaning: '必要的' },
+                    { word: 'embrace', meaning: '拥抱' }
                 ]
             }
         ];
@@ -467,7 +467,7 @@
                 localStorage.setItem('english-learning-user', JSON.stringify(user));
                 showMainPage();
             } else {
-                alert('鐢ㄦ埛鍚嶆垨瀵嗙爜閿欒');
+                alert('用户名或密码错误');
             }
         }
 
@@ -475,12 +475,12 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             if (!username || !password) {
-                alert('璇疯緭鍏ョ敤鎴峰悕鍜屽瘑鐮?);
+                alert('请输入用户名和密码');
                 return;
             }
             const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
             if (users.find(u => u.username === username)) {
-                alert('鐢ㄦ埛鍚嶅凡瀛樺湪');
+                alert('用户名已存在');
                 return;
             }
             const newUser = {
@@ -497,7 +497,7 @@
             };
             users.push(newUser);
             localStorage.setItem('english-learning-users', JSON.stringify(users));
-            alert('娉ㄥ唽鎴愬姛锛岃鐧诲綍');
+            alert('注册成功，请登录');
         }
 
         function logout() {
@@ -542,7 +542,7 @@
                 utterance.rate = 0.8;
                 window.speechSynthesis.speak(utterance);
             } else {
-                alert('鎮ㄧ殑娴忚鍣ㄤ笉鏀寔璇煶鍔熻兘');
+                alert('您的浏览器不支持语音功能');
             }
         }
 
@@ -554,12 +554,12 @@
                 <div class="word-card">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="word">${w.word}</div>
-                        <button class="speak-btn" onclick="speak('${w.word}')" title="鍙戦煶">馃攰</button>
+                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
                     </div>
                     <div class="phonetic">${w.phonetic}</div>
                     <div class="meaning">${w.meaning}</div>
                     <div class="example">${w.example}</div>
-                    <button class="btn btn-success" onclick="startLearning(${w.id})" style="margin-top: 12px;">寮€濮嬪涔?/button>
+                    <button class="btn btn-success" onclick="startLearning(${w.id})" style="margin-top: 12px;">开始学习</button>
                 </div>
             `).join('');
         }
@@ -572,9 +572,9 @@
                 <div class="word-card">
                     <h3>${l.title}</h3>
                     <p style="margin: 12px 0; line-height: 1.6;">${l.content}</p>
-                    <h4>鍏抽敭璇嶆眹锛?/h4>
+                    <h4>关键词汇：</h4>
                     <div style="margin: 8px 0;">
-                        ${l.words?.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; margin-right: 8px; cursor: pointer;" onclick="speak('${w.word}')" title="鐐瑰嚮鍙戦煶">${w.word} - ${w.meaning} 馃攰</span>`).join('') || ''}
+                        ${l.words?.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; margin-right: 8px; cursor: pointer;" onclick="speak('${w.word}')" title="点击发音">${w.word} - ${w.meaning} 🔊</span>`).join('') || ''}
                     </div>
                 </div>
             `).join('');
@@ -583,7 +583,7 @@
         function startLearning(wordId) {
             currentLearningWord = words.find(w => w.id === wordId);
             if (!currentLearningWord) return;
-            document.getElementById('learning-word-title').innerHTML = `${currentLearningWord.word} <button class="speak-btn" onclick="speak('${currentLearningWord.word}')" title="鍙戦煶">馃攰</button>`;
+            document.getElementById('learning-word-title').innerHTML = `${currentLearningWord.word} <button class="speak-btn" onclick="speak('${currentLearningWord.word}')" title="发音">🔊</button>`;
             document.getElementById('learning-word-content').innerHTML = `
                 <div class="phonetic">${currentLearningWord.phonetic}</div>
                 <div class="meaning">${currentLearningWord.meaning}</div>
@@ -603,7 +603,7 @@
 
         function submitRating() {
             if (!currentRating) {
-                alert('璇烽€夋嫨璇勫垎');
+                alert('请选择评分');
                 return;
             }
             const wordId = currentLearningWord.id;
@@ -649,7 +649,7 @@
             saveUser();
             closeLearningModal();
             loadOverview();
-            alert('瀛︿範璁板綍宸蹭繚瀛橈紒');
+            alert('学习记录已保存！');
         }
 
         function updateStreak() {
@@ -703,7 +703,7 @@
                 <div id="quiz-questions">
                     ${questions.map((q, i) => `
                         <div style="margin-bottom: 20px;">
-                            <h4>闂 ${i + 1}: ${q.question}</h4>
+                            <h4>问题 ${i + 1}: ${q.question}</h4>
                             ${q.options.map((opt, j) => `
                                 <div class="quiz-option" onclick="selectQuizAnswer(${i}, ${j})" id="quiz-${i}-${j}">
                                     ${String.fromCharCode(65 + j)}. ${opt}
@@ -712,7 +712,7 @@
                         </div>
                     `).join('')}
                 </div>
-                <button class="btn btn-primary" onclick="submitQuiz()">鎻愪氦绛旀</button>
+                <button class="btn btn-primary" onclick="submitQuiz()">提交答案</button>
             `;
             window.quizData = questions;
         }
@@ -739,11 +739,11 @@
             });
             const total = window.quizData.length;
             const percentage = Math.round((correct / total) * 100);
-            alert(`娴嬭瘯瀹屾垚锛佸緱鍒嗭細${correct}/${total} (${percentage}%)`);
+            alert(`测试完成！得分：${correct}/${total} (${percentage}%)`);
             if (percentage >= 80 && currentUser.level < 5) {
                 currentUser.level++;
                 saveUser();
-                alert(`馃帀 鎭枩锛佹偍鐨勭瓑绾у凡鎻愬崌鍒?Level ${currentUser.level}`);
+                alert(`🎉 恭喜！您的等级已提升到 Level ${currentUser.level}`);
             }
             loadOverview();
         }
@@ -755,35 +755,35 @@
             const mastered = currentUser.progress?.mastered || 0;
             details.innerHTML = `
                 <div style="margin-bottom: 20px;">
-                    <h3>鍗曡瘝鎺屾彙杩涘害</h3>
+                    <h3>单词掌握进度</h3>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: ${total ? (mastered / total * 100) : 0}%"></div>
                     </div>
-                    <p style="margin-top: 8px;">宸叉帉鎻?${mastered} / ${total} 涓崟璇?/p>
+                    <p style="margin-top: 8px;">已掌握 ${mastered} / ${total} 个单词</p>
                 </div>
                 <div>
-                    <h3>瀛︿範缁熻</h3>
-                    <p>杩炵画瀛︿範锛?{currentUser.streak || 0} 澶?/p>
-                    <p>褰撳墠绛夌骇锛歀evel ${currentUser.level || 1}</p>
-                    <p>绱瀛︿範鍗曡瘝锛?{currentUser.totalWordsLearned || 0} 涓?/p>
+                    <h3>学习统计</h3>
+                    <p>连续学习：${currentUser.streak || 0} 天</p>
+                    <p>当前等级：Level ${currentUser.level || 1}</p>
+                    <p>累计学习单词：${currentUser.totalWordsLearned || 0} 个</p>
                 </div>
             `;
         }
 
         function startLevelTest() {
             const levelQuestions = [
-                { question: 'What is the meaning of "apple"?', options: ['鑻规灉', '棣欒晧', '姗欏瓙', '姊?], answer: 0 },
-                { question: 'What is the meaning of "book"?', options: ['涔?, '绗?, '妗屽瓙', '妞呭瓙'], answer: 0 },
-                { question: 'What is the meaning of "happy"?', options: ['鎮蹭激鐨?, '蹇箰鐨?, '鎰ゆ€掔殑', '鐤叉儷鐨?], answer: 1 },
-                { question: 'What is the meaning of "important"?', options: ['閲嶈鐨?, '绠€鍗曠殑', '鍥伴毦鐨?, '鏃犺亰鐨?], answer: 0 },
-                { question: 'What is the meaning of "knowledge"?', options: ['鍔涢噺', '鐭ヨ瘑', '閲戦挶', '鏃堕棿'], answer: 1 }
+                { question: 'What is the meaning of "apple"?', options: ['苹果', '香蕉', '橙子', '梨'], answer: 0 },
+                { question: 'What is the meaning of "book"?', options: ['书', '笔', '桌子', '椅子'], answer: 0 },
+                { question: 'What is the meaning of "happy"?', options: ['悲伤的', '快乐的', '愤怒的', '疲惫的'], answer: 1 },
+                { question: 'What is the meaning of "important"?', options: ['重要的', '简单的', '困难的', '无聊的'], answer: 0 },
+                { question: 'What is the meaning of "knowledge"?', options: ['力量', '知识', '金钱', '时间'], answer: 1 }
             ];
 
             currentTestAnswers = new Array(levelQuestions.length).fill(null);
             const container = document.getElementById('test-questions');
             container.innerHTML = levelQuestions.map((q, i) => `
                 <div style="margin-bottom: 20px;">
-                    <h4>闂 ${i + 1}: ${q.question}</h4>
+                    <h4>问题 ${i + 1}: ${q.question}</h4>
                     ${q.options.map((opt, j) => `
                         <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
                             ${String.fromCharCode(65 + j)}. ${opt}
@@ -818,7 +818,7 @@
             else newLevel = 5;
             currentUser.level = newLevel;
             saveUser();
-            alert(`娴嬭瘯瀹屾垚锛乗n寰楀垎锛?{correct}/${total}\n璇勫畾绛夌骇锛歀evel ${newLevel}`);
+            alert(`测试完成！\n得分：${correct}/${total}\n评定等级：Level ${newLevel}`);
             closeTestModal();
             loadOverview();
         }
@@ -835,7 +835,7 @@
                 return new Date(p.nextReviewDate) <= new Date();
             }).length;
             const newCount = 5;
-            alert(`浠婃棩瀛︿範浠诲姟锛歕n- 澶嶄範鍗曡瘝锛?{reviewCount} 涓猏n- 鏂板鍗曡瘝锛?{newCount} 涓猔);
+            alert(`今日学习任务：\n- 复习单词：${reviewCount} 个\n- 新学单词：${newCount} 个`);
             document.getElementById('word-level').value = level;
             switchTab('words');
             loadWords();
