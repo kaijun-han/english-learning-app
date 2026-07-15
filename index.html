@@ -407,9 +407,16 @@
                 <div id="chat-messages"
                     style="height: 400px; overflow-y: auto; background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
                 </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 14px; color: #6b7280;">
+                        <input type="checkbox" id="chat-auto-speak" checked> 🔊 自动语音回复
+                    </label>
+                </div>
                 <div style="display: flex; gap: 12px;">
                     <input type="text" id="chat-input" class="input" placeholder="输入英语句子..." style="flex: 1;"
                         onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                    <button class="btn btn-secondary" onclick="toggleVoiceInput()" id="voice-btn"
+                        title="语音输入">🎤</button>
                     <button class="btn btn-primary" onclick="sendChatMessage()">发送</button>
                 </div>
             </div>
@@ -1217,6 +1224,77 @@
         }
 
         let chatMessages = [];
+        let voiceRecognition = null;
+        let isVoiceInputting = false;
+
+        function toggleVoiceInput() {
+            const btn = document.getElementById('voice-btn');
+
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('您的浏览器不支持语音输入，请使用Chrome或Safari浏览器');
+                return;
+            }
+
+            if (isVoiceInputting) {
+                if (voiceRecognition) {
+                    voiceRecognition.stop();
+                }
+                isVoiceInputting = false;
+                btn.innerHTML = '🎤';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-secondary');
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            voiceRecognition = new SpeechRecognition();
+            voiceRecognition.lang = 'en-US';
+            voiceRecognition.interimResults = true;
+            voiceRecognition.continuous = false;
+
+            voiceRecognition.onstart = function () {
+                isVoiceInputting = true;
+                btn.innerHTML = '🔴 录音中...';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-danger');
+                document.getElementById('chat-input').placeholder = '正在听您说话...';
+            };
+
+            voiceRecognition.onresult = function (event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                document.getElementById('chat-input').value = transcript;
+                document.getElementById('chat-input').placeholder = '输入英语句子...';
+            };
+
+            voiceRecognition.onend = function () {
+                isVoiceInputting = false;
+                btn.innerHTML = '🎤';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-secondary');
+                document.getElementById('chat-input').placeholder = '输入英语句子...';
+            };
+
+            voiceRecognition.onerror = function (event) {
+                console.error('语音识别错误:', event.error);
+                isVoiceInputting = false;
+                btn.innerHTML = '🎤';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-secondary');
+                document.getElementById('chat-input').placeholder = '输入英语句子...';
+                if (event.error === 'not-allowed') {
+                    alert('请允许麦克风权限以使用语音输入');
+                }
+            };
+
+            try {
+                voiceRecognition.start();
+            } catch (error) {
+                console.error('启动语音识别失败:', error);
+            }
+        }
 
         async function sendChatMessage() {
             const input = document.getElementById('chat-input');
@@ -1248,10 +1326,15 @@
                         <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
                             ${response}
                         </div>
+                        <button class="speak-btn" onclick="speak('${response.replace(/'/g, "\\'")}')" title="听发音" style="margin-left: 8px;">🔊</button>
                     </div>
                 `;
 
                 container.scrollTop = container.scrollHeight;
+
+                if (document.getElementById('chat-auto-speak').checked) {
+                    speak(response);
+                }
             } catch (error) {
                 container.innerHTML += `
                     <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
