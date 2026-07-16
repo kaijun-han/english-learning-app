@@ -129,7 +129,15 @@
             display: flex;
             gap: 12px;
             margin-bottom: 20px;
-            flex-wrap: wrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+        }
+
+        .nav::-webkit-scrollbar {
+            display: none;
         }
 
         .nav-btn {
