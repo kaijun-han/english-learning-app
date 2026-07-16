@@ -1184,6 +1184,8 @@
                 };
             });
 
+            quizAnswers = new Array(questions.length).fill(null);
+
             const container = document.getElementById('quiz-container');
             container.innerHTML = `
                 <div id="quiz-questions">
@@ -1214,21 +1216,25 @@
         function submitQuiz() {
             if (!window.quizData) return;
             let correct = 0;
-            const wrongCount = [];
+            let unanswered = 0;
             window.quizData.forEach((q, i) => {
-                const selectedOption = q.options[quizAnswers[i]];
-                if (selectedOption === q.correctAnswer) {
-                    correct++;
-                    document.getElementById(`quiz-${i}-${quizAnswers[i]}`).classList.add('correct');
+                if (quizAnswers[i] === null || quizAnswers[i] === undefined) {
+                    unanswered++;
                 } else {
-                    document.getElementById(`quiz-${i}-${quizAnswers[i]}`).classList.add('wrong');
-                    const correctIdx = q.options.indexOf(q.correctAnswer);
-                    addToWrongAnswers(q.question, quizAnswers[i], correctIdx, q.options);
+                    const selectedOption = q.options[quizAnswers[i]];
+                    if (selectedOption === q.correctAnswer) {
+                        correct++;
+                        document.getElementById(`quiz-${i}-${quizAnswers[i]}`).classList.add('correct');
+                    } else {
+                        document.getElementById(`quiz-${i}-${quizAnswers[i]}`).classList.add('wrong');
+                        const correctIdx = q.options.indexOf(q.correctAnswer);
+                        addToWrongAnswers(q.question, quizAnswers[i], correctIdx, q.options);
+                    }
                 }
             });
             const total = window.quizData.length;
             const percentage = Math.round((correct / total) * 100);
-            alert(`测试完成！得分：${correct}/${total} (${percentage}%)`);
+            alert(`测试完成！得分：${correct}/${total} (${percentage}%)${unanswered > 0 ? `\n未作答：${unanswered}题` : ''}`);
             loadOverview();
             loadWrongAnswers();
         }
