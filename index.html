@@ -221,6 +221,39 @@
             content: '✓ ';
         }
 
+        .quiz-option-letter {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #374151;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .quiz-option.selected .quiz-option-letter {
+            background: white;
+            color: #667eea;
+        }
+
+        .quiz-option-text {
+            flex: 1;
+        }
+
+        .quiz-option-check {
+            display: none;
+            color: white;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .quiz-option.selected .quiz-option-check {
+            display: inline;
+        }
+
         .quiz-option.correct {
             border-color: #10b981;
             background: #d1fae5;
@@ -2298,8 +2331,10 @@
                                     <div style="margin-bottom: 20px;">
                                         <h4>问题 ${i + 1} (选择题): ${q.question}</h4>
                                         ${q.options.map((opt, j) => `
-                                            <div class="quiz-option" onclick="selectAIQuizAnswer(${i}, '${opt}')" id="ai-quiz-${i}-${j}">
-                                                ${String.fromCharCode(65 + j)}. ${opt}
+                                            <div class="quiz-option" onclick="selectAIQuizAnswer(${i}, ${j})" id="ai-quiz-${i}-${j}">
+                                                <span class="quiz-option-letter">${String.fromCharCode(65 + j)}</span>
+                                                <span class="quiz-option-text">${opt}</span>
+                                                <span class="quiz-option-check">✓</span>
                                             </div>
                                         `).join('')}
                                     </div>
@@ -2330,15 +2365,15 @@
             }
         }
 
-        function selectAIQuizAnswer(idx, answer) {
-            window.aiQuizAnswers[idx] = answer;
-            const options = document.querySelectorAll(`[id^="ai-quiz-${idx}-"]`);
-            options.forEach(el => el.classList.remove('selected'));
-            options.forEach((opt, j) => {
-                if (opt.textContent.includes(answer)) {
-                    opt.classList.add('selected');
-                }
-            });
+        function selectAIQuizAnswer(idx, optionIdx) {
+            if (typeof optionIdx === 'number') {
+                window.aiQuizAnswers[idx] = { type: 'choice', idx: optionIdx, answer: window.aiQuizData[idx].options[optionIdx] };
+                const options = document.querySelectorAll(`[id^="ai-quiz-${idx}-"]`);
+                options.forEach(el => el.classList.remove('selected'));
+                document.getElementById(`ai-quiz-${idx}-${optionIdx}`).classList.add('selected');
+            } else {
+                window.aiQuizAnswers[idx] = { type: 'text', answer: optionIdx };
+            }
         }
 
         async function submitAIQuiz() {
@@ -2346,30 +2381,24 @@
 
             let correct = 0;
             window.aiQuizData.forEach((q, i) => {
-                const userAnswer = window.aiQuizAnswers[i];
+                const userAnswerObj = window.aiQuizAnswers[i];
+                const userAnswer = userAnswerObj ? userAnswerObj.answer : null;
                 const isCorrect = userAnswer && userAnswer.toLowerCase().includes(q.answer.toLowerCase());
 
                 if (isCorrect) {
                     correct++;
                     if (q.type === 'choice') {
-                        const options = document.querySelectorAll(`[id^="ai-quiz-${i}-"]`);
-                        options.forEach(opt => {
-                            if (opt.textContent.includes(userAnswer)) {
-                                opt.classList.add('correct');
-                            }
-                        });
+                        document.getElementById(`ai-quiz-${i}-${userAnswerObj.idx}`).classList.add('correct');
                     }
                 } else {
                     if (q.type === 'choice') {
-                        const options = document.querySelectorAll(`[id^="ai-quiz-${i}-"]`);
-                        options.forEach(opt => {
-                            if (opt.textContent.includes(userAnswer)) {
-                                opt.classList.add('wrong');
-                            }
-                            if (opt.textContent.includes(q.answer)) {
-                                opt.classList.add('correct');
-                            }
-                        });
+                        if (userAnswerObj) {
+                            document.getElementById(`ai-quiz-${i}-${userAnswerObj.idx}`).classList.add('wrong');
+                        }
+                        const correctIdx = q.options.indexOf(q.answer);
+                        if (correctIdx >= 0) {
+                            document.getElementById(`ai-quiz-${i}-${correctIdx}`).classList.add('correct');
+                        }
                     }
                     addToWrongAnswers(q.question, userAnswer || '', q.answer, q.options || []);
                 }
