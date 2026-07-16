@@ -706,6 +706,7 @@
 
         function init() {
             loadGeneratedWordsHistory();
+            loadAIWordCache();
             const savedUser = localStorage.getItem('english-learning-user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
@@ -1431,6 +1432,23 @@
         }
 
         let aiWordCache = [];
+        let lastWordTopic = '';
+
+        function loadAIWordCache() {
+            const saved = localStorage.getItem('english-learning-last-word-batch');
+            if (saved) {
+                const data = JSON.parse(saved);
+                aiWordCache = data.words || [];
+                lastWordTopic = data.topic || '';
+            }
+        }
+
+        function saveAIWordCache(topic) {
+            localStorage.setItem('english-learning-last-word-batch', JSON.stringify({
+                words: aiWordCache,
+                topic: topic || lastWordTopic
+            }));
+        }
 
         async function generateAIWords() {
             const level = currentUser.level || 1;
@@ -1466,7 +1484,7 @@
 
             try {
                 const excludeWords = currentHistory.join(', ') || '无';
-                const prompt = `请为英语水平为"${levelDesc}"的学习者生成15个适合的英语单词，主题为"${randomTopic}"。请避免重复以下已生成的单词：${excludeWords}。请确保生成的单词都是该水平的常用词汇，不要重复。请返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。`;
+                const prompt = `请为英语水平为"${levelDesc}"的学习者生成12个适合的英语单词，主题为"${randomTopic}"。要求：1. 这些单词要围绕同一个主题，相互之间有逻辑关联，能够自然地组合成一篇课文；2. 包含名词、动词、形容词等不同词性的单词；3. 避免重复以下已生成的单词：${excludeWords}；4. 确保生成的单词都是该水平的常用词汇；5. 返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。`;
 
                 const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
                 aiWordCache = JSON.parse(response);
@@ -1478,6 +1496,7 @@
                 });
 
                 saveGeneratedWordsHistory();
+                saveAIWordCache(randomTopic);
 
                 const newCoveredCount = currentHistory.length;
                 const newProgress = Math.round((newCoveredCount / totalCount) * 100);
@@ -1485,7 +1504,7 @@
                 resultDiv.innerHTML = `
                     <div style="margin-bottom: 16px; padding: 12px; background: #f0fdf4; border-radius: 8px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span>📚 本次生成主题：${randomTopic} · 共 ${aiWordCache.length} 个单词</span>
+                            <span>📚 本次生成主题：${randomTopic} · 共 ${aiWordCache.length} 个单词（可用于生成课文）</span>
                             <span style="font-weight: bold; color: #10b981;">覆盖进度：${newCoveredCount}/${totalCount} (${newProgress}%)</span>
                         </div>
                         <div style="height: 8px; background: #d1fae5; border-radius: 4px; overflow: hidden;">
@@ -1875,30 +1894,35 @@
         async function generateAILesson() {
             const level = currentUser.level || 1;
             const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
-            const topic = document.getElementById('ai-lesson-topic').value || '日常生活';
+            const userTopic = document.getElementById('ai-lesson-topic').value;
             const loadingDiv = document.getElementById('ai-lesson-loading');
             const resultDiv = document.getElementById('ai-lesson-result');
 
-            const builtInWords = VOCABULARY_BY_LEVEL[level];
-            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]').filter(w => w.level === level);
-            const allWords = [...builtInWords, ...aiWords];
-
-            if (allWords.length === 0) {
-                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">当前等级暂无单词，请先在「✨ AI单词」中生成或添加单词</p>`;
+            if (aiWordCache.length === 0) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">暂无可用单词，请先在「✨ AI单词」中生成单词</p>`;
                 return;
             }
 
-            const wordList = allWords.map(w => w.word).join(', ');
+            const wordList = aiWordCache.map(w => w.word).join(', ');
+            const autoTopic = userTopic || (lastWordTopic || '根据单词内容自动确定');
 
             loadingDiv.style.display = 'block';
             resultDiv.innerHTML = '';
             isSpeaking = false;
 
             try {
-                const prompt = `请为英语水平为"${levelDesc}"的学习者写一篇关于"${topic}"的课文。要求：1. 根据难度描述控制课文长度和难度；2. **必须包含以下所有单词**：${wordList}；3. 语言简单易懂，让学习者能够通过课文巩固单词；4. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）。确保返回纯JSON，不要包含其他文字。`;
+                let prompt = '';
+
+                if (userTopic) {
+                    prompt = `请为英语水平为"${levelDesc}"的学习者写一篇关于"${userTopic}"的课文。要求：1. 根据难度描述控制课文长度和难度；2. 课文中需要包含以下单词，尽量自然融入：${wordList}；3. 语言简单易懂，让学习者能够通过课文巩固单词；4. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）。确保返回纯JSON，不要包含其他文字。`;
+                } else {
+                    prompt = `请为英语水平为"${levelDesc}"的学习者写一篇课文。要求：1. 根据以下单词确定一个合适的主题，主题要适合这些单词：${wordList}；2. 根据难度描述控制课文长度和难度；3. 课文中必须包含上述所有单词；4. 语言简单易懂，让学习者能够通过课文巩固单词；5. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）。确保返回纯JSON，不要包含其他文字。`;
+                }
 
                 const response = await callAI(prompt, '你是一个专业的英语课文生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
-                const lesson = JSON.parse(response);
+
+                const cleanResponse = response.replace(/```json/g, '').replace(/```/g, '').trim();
+                const lesson = JSON.parse(cleanResponse);
                 currentLesson = { ...lesson, level, savedDate: new Date().toISOString() };
 
                 let contentWithAudio = lesson.content;
@@ -1939,7 +1963,8 @@
                 `;
                 window.currentLessonKeyWords = lesson.keyWords;
             } catch (error) {
-                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">生成失败，请重试</p>`;
+                console.error('AI课文生成失败:', error);
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">生成失败，请重试<br><span style="font-size: 12px;">错误信息: ${error.message}</span></p>`;
             } finally {
                 loadingDiv.style.display = 'none';
             }
