@@ -340,6 +340,13 @@
                     <button class="btn btn-primary" onclick="generateQuiz()">生成测试题</button>
                     <div id="quiz-container"></div>
                 </div>
+                <div class="card" style="margin-top: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2>📝 错题本</h2>
+                        <button class="btn btn-secondary" onclick="loadWrongAnswers()">刷新</button>
+                    </div>
+                    <div id="wrong-answers-list" style="max-height: 400px; overflow-y: auto;"></div>
+                </div>
             </div>
 
             <div id="tab-vocab" class="hidden">
@@ -497,6 +504,21 @@
                     <button class="btn btn-outline" onclick="clearChat()">清空对话</button>
                 </div>
                 <p style="color: #6b7280; margin-bottom: 16px;">用英语与AI进行自然对话，提升口语能力</p>
+                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                    <label style="font-size: 14px; color: #6b7280; white-space: nowrap;">对话主题：</label>
+                    <select id="chat-topic" class="input" style="flex: 1;" onchange="startChatWithTopic()">
+                        <option value="">🎲 随机主题</option>
+                        <option value="日常对话">💬 日常对话</option>
+                        <option value="旅行">✈️ 旅行</option>
+                        <option value="餐厅点餐">🍽️ 餐厅点餐</option>
+                        <option value="购物">🛍️ 购物</option>
+                        <option value="工作面试">💼 工作面试</option>
+                        <option value="学校生活">🏫 学校生活</option>
+                        <option value="天气">☀️ 天气</option>
+                        <option value="爱好">🎨 爱好</option>
+                        <option value="健康">🏥 健康</option>
+                    </select>
+                </div>
                 <div id="chat-messages"
                     style="height: 400px; overflow-y: auto; background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
                 </div>
@@ -793,7 +815,7 @@
         }
 
         function clearUIData() {
-            const elements = ['ai-words-result', 'ai-lesson-result', 'saved-lessons-list', 'vocab-list', 'word-list', 'lesson-list'];
+            const elements = ['ai-words-result', 'ai-lesson-result', 'saved-lessons-list', 'vocab-list', 'word-list', 'lesson-list', 'quiz-container', 'wrong-answers-list', 'chat-messages'];
             elements.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -804,6 +826,7 @@
             if (levelPanel) {
                 levelPanel.style.display = 'none';
             }
+            currentChatTopic = '';
         }
 
         function logout() {
@@ -1168,6 +1191,7 @@
         function submitQuiz() {
             if (!window.quizData) return;
             let correct = 0;
+            const wrongCount = [];
             window.quizData.forEach((q, i) => {
                 const selectedOption = q.options[quizAnswers[i]];
                 if (selectedOption === q.correctAnswer) {
@@ -1175,17 +1199,69 @@
                     document.getElementById(`quiz-${i}-${quizAnswers[i]}`).classList.add('correct');
                 } else {
                     document.getElementById(`quiz-${i}-${quizAnswers[i]}`).classList.add('wrong');
+                    const correctIdx = q.options.indexOf(q.correctAnswer);
+                    addToWrongAnswers(q.question, quizAnswers[i], correctIdx, q.options);
                 }
             });
             const total = window.quizData.length;
             const percentage = Math.round((correct / total) * 100);
             alert(`测试完成！得分：${correct}/${total} (${percentage}%)`);
-            if (percentage >= 80 && currentUser.level < 5) {
-                currentUser.level++;
-                saveUser();
-                alert(`🎉 恭喜！您的等级已提升到 Level ${currentUser.level}`);
-            }
             loadOverview();
+            loadWrongAnswers();
+        }
+
+        function addToWrongAnswers(question, userAnswer, correctAnswer, options) {
+            const wrongAnswers = JSON.parse(localStorage.getItem(getUserKey('english-learning-wrong-answers')) || '[]');
+            const existingIndex = wrongAnswers.findIndex(w => w.question === question);
+            if (existingIndex >= 0) {
+                wrongAnswers[existingIndex].attempts++;
+                wrongAnswers[existingIndex].lastAttempt = new Date().toISOString();
+            } else {
+                wrongAnswers.push({
+                    id: Date.now(),
+                    question: question,
+                    userAnswer: userAnswer,
+                    correctAnswer: correctAnswer,
+                    options: options,
+                    attempts: 1,
+                    lastAttempt: new Date().toISOString()
+                });
+            }
+            localStorage.setItem(getUserKey('english-learning-wrong-answers'), JSON.stringify(wrongAnswers));
+        }
+
+        function removeWrongAnswer(id) {
+            let wrongAnswers = JSON.parse(localStorage.getItem(getUserKey('english-learning-wrong-answers')) || '[]');
+            wrongAnswers = wrongAnswers.filter(w => w.id !== id);
+            localStorage.setItem(getUserKey('english-learning-wrong-answers'), JSON.stringify(wrongAnswers));
+            loadWrongAnswers();
+        }
+
+        function loadWrongAnswers() {
+            const wrongAnswers = JSON.parse(localStorage.getItem(getUserKey('english-learning-wrong-answers')) || '[]');
+            const container = document.getElementById('wrong-answers-list');
+            if (!container) return;
+
+            if (wrongAnswers.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: #6b7280; padding: 20px;">暂无错题记录</p>`;
+                return;
+            }
+
+            container.innerHTML = wrongAnswers.map(w => `
+                <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; position: relative;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">${w.question}</div>
+                    <div style="font-size: 14px; margin-bottom: 4px;">
+                        <span style="color: #ef4444;">您的答案：${w.userAnswer !== null && w.userAnswer !== undefined ? w.options[w.userAnswer] : '未作答'}</span>
+                    </div>
+                    <div style="font-size: 14px; margin-bottom: 4px;">
+                        <span style="color: #10b981;">正确答案：${w.options[w.correctAnswer]}</span>
+                    </div>
+                    <div style="font-size: 12px; color: #6b7280;">
+                        错误次数：${w.attempts}次 | 上次错误：${new Date(w.lastAttempt).toLocaleDateString()}
+                    </div>
+                    <button class="btn btn-danger" style="position: absolute; top: 12px; right: 12px; padding: 4px 8px; font-size: 12px;" onclick="removeWrongAnswer(${w.id})">🗑️</button>
+                </div>
+            `).join('');
         }
 
         function loadProgress() {
@@ -1308,11 +1384,23 @@
             return labels[type] || type;
         }
 
+        function restoreTestAnswerSelection(index) {
+            document.querySelectorAll(`[id^="test-${index}-"]`).forEach(el => el.classList.remove('selected'));
+            const answer = currentTestAnswers[index];
+            if (answer !== null && answer !== undefined) {
+                const el = document.getElementById(`test-${index}-${answer}`);
+                if (el) {
+                    el.classList.add('selected');
+                }
+            }
+        }
+
         function prevTestQuestion() {
             if (window.currentTestIndex > 0) {
                 document.getElementById(`test-question-${window.currentTestIndex}`).classList.add('hidden');
                 window.currentTestIndex--;
                 document.getElementById(`test-question-${window.currentTestIndex}`).classList.remove('hidden');
+                restoreTestAnswerSelection(window.currentTestIndex);
                 document.getElementById('test-progress').textContent = `问题 ${window.currentTestIndex + 1}/${window.levelTestData.length}`;
                 document.getElementById('test-prev-btn').disabled = window.currentTestIndex === 0;
                 document.getElementById('test-next-btn').textContent = '下一题';
@@ -1324,6 +1412,7 @@
                 document.getElementById(`test-question-${window.currentTestIndex}`).classList.add('hidden');
                 window.currentTestIndex++;
                 document.getElementById(`test-question-${window.currentTestIndex}`).classList.remove('hidden');
+                restoreTestAnswerSelection(window.currentTestIndex);
                 document.getElementById('test-progress').textContent = `问题 ${window.currentTestIndex + 1}/${window.levelTestData.length}`;
                 document.getElementById('test-prev-btn').disabled = false;
                 if (window.currentTestIndex === window.levelTestData.length - 1) {
@@ -2371,6 +2460,50 @@
             statusDiv.textContent = msg;
         }
 
+        let currentChatTopic = '';
+
+        function startChatWithTopic() {
+            const topicSelect = document.getElementById('chat-topic');
+            currentChatTopic = topicSelect.value;
+            if (!currentChatTopic) {
+                const topics = ['日常对话', '旅行', '餐厅点餐', '购物', '工作面试', '学校生活', '天气', '爱好', '健康'];
+                currentChatTopic = topics[Math.floor(Math.random() * topics.length)];
+            }
+            const container = document.getElementById('chat-messages');
+            const levelInfo = VOCABULARY_LEVELS[currentUser.level || 1];
+            container.innerHTML = `
+                <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                    <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
+                        🎯 话题：${currentChatTopic}
+                        <br><small style="color: #6b7280;">难度：${levelInfo.cefr}</small>
+                        <br>Let's talk about ${currentChatTopic} in English! I'll start the conversation.
+                    </div>
+                </div>
+            `;
+            chatMessages = [];
+            setTimeout(() => {
+                const levelDesc = LEVEL_DESCRIPTIONS[currentUser.level || 1] || LEVEL_DESCRIPTIONS[1];
+                const prompt = `请开启关于"${currentChatTopic}"的对话。你是对话的主导者，主动提问引导用户参与。难度级别：${levelDesc}。请用英语回复。`;
+                callAI(prompt, `你是一个英语对话练习伙伴，主导关于"${currentChatTopic}"的对话。用英语提问，引导用户参与对话。根据用户水平（CEFR ${levelInfo.cefr}）调整语言难度。`).then(response => {
+                    chatMessages.push({ role: 'assistant', content: response });
+                    container.innerHTML += `
+                        <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                            <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
+                                ${response}
+                            </div>
+                            <button class="speak-btn" onclick="speak('${response.replace(/'/g, "\\'")}')" title="听发音" style="margin-left: 8px;">🔊</button>
+                        </div>
+                    `;
+                    container.scrollTop = container.scrollHeight;
+                    if (document.getElementById('chat-auto-speak').checked) {
+                        speak(response);
+                    }
+                }).catch(e => {
+                    console.error('Chat error:', e);
+                });
+            }, 500);
+        }
+
         async function sendChatMessage() {
             const input = document.getElementById('chat-input');
             const message = input.value.trim();
@@ -2391,8 +2524,10 @@
             container.scrollTop = container.scrollHeight;
 
             try {
-                const prompt = `用户说：${message}\n请用英语回复，保持对话自然。如果用户水平较低，请使用简单的词汇和句子。用户当前等级：Level ${currentUser.level || 1}`;
-                const response = await callAI(prompt, '你是一个英语对话练习伙伴，用英语与用户进行自然对话。根据用户水平调整语言难度。');
+                const levelInfo = VOCABULARY_LEVELS[currentUser.level || 1];
+                const topicPrompt = currentChatTopic ? `话题：${currentChatTopic}。` : '';
+                const prompt = `${topicPrompt}用户说：${message}\n请用英语回复，保持对话自然。你是对话的主导者，适当提问引导用户继续对话。用户当前等级：Level ${currentUser.level || 1} (CEFR ${levelInfo.cefr})。`;
+                const response = await callAI(prompt, `你是一个英语对话练习伙伴，主导对话。${currentChatTopic ? `话题是"${currentChatTopic}"。` : ''}用英语与用户进行自然对话，适当提问引导。根据用户水平（CEFR ${levelInfo.cefr}）调整语言难度。`);
 
                 chatMessages.push({ role: 'assistant', content: response });
 
@@ -2423,7 +2558,12 @@
 
         function clearChat() {
             chatMessages = [];
+            currentChatTopic = '';
             document.getElementById('chat-messages').innerHTML = '';
+            const topicSelect = document.getElementById('chat-topic');
+            if (topicSelect) {
+                topicSelect.value = '';
+            }
         }
     </script>
 </body>
