@@ -462,9 +462,9 @@
         <div id="tab-ai-lessons" class="hidden">
             <div class="card">
                 <h2>✨ AI智能课文生成</h2>
-                <p style="color: #6b7280; margin-bottom: 16px;">根据您的兴趣和水平，AI自动生成个性化课文</p>
+                <p style="color: #6b7280; margin-bottom: 16px;">AI自动根据当前等级单词生成课文，包含所有已学习单词</p>
                 <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                    <input type="text" id="ai-lesson-topic" class="input" placeholder="输入课文主题（如：旅游、科技、美食）"
+                    <input type="text" id="ai-lesson-topic" class="input" placeholder="输入课文主题（如：旅游、科技、美食），可选"
                         style="flex: 1;">
                     <button class="btn btn-primary" onclick="generateAILesson()">📝 生成课文</button>
                 </div>
@@ -472,6 +472,7 @@
                     <div style="font-size: 32px;">⏳</div>
                     <p>AI正在创作课文...</p>
                 </div>
+                <div id="saved-lessons-list" style="margin-bottom: 20px;"></div>
                 <div id="ai-lesson-result"></div>
             </div>
         </div>
@@ -531,7 +532,20 @@
             5: '困难，高中及以上水平，使用高级词汇和复杂句型，包含复合句和非谓语动词，每篇课文不超过250词'
         };
 
-        let generatedWordsHistory = [];
+        let generatedWordsHistory = {};
+
+        function loadGeneratedWordsHistory() {
+            const saved = localStorage.getItem('english-learning-generated-history');
+            if (saved) {
+                generatedWordsHistory = JSON.parse(saved);
+            } else {
+                generatedWordsHistory = {};
+            }
+        }
+
+        function saveGeneratedWordsHistory() {
+            localStorage.setItem('english-learning-generated-history', JSON.stringify(generatedWordsHistory));
+        }
 
         async function callAI(prompt, systemMessage = '你是一个专业的英语学习助手，帮助用户学习英语词汇、语法和对话。请用中文回复，内容清晰易懂。') {
             try {
@@ -691,6 +705,7 @@
         let currentTestAnswers = [];
 
         function init() {
+            loadGeneratedWordsHistory();
             const savedUser = localStorage.getItem('english-learning-user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
@@ -769,6 +784,7 @@
             document.getElementById('tab-' + tab).classList.remove('hidden');
             if (tab === 'progress') loadProgress();
             if (tab === 'vocab') loadVocab();
+            if (tab === 'ai-lessons') loadSavedLessons();
         }
 
         function loadOverview() {
@@ -1419,30 +1435,62 @@
         async function generateAIWords() {
             const level = currentUser.level || 1;
             const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+            const levelInfo = VOCABULARY_LEVELS[level];
             const loadingDiv = document.getElementById('ai-words-loading');
             const resultDiv = document.getElementById('ai-words-result');
-            const topics = ['日常用品', '食物', '动物', '天气', '学校', '家庭', '运动', '旅行', '时间', '颜色'];
+            const topics = ['日常用品', '食物', '动物', '天气', '学校', '家庭', '运动', '旅行', '时间', '颜色', '自然', '科技', '文化', '节日', '健康'];
             const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+
+            if (!generatedWordsHistory[level]) {
+                generatedWordsHistory[level] = [...VOCABULARY_BY_LEVEL[level].map(w => w.word)];
+            }
+
+            const currentHistory = generatedWordsHistory[level];
+            const coveredCount = currentHistory.length;
+            const totalCount = levelInfo.wordCount;
+            const progress = Math.round((coveredCount / totalCount) * 100);
+
+            if (coveredCount >= totalCount) {
+                resultDiv.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6b7280;">
+                        <div style="font-size: 64px;">🎉</div>
+                        <h3 style="margin-top: 16px;">恭喜！该等级词汇已全部覆盖</h3>
+                        <p style="margin-top: 8px;">已生成 ${coveredCount} / ${totalCount} 个单词</p>
+                    </div>
+                `;
+                return;
+            }
 
             loadingDiv.style.display = 'block';
             resultDiv.innerHTML = '';
 
             try {
-                const excludeWords = generatedWordsHistory.join(', ') || '无';
-                const prompt = `请为英语水平为"${levelDesc}"的学习者生成12个适合的英语单词，主题为"${randomTopic}"。请避免重复以下已生成的单词：${excludeWords}。请返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。`;
+                const excludeWords = currentHistory.join(', ') || '无';
+                const prompt = `请为英语水平为"${levelDesc}"的学习者生成15个适合的英语单词，主题为"${randomTopic}"。请避免重复以下已生成的单词：${excludeWords}。请确保生成的单词都是该水平的常用词汇，不要重复。请返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。`;
 
                 const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
                 aiWordCache = JSON.parse(response);
 
                 aiWordCache.forEach(w => {
-                    if (!generatedWordsHistory.includes(w.word)) {
-                        generatedWordsHistory.push(w.word);
+                    if (!currentHistory.includes(w.word)) {
+                        currentHistory.push(w.word);
                     }
                 });
 
+                saveGeneratedWordsHistory();
+
+                const newCoveredCount = currentHistory.length;
+                const newProgress = Math.round((newCoveredCount / totalCount) * 100);
+
                 resultDiv.innerHTML = `
-                    <div style="margin-bottom: 16px; padding: 12px; background: #f0fdf4; border-radius: 8px; text-align: center;">
-                        <span>📚 本次生成主题：${randomTopic} · 共 ${aiWordCache.length} 个单词</span>
+                    <div style="margin-bottom: 16px; padding: 12px; background: #f0fdf4; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span>📚 本次生成主题：${randomTopic} · 共 ${aiWordCache.length} 个单词</span>
+                            <span style="font-weight: bold; color: #10b981;">覆盖进度：${newCoveredCount}/${totalCount} (${newProgress}%)</span>
+                        </div>
+                        <div style="height: 8px; background: #d1fae5; border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; background: #10b981; width: ${newProgress}%; border-radius: 4px;"></div>
+                        </div>
                     </div>
                     ${aiWordCache.map((w, idx) => `
                         <div class="word-card">
@@ -1456,7 +1504,7 @@
                             <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
                                 💡 记忆技巧：${w.tips}
                             </div>
-                            <button class="btn btn-success" onclick="addAIWord(${idx})" style="margin-top: 12px;">添加到学习列表</button>
+                            <button class="btn btn-success" onclick="addAIWord(${idx})" style="margin-top: 12px;">添加到生词本</button>
                         </div>
                     `).join('')}
                 `;
@@ -1822,6 +1870,8 @@
             }
         }
 
+        let currentLesson = null;
+
         async function generateAILesson() {
             const level = currentUser.level || 1;
             const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
@@ -1829,15 +1879,27 @@
             const loadingDiv = document.getElementById('ai-lesson-loading');
             const resultDiv = document.getElementById('ai-lesson-result');
 
+            const builtInWords = VOCABULARY_BY_LEVEL[level];
+            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]').filter(w => w.level === level);
+            const allWords = [...builtInWords, ...aiWords];
+
+            if (allWords.length === 0) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">当前等级暂无单词，请先在「✨ AI单词」中生成或添加单词</p>`;
+                return;
+            }
+
+            const wordList = allWords.map(w => w.word).join(', ');
+
             loadingDiv.style.display = 'block';
             resultDiv.innerHTML = '';
             isSpeaking = false;
 
             try {
-                const prompt = `请为英语水平为"${levelDesc}"的学习者写一篇关于"${topic}"的课文。要求：1. 根据难度描述控制课文长度和难度；2. 包含5-8个重点单词；3. 语言简单易懂；4. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）。确保返回纯JSON，不要包含其他文字。`;
+                const prompt = `请为英语水平为"${levelDesc}"的学习者写一篇关于"${topic}"的课文。要求：1. 根据难度描述控制课文长度和难度；2. **必须包含以下所有单词**：${wordList}；3. 语言简单易懂，让学习者能够通过课文巩固单词；4. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）。确保返回纯JSON，不要包含其他文字。`;
 
                 const response = await callAI(prompt, '你是一个专业的英语课文生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
                 const lesson = JSON.parse(response);
+                currentLesson = { ...lesson, level, savedDate: new Date().toISOString() };
 
                 let contentWithAudio = lesson.content;
                 lesson.keyWords.forEach(w => {
@@ -1849,12 +1911,15 @@
                     <div class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                             <h3>${lesson.title}</h3>
-                            <button class="btn btn-success" onclick="toggleLessonSpeech('${lesson.content.replace(/'/g, "\\'")}')" style="padding: 8px 16px; font-size: 14px;">
-                                🔊 朗读课文
-                            </button>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-outline" onclick="saveCurrentLesson()" style="padding: 8px 16px; font-size: 14px;">💾 保存课文</button>
+                                <button class="btn btn-success" onclick="toggleLessonSpeech('${lesson.content.replace(/'/g, "\\'")}')" style="padding: 8px 16px; font-size: 14px;">
+                                    🔊 朗读课文
+                                </button>
+                            </div>
                         </div>
                         <p style="margin: 12px 0; line-height: 1.8;">${contentWithAudio}</p>
-                        <h4>📖 重点单词：</h4>
+                        <h4>📖 重点单词（共${lesson.keyWords.length}个）：</h4>
                         <div style="margin: 8px 0;">
                             ${lesson.keyWords.map((w, idx) => `
                                 <div class="word-card" style="margin-bottom: 12px;">
@@ -1878,6 +1943,116 @@
             } finally {
                 loadingDiv.style.display = 'none';
             }
+        }
+
+        function saveCurrentLesson() {
+            if (!currentLesson) {
+                showToast('没有可保存的课文');
+                return;
+            }
+
+            const savedLessons = JSON.parse(localStorage.getItem('english-learning-saved-lessons') || '[]');
+            const existingIndex = savedLessons.findIndex(l => l.title === currentLesson.title && l.level === currentLesson.level);
+
+            if (existingIndex >= 0) {
+                savedLessons[existingIndex] = currentLesson;
+            } else {
+                currentLesson.id = Date.now();
+                savedLessons.push(currentLesson);
+            }
+
+            localStorage.setItem('english-learning-saved-lessons', JSON.stringify(savedLessons));
+            showToast('✅ 课文已保存');
+            loadSavedLessons();
+        }
+
+        function loadSavedLessons() {
+            const savedLessons = JSON.parse(localStorage.getItem('english-learning-saved-lessons') || '[]');
+            const container = document.getElementById('saved-lessons-list');
+
+            if (savedLessons.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 12px;">📚 已保存课文（${savedLessons.length}篇）</h4>
+                    <div style="display: flex; flex-wrap: gap: 8px;">
+                        ${savedLessons.map(lesson => `
+                            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <span style="font-weight: bold;">${lesson.title}</span>
+                                    <span style="font-size: 12px; color: #6b7280; margin-left: 8px;">Level ${lesson.level}</span>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn btn-outline" onclick="viewSavedLesson(${lesson.id})" style="padding: 4px 8px; font-size: 12px;">查看</button>
+                                    <button class="btn btn-danger" onclick="deleteSavedLesson(${lesson.id})" style="padding: 4px 8px; font-size: 12px;">🗑️ 删除</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function viewSavedLesson(lessonId) {
+            const savedLessons = JSON.parse(localStorage.getItem('english-learning-saved-lessons') || '[]');
+            const lesson = savedLessons.find(l => l.id === lessonId);
+            if (!lesson) return;
+
+            currentLesson = lesson;
+            isSpeaking = false;
+
+            let contentWithAudio = lesson.content;
+            lesson.keyWords.forEach(w => {
+                const regex = new RegExp(`\\b(${w.word})\\b`, 'gi');
+                contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}')" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
+            });
+
+            const resultDiv = document.getElementById('ai-lesson-result');
+            resultDiv.innerHTML = `
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3>${lesson.title}</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-success" onclick="toggleLessonSpeech('${lesson.content.replace(/'/g, "\\'")}')" style="padding: 8px 16px; font-size: 14px;">
+                                🔊 朗读课文
+                            </button>
+                        </div>
+                    </div>
+                    <p style="margin: 12px 0; line-height: 1.8;">${contentWithAudio}</p>
+                    <h4>📖 重点单词（共${lesson.keyWords.length}个）：</h4>
+                    <div style="margin: 8px 0;">
+                        ${lesson.keyWords.map((w, idx) => `
+                            <div class="word-card" style="margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="word">${w.word}</div>
+                                    <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                                    <span style="font-size: 12px; padding: 2px 6px; background: #e0e7ff; color: #4338ca; border-radius: 4px;">${w.partOfSpeech}</span>
+                                </div>
+                                <div class="phonetic">${w.phonetic}</div>
+                                <div class="meaning">${w.chineseMeaning}</div>
+                                <div class="example">${w.example}</div>
+                                <button class="btn btn-success" onclick="addLessonWordFromSaved(${idx})" style="margin-top: 12px;">➕ 添加到生词本</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            window.currentLessonKeyWords = lesson.keyWords;
+        }
+
+        function deleteSavedLesson(lessonId) {
+            let savedLessons = JSON.parse(localStorage.getItem('english-learning-saved-lessons') || '[]');
+            savedLessons = savedLessons.filter(l => l.id !== lessonId);
+            localStorage.setItem('english-learning-saved-lessons', JSON.stringify(savedLessons));
+            showToast('✅ 课文已删除');
+            loadSavedLessons();
+        }
+
+        function addLessonWordFromSaved(index) {
+            addLessonWord(index);
         }
 
         async function generateAIQuiz() {
