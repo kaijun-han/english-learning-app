@@ -266,6 +266,7 @@
                 <button class="nav-btn" onclick="switchTab('ai-quiz')">✨ AI测试</button>
                 <button class="nav-btn" onclick="switchTab('ai-chat')">✨ AI对话</button>
                 <button class="nav-btn" onclick="switchTab('vocab')">📖 生词本</button>
+                <button class="nav-btn" onclick="switchTab('wrong-answers')">📝 错题本</button>
                 <button class="nav-btn" onclick="switchTab('progress')">学习进度</button>
                 <button class="nav-btn" onclick="logout()" style="margin-left: auto;">退出</button>
             </div>
@@ -347,12 +348,18 @@
                     <button class="btn btn-primary" onclick="generateQuiz()">生成测试题</button>
                     <div id="quiz-container"></div>
                 </div>
-                <div class="card" style="margin-top: 16px;">
+            </div>
+
+            <div id="tab-wrong-answers" class="hidden">
+                <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <h2>📝 错题本</h2>
-                        <button class="btn btn-secondary" onclick="loadWrongAnswers()">刷新</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary" onclick="loadWrongAnswers()">刷新</button>
+                            <button class="btn btn-danger" onclick="clearAllWrongAnswers()">清空全部</button>
+                        </div>
                     </div>
-                    <div id="wrong-answers-list" style="max-height: 400px; overflow-y: auto;"></div>
+                    <div id="wrong-answers-list" style="max-height: 600px; overflow-y: auto;"></div>
                 </div>
             </div>
 
@@ -868,7 +875,7 @@
         function switchTab(tab) {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             const btns = document.querySelectorAll('.nav-btn');
-            const tabNames = ['home', 'words', 'lessons', 'ai-words', 'ai-lessons', 'ai-quiz', 'ai-chat', 'vocab', 'progress'];
+            const tabNames = ['home', 'words', 'lessons', 'ai-words', 'ai-lessons', 'ai-quiz', 'ai-chat', 'vocab', 'wrong-answers', 'progress'];
             const idx = tabNames.indexOf(tab);
             if (idx >= 0 && idx < btns.length) {
                 btns[idx].classList.add('active');
@@ -878,7 +885,7 @@
             if (tab === 'progress') loadProgress();
             if (tab === 'vocab') loadVocab();
             if (tab === 'ai-lessons') loadSavedLessons();
-            if (tab === 'ai-quiz') loadWrongAnswers();
+            if (tab === 'wrong-answers') loadWrongAnswers();
         }
 
         function loadOverview() {
@@ -1243,6 +1250,13 @@
             wrongAnswers = wrongAnswers.filter(w => w.id !== id);
             localStorage.setItem(getUserKey('english-learning-wrong-answers'), JSON.stringify(wrongAnswers));
             loadWrongAnswers();
+        }
+
+        function clearAllWrongAnswers() {
+            if (confirm('确定要清空所有错题吗？此操作不可撤销。')) {
+                localStorage.removeItem(getUserKey('english-learning-wrong-answers'));
+                loadWrongAnswers();
+            }
         }
 
         function loadWrongAnswers() {
