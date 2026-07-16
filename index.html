@@ -793,13 +793,17 @@
         }
 
         function clearUIData() {
-            document.getElementById('ai-words-result').innerHTML = '';
-            document.getElementById('ai-lesson-result').innerHTML = '';
-            document.getElementById('saved-lessons-list').innerHTML = '';
-            document.getElementById('vocab-list').innerHTML = '';
-            document.getElementById('level-info-panel').style.display = 'none';
-            document.getElementById('word-list').innerHTML = '';
-            document.getElementById('lesson-list').innerHTML = '';
+            const elements = ['ai-words-result', 'ai-lesson-result', 'saved-lessons-list', 'vocab-list', 'word-list', 'lesson-list'];
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = '';
+                }
+            });
+            const levelPanel = document.getElementById('level-info-panel');
+            if (levelPanel) {
+                levelPanel.style.display = 'none';
+            }
         }
 
         function logout() {
