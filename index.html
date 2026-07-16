@@ -203,7 +203,14 @@
 
         .quiz-option.selected {
             border-color: #667eea;
-            background: #eef2ff;
+            border-width: 2px;
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .quiz-option.selected::before {
+            content: '✓ ';
         }
 
         .quiz-option.correct {
@@ -871,6 +878,7 @@
             if (tab === 'progress') loadProgress();
             if (tab === 'vocab') loadVocab();
             if (tab === 'ai-lessons') loadSavedLessons();
+            if (tab === 'ai-quiz') loadWrongAnswers();
         }
 
         function loadOverview() {
