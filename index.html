@@ -710,6 +710,9 @@
         let currentLearningWord = null;
         let currentRating = 0;
         let currentTestAnswers = [];
+        let aiWordCache = [];
+        let lastWordTopic = '';
+        let currentLesson = null;
 
         function init() {
             loadGeneratedWordsHistory();
@@ -1444,9 +1447,6 @@
             loadWords();
         }
 
-        let aiWordCache = [];
-        let lastWordTopic = '';
-
         function loadAIWordCache() {
             const saved = localStorage.getItem(getUserKey('english-learning-last-word-batch'));
             if (saved) {
@@ -1912,8 +1912,6 @@
                 countBadge.style.display = aiWords.length > 0 ? 'inline-block' : 'none';
             }
         }
-
-        let currentLesson = null;
 
         async function generateAILesson() {
             const level = currentUser.level || 1;
