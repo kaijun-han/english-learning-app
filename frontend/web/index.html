@@ -30,6 +30,8 @@
             padding: 24px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .btn {
@@ -124,23 +126,43 @@
         }
 
         .nav {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             margin-bottom: 20px;
         }
 
         .nav-btn {
-            padding: 10px 20px;
+            padding: 14px 12px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
             cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
         }
 
         .nav-btn.active {
             background: rgba(255, 255, 255, 0.9);
             color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn.logout-btn {
+            background: rgba(239, 68, 68, 0.8);
+            grid-column: span 2;
+        }
+
+        .nav-btn.logout-btn:hover {
+            background: rgba(239, 68, 68, 1);
         }
 
         .hidden {
@@ -199,7 +221,47 @@
 
         .quiz-option.selected {
             border-color: #667eea;
-            background: #eef2ff;
+            border-width: 2px;
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .quiz-option.selected::before {
+            content: '鉁?';
+        }
+
+        .quiz-option-letter {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #374151;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .quiz-option.selected .quiz-option-letter {
+            background: white;
+            color: #667eea;
+        }
+
+        .quiz-option-text {
+            flex: 1;
+        }
+
+        .quiz-option-check {
+            display: none;
+            color: white;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .quiz-option.selected .quiz-option-check {
+            display: inline;
         }
 
         .quiz-option.correct {
@@ -210,6 +272,24 @@
         .quiz-option.wrong {
             border-color: #ef4444;
             background: #fee2e2;
+        }
+
+        .quiz-option-dontknow {
+            border-style: dashed;
+            border-color: #9ca3af;
+            color: #6b7280;
+            background: #f9fafb;
+        }
+
+        .quiz-option-dontknow:hover {
+            border-color: #6b7280;
+            background: #f3f4f6;
+        }
+
+        .quiz-option-dontknow.selected {
+            border-style: solid;
+            border-color: #9ca3af;
+            background: #f3f4f6;
         }
     </style>
 </head>
@@ -228,12 +308,17 @@
 
         <div id="main-page" class="hidden">
             <div class="nav">
-                <button class="nav-btn active" onclick="switchTab('home')">棣栭〉</button>
-                <button class="nav-btn" onclick="switchTab('words')">鍗曡瘝瀛︿範</button>
-                <button class="nav-btn" onclick="switchTab('lessons')">璇炬枃瀛︿範</button>
-                <button class="nav-btn" onclick="switchTab('quiz')">AI娴嬭瘯</button>
-                <button class="nav-btn" onclick="switchTab('progress')">瀛︿範杩涘害</button>
-                <button class="nav-btn" onclick="logout()" style="margin-left: auto;">閫€鍑?/button>
+                <button class="nav-btn active" onclick="switchTab('home')">馃彔 棣栭〉</button>
+                <button class="nav-btn" onclick="switchTab('words')">馃摎 鍗曡瘝瀛︿範</button>
+                <button class="nav-btn" onclick="switchTab('lessons')">馃摉 璇炬枃瀛︿範</button>
+                <button class="nav-btn" onclick="switchTab('ai-words')">鉁?AI鍗曡瘝</button>
+                <button class="nav-btn" onclick="switchTab('ai-lessons')">鉁?AI璇炬枃</button>
+                <button class="nav-btn" onclick="switchTab('ai-quiz')">鉁?AI娴嬭瘯</button>
+                <button class="nav-btn" onclick="switchTab('ai-chat')">鉁?AI瀵硅瘽</button>
+                <button class="nav-btn" onclick="switchTab('vocab')">馃摉 鐢熻瘝鏈?/button>
+                <button class="nav-btn" onclick="switchTab('wrong-answers')">馃摑 閿欓鏈?/button>
+                <button class="nav-btn" onclick="switchTab('progress')">馃搳 瀛︿範杩涘害</button>
+                <button class="nav-btn logout-btn" onclick="logout()">馃毆 閫€鍑?/button>
             </div>
 
             <div id="tab-home">
@@ -271,15 +356,20 @@
             <div id="tab-words" class="hidden">
                 <div class="card">
                     <h2>馃摎 鍗曡瘝瀛︿範</h2>
-                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
                         <select id="word-level" class="input" style="width: auto;">
-                            <option value="1">Level 1 - 鍏ラ棬</option>
-                            <option value="2">Level 2 - 鍩虹</option>
-                            <option value="3">Level 3 - 杩涢樁</option>
-                            <option value="4">Level 4 - 楂樼骇</option>
-                            <option value="5">Level 5 - 绮鹃€?/option>
+                            <option value="1">Level 1 - 鍏ラ棬 (灏忓3-4骞寸骇/CEFR A1/绾?00璇?</option>
+                            <option value="2">Level 2 - 鍩虹 (灏忓5-6骞寸骇/CEFR A2/绾?00璇?</option>
+                            <option value="3">Level 3 - 杩涢樁 (鍒濅腑1-2骞寸骇/CEFR B1/绾?000璇?</option>
+                            <option value="4">Level 4 - 楂樼骇 (鍒濅腑3-楂樹腑1骞寸骇/CEFR B2/绾?00璇?</option>
+                            <option value="5">Level 5 - 绮鹃€?(楂樹腑鍙婁互涓?CEFR C1/绾?00璇?</option>
                         </select>
                         <button class="btn btn-primary" onclick="loadWords()">鍔犺浇鍗曡瘝</button>
+                    </div>
+                    <div id="level-info-panel"
+                        style="background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none;">
+                        <div style="font-weight: bold; color: #0369a1; margin-bottom: 8px;">馃搳 绛夌骇璇存槑</div>
+                        <div id="level-info-content"></div>
                     </div>
                     <div id="words-list"></div>
                 </div>
@@ -288,7 +378,7 @@
             <div id="tab-lessons" class="hidden">
                 <div class="card">
                     <h2>馃摉 璇炬枃瀛︿範</h2>
-                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
                         <select id="lesson-level" class="input" style="width: auto;">
                             <option value="1">Level 1 - 鍏ラ棬</option>
                             <option value="2">Level 2 - 鍩虹</option>
@@ -307,6 +397,86 @@
                     <h2>馃 AI娴嬭瘯</h2>
                     <button class="btn btn-primary" onclick="generateQuiz()">鐢熸垚娴嬭瘯棰?/button>
                     <div id="quiz-container"></div>
+                </div>
+            </div>
+
+            <div id="tab-wrong-answers" class="hidden">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2>馃摑 閿欓鏈?/h2>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary" onclick="loadWrongAnswers()">鍒锋柊</button>
+                            <button class="btn btn-danger" onclick="clearAllWrongAnswers()">娓呯┖鍏ㄩ儴</button>
+                        </div>
+                    </div>
+                    <div id="wrong-answers-list" style="max-height: 600px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <div id="tab-vocab" class="hidden">
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2>馃摉 鐢熻瘝鏈?/h2>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-success" onclick="startVocabReview()">馃幆 寮€濮嬪涔?/button>
+                            <button class="btn btn-primary" onclick="startVocabQuiz()">馃摑 AI娴嬮獙</button>
+                        </div>
+                    </div>
+                    <div id="vocab-stats" style="display: flex; gap: 16px; margin-bottom: 16px;">
+                        <div style="padding: 12px; background: #eff6ff; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">0</div>
+                            <div style="font-size: 12px; color: #6b7280;">寰呭涔?/div>
+                        </div>
+                        <div style="padding: 12px; background: #f0fdf4; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #10b981;">0</div>
+                            <div style="font-size: 12px; color: #6b7280;">宸叉帉鎻?/div>
+                        </div>
+                        <div style="padding: 12px; background: #fffbeb; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">0</div>
+                            <div style="font-size: 12px; color: #6b7280;">瀛︿範涓?/div>
+                        </div>
+                        <div style="padding: 12px; background: #fef2f2; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #ef4444;">0</div>
+                            <div style="font-size: 12px; color: #6b7280;">鏂拌瘝</div>
+                        </div>
+                    </div>
+                    <div id="vocab-list"></div>
+                </div>
+            </div>
+
+            <div id="vocab-review-modal" class="hidden"
+                style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+                <div class="card" style="max-width: 500px; width: 90%;">
+                    <button class="btn btn-danger" onclick="closeVocabReview()" style="float: right;">鉁?/button>
+                    <h2 style="text-align: center;">馃幆 鐢熻瘝澶嶄範</h2>
+                    <div id="vocab-review-progress" style="text-align: center; margin-bottom: 16px;">杩涘害锛?/0</div>
+                    <div id="vocab-flashcard" style="perspective: 1000px; height: 300px; margin-bottom: 20px;">
+                        <div id="flashcard-inner"
+                            style="position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d;"
+                            onclick="flipFlashcard()">
+                            <div id="flashcard-front"
+                                style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: #667eea; color: white; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+                                <div id="flashcard-word" style="font-size: 36px; font-weight: bold;"></div>
+                                <div id="flashcard-phonetic" style="font-size: 18px; margin-top: 8px;"></div>
+                                <p style="font-size: 14px; margin-top: 20px; opacity: 0.8;">鐐瑰嚮鍗＄墖鏌ョ湅閲婁箟</p>
+                            </div>
+                            <div id="flashcard-back"
+                                style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border: 2px solid #667eea; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transform: rotateY(180deg);">
+                                <div id="flashcard-meaning" style="font-size: 24px; font-weight: bold; color: #667eea;">
+                                </div>
+                                <div id="flashcard-example"
+                                    style="font-size: 16px; margin-top: 12px; color: #4b5563; text-align: center;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                        <button class="btn btn-danger" onclick="rateVocabWord(0)" style="flex: 1;">馃槴 涓嶄細</button>
+                        <button class="btn btn-warning" onclick="rateVocabWord(2)" style="flex: 1;">馃槙 鍥伴毦</button>
+                        <button class="btn btn-info" onclick="rateVocabWord(3)" style="flex: 1;">馃槉 鑹ソ</button>
+                        <button class="btn btn-success" onclick="rateVocabWord(5)" style="flex: 1;">馃槃 绠€鍗?/button>
+                    </div>
                 </div>
             </div>
 
@@ -346,60 +516,409 @@
                     style="margin-top: 16px; width: 100%;">鎻愪氦娴嬭瘯</button>
             </div>
         </div>
+
+        <div id="tab-ai-words" class="hidden">
+            <div class="card">
+                <h2>鉁?AI鏅鸿兘鍗曡瘝鐢熸垚</h2>
+                <p style="color: #6b7280; margin-bottom: 16px;">鏍规嵁鎮ㄧ殑鑻辫姘村钩锛孉I鑷姩鐢熸垚閫傚悎鐨勫崟璇嶅拰璁板繂鎶€宸?/p>
+                <button class="btn btn-primary" onclick="generateAIWords()">馃幉 鐢熸垚鍗曡瘝</button>
+                <div id="ai-words-loading" style="display: none; text-align: center; margin-top: 20px;">
+                    <div style="font-size: 32px;">鈴?/div>
+                    <p>AI姝ｅ湪鐢熸垚鍗曡瘝...</p>
+                </div>
+                <div id="ai-words-result"></div>
+            </div>
+        </div>
+
+        <div id="tab-ai-lessons" class="hidden">
+            <div class="card">
+                <h2>鉁?AI鏅鸿兘璇炬枃鐢熸垚</h2>
+                <p style="color: #6b7280; margin-bottom: 16px;">AI鑷姩鏍规嵁褰撳墠绛夌骇鍗曡瘝鐢熸垚璇炬枃锛屽寘鍚墍鏈夊凡瀛︿範鍗曡瘝</p>
+                <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <input type="text" id="ai-lesson-topic" class="input" placeholder="杈撳叆璇炬枃涓婚锛堝锛氭梾娓搞€佺鎶€銆佺編椋燂級锛屽彲閫?
+                        style="flex: 1;">
+                    <button class="btn btn-primary" onclick="generateAILesson()">馃摑 鐢熸垚璇炬枃</button>
+                </div>
+                <div id="ai-lesson-loading" style="display: none; text-align: center; margin-top: 20px;">
+                    <div style="font-size: 32px;">鈴?/div>
+                    <p>AI姝ｅ湪鍒涗綔璇炬枃...</p>
+                </div>
+                <div id="saved-lessons-list" style="margin-bottom: 20px;"></div>
+                <div id="ai-lesson-result"></div>
+            </div>
+        </div>
+
+        <div id="tab-ai-quiz" class="hidden">
+            <div class="card">
+                <h2>鉁?AI鏅鸿兘娴嬭瘯</h2>
+                <p style="color: #6b7280; margin-bottom: 16px;">AI鏍规嵁鎮ㄧ殑姘村钩鐢熸垚澶氭牱鍖栨祴璇曢锛堥€夋嫨銆佸～绌恒€佺炕璇戯級</p>
+                <button class="btn btn-primary" onclick="generateAIQuiz()">馃幆 鐢熸垚娴嬭瘯</button>
+                <div id="ai-quiz-loading" style="display: none; text-align: center; margin-top: 20px;">
+                    <div style="font-size: 32px;">鈴?/div>
+                    <p>AI姝ｅ湪鍑洪...</p>
+                </div>
+                <div id="ai-quiz-container"></div>
+            </div>
+        </div>
+
+        <div id="tab-ai-chat" class="hidden">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>鉁?AI鑻辫瀵硅瘽缁冧範</h2>
+                    <button class="btn btn-outline" onclick="clearChat()">娓呯┖瀵硅瘽</button>
+                </div>
+                <p style="color: #6b7280; margin-bottom: 16px;">鐢ㄨ嫳璇笌AI杩涜鑷劧瀵硅瘽锛屾彁鍗囧彛璇兘鍔?/p>
+                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                    <label style="font-size: 14px; color: #6b7280; white-space: nowrap;">瀵硅瘽涓婚锛?/label>
+                    <select id="chat-topic" class="input" style="flex: 1;" onchange="startChatWithTopic()">
+                        <option value="">馃幉 闅忔満涓婚</option>
+                        <option value="鏃ュ父瀵硅瘽">馃挰 鏃ュ父瀵硅瘽</option>
+                        <option value="鏃呰">鉁堬笍 鏃呰</option>
+                        <option value="椁愬巺鐐归">馃嵔锔?椁愬巺鐐归</option>
+                        <option value="璐墿">馃泹锔?璐墿</option>
+                        <option value="宸ヤ綔闈㈣瘯">馃捈 宸ヤ綔闈㈣瘯</option>
+                        <option value="瀛︽牎鐢熸椿">馃彨 瀛︽牎鐢熸椿</option>
+                        <option value="澶╂皵">鈽€锔?澶╂皵</option>
+                        <option value="鐖卞ソ">馃帹 鐖卞ソ</option>
+                        <option value="鍋ュ悍">馃彞 鍋ュ悍</option>
+                    </select>
+                </div>
+                <div id="chat-messages"
+                    style="height: 400px; overflow-y: auto; background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 14px; color: #6b7280;">
+                        <input type="checkbox" id="chat-auto-speak" checked> 馃攰 鑷姩璇煶鍥炲
+                    </label>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <input type="text" id="chat-input" class="input" placeholder="杈撳叆鑻辫鍙ュ瓙..." style="flex: 1;"
+                        onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                    <button class="btn btn-secondary" onclick="toggleVoiceInput()" id="voice-btn"
+                        title="璇煶杈撳叆">馃帳</button>
+                    <button class="btn btn-primary" onclick="sendChatMessage()">鍙戦€?/button>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <script src="vocabulary-data.js"></script>
     <script>
-        let token = localStorage.getItem('token');
-        let currentUserId = localStorage.getItem('userId');
+        const AI_CONFIG = {
+            apiKey: 'sk-a3a7d3678f8148b2b487c879a034a2d4',
+            apiUrl: 'https://api.deepseek.com/v1/chat/completions',
+            model: 'deepseek-chat'
+        };
+
+        const LEVEL_DESCRIPTIONS = {
+            1: '闈炲父绠€鍗曪紝灏忓3-4骞寸骇姘村钩锛屼娇鐢ㄦ渶鍩虹鐨勬棩甯歌瘝姹囷紙濡俛pple, book, happy锛夛紝绠€鍗曞彞鍨嬶紙涓昏皳瀹剧粨鏋勶級锛屾瘡绡囪鏂囦笉瓒呰繃50璇?,
+            2: '绠€鍗曪紝灏忓5-6骞寸骇姘村钩锛屼娇鐢ㄥ熀纭€鏃ュ父璇嶆眹鍜屽父鐢ㄧ煭璇紝绠€鍗曟椂鎬侊紙涓€鑸幇鍦ㄦ椂銆佷竴鑸繃鍘绘椂锛夛紝姣忕瘒璇炬枃涓嶈秴杩?0璇?,
+            3: '涓瓑锛屽垵涓?-2骞寸骇姘村钩锛屼娇鐢ㄥ父鐢ㄨ瘝姹囧拰鍥哄畾鎼厤锛屾帉鎻″熀鏈椂鎬佸拰鍙ュ瀷锛屾瘡绡囪鏂囦笉瓒呰繃120璇?,
+            4: '杈冮毦锛屽垵涓?骞寸骇-楂樹腑1骞寸骇姘村钩锛屼娇鐢ㄨ緝澶嶆潅璇嶆眹鍜屼粠鍙ワ紝鎺屾彙澶氱鏃舵€佸拰璇€侊紝姣忕瘒璇炬枃涓嶈秴杩?80璇?,
+            5: '鍥伴毦锛岄珮涓強浠ヤ笂姘村钩锛屼娇鐢ㄩ珮绾ц瘝姹囧拰澶嶆潅鍙ュ瀷锛屽寘鍚鍚堝彞鍜岄潪璋撹鍔ㄨ瘝锛屾瘡绡囪鏂囦笉瓒呰繃250璇?
+        };
+
+        function getUserKey(key) {
+            if (!currentUser || !currentUser.id) {
+                return key;
+            }
+            return `${key}-${currentUser.id}`;
+        }
+
+        let generatedWordsHistory = {};
+
+        function loadGeneratedWordsHistory() {
+            const saved = localStorage.getItem(getUserKey('english-learning-generated-history'));
+            if (saved) {
+                generatedWordsHistory = JSON.parse(saved);
+            } else {
+                generatedWordsHistory = {};
+            }
+        }
+
+        function saveGeneratedWordsHistory() {
+            localStorage.setItem(getUserKey('english-learning-generated-history'), JSON.stringify(generatedWordsHistory));
+        }
+
+        async function callAI(prompt, systemMessage = '浣犳槸涓€涓笓涓氱殑鑻辫瀛︿範鍔╂墜锛屽府鍔╃敤鎴峰涔犺嫳璇瘝姹囥€佽娉曞拰瀵硅瘽銆傝鐢ㄤ腑鏂囧洖澶嶏紝鍐呭娓呮櫚鏄撴噦銆?) {
+            try {
+                const response = await fetch(AI_CONFIG.apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AI_CONFIG.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: AI_CONFIG.model,
+                        messages: [
+                            { role: 'system', content: systemMessage },
+                            { role: 'user', content: prompt }
+                        ],
+                        max_tokens: 2000,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error('AI API Error:', error);
+                throw error;
+            }
+        }
+
+        const words = [
+            { id: 1, word: 'apple', phonetic: '/藞忙pl/', meaning: '鑻规灉', example: 'I eat an apple every day.', level: 1 },
+            { id: 2, word: 'book', phonetic: '/b蕣k/', meaning: '涔?, example: 'This is a good book.', level: 1 },
+            { id: 3, word: 'cat', phonetic: '/k忙t/', meaning: '鐚?, example: 'The cat is sleeping.', level: 1 },
+            { id: 4, word: 'dog', phonetic: '/d蓲伞/', meaning: '鐙?, example: 'I have a pet dog.', level: 1 },
+            { id: 5, word: 'elephant', phonetic: '/藞el瑟f蓹nt/', meaning: '澶ц薄', example: 'Elephants are very big.', level: 1 },
+            { id: 6, word: 'fish', phonetic: '/f瑟蕛/', meaning: '楸?, example: 'Fish can swim in water.', level: 1 },
+            { id: 7, word: 'girl', phonetic: '/伞蓽藧l/', meaning: '濂冲', example: 'She is a beautiful girl.', level: 1 },
+            { id: 8, word: 'hand', phonetic: '/h忙nd/', meaning: '鎵?, example: 'Wash your hands before eating.', level: 1 },
+            { id: 9, word: 'ice', phonetic: '/a瑟s/', meaning: '鍐?, example: 'Water turns to ice in winter.', level: 1 },
+            { id: 10, word: 'juice', phonetic: '/d蕭u藧s/', meaning: '鏋滄眮', example: 'I drink orange juice for breakfast.', level: 1 },
+            { id: 11, word: 'friend', phonetic: '/frend/', meaning: '鏈嬪弸', example: 'She is my best friend.', level: 2 },
+            { id: 12, word: 'garden', phonetic: '/藞伞蓱藧dn/', meaning: '鑺卞洯', example: 'We have a beautiful garden.', level: 2 },
+            { id: 13, word: 'happy', phonetic: '/藞h忙pi/', meaning: '蹇箰鐨?, example: 'I am very happy today.', level: 2 },
+            { id: 14, word: 'beautiful', phonetic: '/藞bju藧t瑟fl/', meaning: '缇庝附鐨?, example: 'What a beautiful day!', level: 2 },
+            { id: 15, word: 'computer', phonetic: '/k蓹m藞pju藧t蓹r/', meaning: '鐢佃剳', example: 'I use my computer every day.', level: 2 },
+            { id: 16, word: 'school', phonetic: '/sku藧l/', meaning: '瀛︽牎', example: 'I go to school every morning.', level: 2 },
+            { id: 17, word: 'teacher', phonetic: '/藞ti藧t蕛蓹r/', meaning: '鑰佸笀', example: 'My teacher is very kind.', level: 2 },
+            { id: 18, word: 'student', phonetic: '/藞stju藧dnt/', meaning: '瀛︾敓', example: 'I am a student.', level: 2 },
+            { id: 19, word: 'family', phonetic: '/藞f忙m蓹li/', meaning: '瀹跺涵', example: 'I love my family.', level: 2 },
+            { id: 20, word: 'home', phonetic: '/h蓹蕣m/', meaning: '瀹?, example: 'Welcome to my home.', level: 2 },
+            { id: 21, word: 'important', phonetic: '/瑟m藞p蓴藧tnt/', meaning: '閲嶈鐨?, example: 'This is very important.', level: 3 },
+            { id: 22, word: 'journey', phonetic: '/藞d蕭蓽藧ni/', meaning: '鏃呯▼', example: 'It was a long journey.', level: 3 },
+            { id: 23, word: 'different', phonetic: '/藞d瑟fr蓹nt/', meaning: '涓嶅悓鐨?, example: 'We have different opinions.', level: 3 },
+            { id: 24, word: 'fantastic', phonetic: '/f忙n藞t忙st瑟k/', meaning: '鏋佸ソ鐨?, example: 'That was a fantastic movie.', level: 3 },
+            { id: 25, word: 'communicate', phonetic: '/k蓹藞mju藧n瑟ke瑟t/', meaning: '浜ゆ祦', example: 'We need to communicate better.', level: 3 },
+            { id: 26, word: 'practice', phonetic: '/藞pr忙kt瑟s/', meaning: '缁冧範', example: 'Practice makes perfect.', level: 3 },
+            { id: 27, word: 'improve', phonetic: '/瑟m藞pru藧v/', meaning: '鏀瑰杽', example: 'I want to improve my English.', level: 3 },
+            { id: 28, word: 'challenge', phonetic: '/藞t蕛忙l瑟nd蕭/', meaning: '鎸戞垬', example: 'This is a big challenge.', level: 3 },
+            { id: 29, word: 'success', phonetic: '/s蓹k藞ses/', meaning: '鎴愬姛', example: 'Success comes from hard work.', level: 3 },
+            { id: 30, word: 'education', phonetic: '/藢ed蕭u藞ke瑟蕛n/', meaning: '鏁欒偛', example: 'Education is very important.', level: 3 },
+            { id: 31, word: 'knowledge', phonetic: '/藞n蓲l瑟d蕭/', meaning: '鐭ヨ瘑', example: 'Knowledge is power.', level: 4 },
+            { id: 32, word: 'language', phonetic: '/藞l忙艐伞w瑟d蕭/', meaning: '璇█', example: 'English is a global language.', level: 4 },
+            { id: 33, word: 'necessary', phonetic: '/藞nes蓹s蓹ri/', meaning: '蹇呰鐨?, example: 'It is necessary to study.', level: 4 },
+            { id: 34, word: 'experience', phonetic: '/瑟k藞sp瑟蓹ri蓹ns/', meaning: '缁忛獙', example: 'She has rich experience.', level: 4 },
+            { id: 35, word: 'opportunity', phonetic: '/藢蓲p蓹藞tju藧n蓹ti/', meaning: '鏈轰細', example: 'This is a great opportunity.', level: 4 },
+            { id: 36, word: 'development', phonetic: '/d瑟藞vel蓹pm蓹nt/', meaning: '鍙戝睍', example: 'Economic development is important.', level: 4 },
+            { id: 37, word: 'technology', phonetic: '/tek藞n蓲l蓹d蕭i/', meaning: '鎶€鏈?, example: 'Technology changes our lives.', level: 4 },
+            { id: 38, word: 'environment', phonetic: '/瑟n藞va瑟r蓹nm蓹nt/', meaning: '鐜', example: 'Protect the environment.', level: 4 },
+            { id: 39, word: 'society', phonetic: '/s蓹藞sa瑟蓹ti/', meaning: '绀句細', example: 'We live in a modern society.', level: 4 },
+            { id: 40, word: 'culture', phonetic: '/藞k蕦lt蕛蓹r/', meaning: '鏂囧寲', example: 'Different countries have different cultures.', level: 4 },
+            { id: 41, word: 'mysterious', phonetic: '/m瑟藞st瑟蓹ri蓹s/', meaning: '绁炵鐨?, example: 'It was a mysterious event.', level: 5 },
+            { id: 42, word: 'accomplish', phonetic: '/蓹藞k蕦mpl瑟蕛/', meaning: '瀹屾垚', example: 'I accomplished my goal.', level: 5 },
+            { id: 43, word: 'perspective', phonetic: '/p蓹藞spekt瑟v/', meaning: '瑙嗚', example: 'Try to see things from a different perspective.', level: 5 },
+            { id: 44, word: 'phenomenon', phonetic: '/f瑟藞n蓲m瑟n蓹n/', meaning: '鐜拌薄', example: 'This is a natural phenomenon.', level: 5 },
+            { id: 45, word: 'consequence', phonetic: '/藞k蓲ns瑟kw蓹ns/', meaning: '鍚庢灉', example: 'Every action has its consequences.', level: 5 },
+            { id: 46, word: 'fundamental', phonetic: '/藢f蕦nd蓹藞mentl/', meaning: '鍩烘湰鐨?, example: 'This is a fundamental principle.', level: 5 },
+            { id: 47, word: 'controversy', phonetic: '/藞k蓲ntr蓹v蓽藧si/', meaning: '浜夎', example: 'This issue caused much controversy.', level: 5 },
+            { id: 48, word: 'comprehensive', phonetic: '/藢k蓲mpr瑟藞hens瑟v/', meaning: '鍏ㄩ潰鐨?, example: 'We need a comprehensive solution.', level: 5 },
+            { id: 49, word: 'sophisticated', phonetic: '/s蓹藞f瑟st瑟ke瑟t瑟d/', meaning: '澶嶆潅鐨?, example: 'This is a sophisticated system.', level: 5 },
+            { id: 50, word: 'inevitable', phonetic: '/瑟n藞ev瑟t蓹bl/', meaning: '涓嶅彲閬垮厤鐨?, example: 'Change is inevitable.', level: 5 }
+        ];
+
+        const lessons = [
+            {
+                id: 1,
+                title: 'My Daily Life',
+                content: 'I wake up early every morning. After breakfast, I go to school. I study English every day because it is very important. In the afternoon, I play sports with my friends.',
+                level: 1,
+                words: [
+                    { word: 'morning', meaning: '鏃╂櫒' },
+                    { word: 'breakfast', meaning: '鏃╅' },
+                    { word: 'school', meaning: '瀛︽牎' },
+                    { word: 'afternoon', meaning: '涓嬪崍' },
+                    { word: 'friends', meaning: '鏈嬪弸' }
+                ]
+            },
+            {
+                id: 2,
+                title: 'The Beautiful Garden',
+                content: 'There is a beautiful garden in our neighborhood. It has many colorful flowers and tall trees. I like to walk in the garden every evening. It makes me feel happy and relaxed.',
+                level: 2,
+                words: [
+                    { word: 'beautiful', meaning: '缇庝附鐨? },
+                    { word: 'garden', meaning: '鑺卞洯' },
+                    { word: 'colorful', meaning: '褰╄壊鐨? },
+                    { word: 'flowers', meaning: '鑺? },
+                    { word: 'relaxed', meaning: '鏀炬澗鐨? }
+                ]
+            },
+            {
+                id: 3,
+                title: 'Learning English',
+                content: 'Learning English is very important in today\'s world. It opens many doors to new opportunities. With English, you can communicate with people from all over the world. Practice makes perfect!',
+                level: 3,
+                words: [
+                    { word: 'important', meaning: '閲嶈鐨? },
+                    { word: 'opportunities', meaning: '鏈轰細' },
+                    { word: 'communicate', meaning: '浜ゆ祦' },
+                    { word: 'practice', meaning: '缁冧範' },
+                    { word: 'perfect', meaning: '瀹岀編鐨? }
+                ]
+            },
+            {
+                id: 4,
+                title: 'Knowledge is Power',
+                content: 'Knowledge is power. The more you learn, the more you know. Reading books is a great way to gain knowledge. It helps you understand the world better and make better decisions.',
+                level: 4,
+                words: [
+                    { word: 'knowledge', meaning: '鐭ヨ瘑' },
+                    { word: 'power', meaning: '鍔涢噺' },
+                    { word: 'reading', meaning: '闃呰' },
+                    { word: 'understand', meaning: '鐞嗚В' },
+                    { word: 'decisions', meaning: '鍐冲畾' }
+                ]
+            },
+            {
+                id: 5,
+                title: 'The Journey of Life',
+                content: 'Life is a long journey full of mysterious experiences. Every day brings new challenges and opportunities. It is necessary to embrace change and keep learning. The journey itself is the reward.',
+                level: 5,
+                words: [
+                    { word: 'journey', meaning: '鏃呯▼' },
+                    { word: 'mysterious', meaning: '绁炵鐨? },
+                    { word: 'challenges', meaning: '鎸戞垬' },
+                    { word: 'necessary', meaning: '蹇呰鐨? },
+                    { word: 'embrace', meaning: '鎷ユ姳' }
+                ]
+            }
+        ];
+
+        let currentUser = null;
         let currentLearningWord = null;
         let currentRating = 0;
         let currentTestAnswers = [];
+        let aiWordCache = [];
+        let lastWordTopic = '';
+        let currentLesson = null;
 
-        if (token) {
-            showMainPage();
-        }
+        function init() {
+            const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
+            if (users.length === 0) {
+                const defaultUser = {
+                    id: 1,
+                    username: 'test',
+                    password: '123456',
+                    level: 1,
+                    streak: 0,
+                    lastStudyDate: null,
+                    totalWordsLearned: 0,
+                    progress: { learning: 0, mastered: 0 },
+                    wordProgress: {},
+                    createdAt: new Date().toISOString()
+                };
+                users.push(defaultUser);
+                localStorage.setItem('english-learning-users', JSON.stringify(users));
+            }
 
-        async function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-            if (data.token) {
-                token = data.token;
-                currentUserId = data.user.id;
-                localStorage.setItem('token', token);
-                localStorage.setItem('userId', currentUserId);
+            loadGeneratedWordsHistory();
+            loadAIWordCache();
+            const savedUser = localStorage.getItem('english-learning-user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
                 showMainPage();
-            } else {
-                alert(data.message || '鐧诲綍澶辫触');
+                const wordLevelSelect = document.getElementById('word-level');
+                const lessonLevelSelect = document.getElementById('lesson-level');
+                if (wordLevelSelect) {
+                    wordLevelSelect.value = currentUser.level || 1;
+                }
+                if (lessonLevelSelect) {
+                    lessonLevelSelect.value = currentUser.level || 1;
+                }
+                loadWords();
+                loadLessons();
             }
         }
 
-        async function register() {
+        init();
+
+        function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const res = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-            if (data.user) {
-                alert('娉ㄥ唽鎴愬姛锛岃鐧诲綍');
+            const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('english-learning-user', JSON.stringify(user));
+                loadGeneratedWordsHistory();
+                loadAIWordCache();
+                clearUIData();
+                showMainPage();
+                const wordLevelSelect = document.getElementById('word-level');
+                const lessonLevelSelect = document.getElementById('lesson-level');
+                if (wordLevelSelect) {
+                    wordLevelSelect.value = currentUser.level || 1;
+                }
+                if (lessonLevelSelect) {
+                    lessonLevelSelect.value = currentUser.level || 1;
+                }
+                loadWords();
+                loadLessons();
             } else {
-                alert(data.message || '娉ㄥ唽澶辫触');
+                alert('鐢ㄦ埛鍚嶆垨瀵嗙爜閿欒');
             }
+        }
+
+        function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (!username || !password) {
+                alert('璇疯緭鍏ョ敤鎴峰悕鍜屽瘑鐮?);
+                return;
+            }
+            const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
+            if (users.find(u => u.username === username)) {
+                alert('鐢ㄦ埛鍚嶅凡瀛樺湪');
+                return;
+            }
+            const newUser = {
+                id: Date.now(),
+                username,
+                password,
+                level: 1,
+                streak: 0,
+                lastStudyDate: null,
+                totalWordsLearned: 0,
+                progress: { learning: 0, mastered: 0 },
+                wordProgress: {},
+                createdAt: new Date().toISOString()
+            };
+            users.push(newUser);
+            localStorage.setItem('english-learning-users', JSON.stringify(users));
+            alert('娉ㄥ唽鎴愬姛锛岃鐧诲綍');
+        }
+
+        function clearUIData() {
+            const elements = ['ai-words-result', 'ai-lesson-result', 'saved-lessons-list', 'vocab-list', 'word-list', 'lesson-list', 'quiz-container', 'wrong-answers-list', 'chat-messages'];
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = '';
+                }
+            });
+            const levelPanel = document.getElementById('level-info-panel');
+            if (levelPanel) {
+                levelPanel.style.display = 'none';
+            }
+            currentChatTopic = '';
         }
 
         function logout() {
-            token = null;
-            currentUserId = null;
-            localStorage.removeItem('token');
-            localStorage.removeItem('userId');
+            currentUser = null;
+            aiWordCache = [];
+            generatedWordsHistory = {};
+            lastWordTopic = '';
+            currentLesson = null;
+            clearUIData();
+            localStorage.removeItem('english-learning-user');
             document.getElementById('login-page').classList.remove('hidden');
             document.getElementById('main-page').classList.add('hidden');
         }
@@ -408,27 +927,41 @@
             document.getElementById('login-page').classList.add('hidden');
             document.getElementById('main-page').classList.remove('hidden');
             loadOverview();
+            updateAIWordsCount();
+            if (currentUser) {
+                const wordLevelSelect = document.getElementById('word-level');
+                const lessonLevelSelect = document.getElementById('lesson-level');
+                if (wordLevelSelect) {
+                    wordLevelSelect.value = currentUser.level || 1;
+                }
+                if (lessonLevelSelect) {
+                    lessonLevelSelect.value = currentUser.level || 1;
+                }
+            }
         }
 
         function switchTab(tab) {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+            const btns = document.querySelectorAll('.nav-btn');
+            const tabNames = ['home', 'words', 'lessons', 'ai-words', 'ai-lessons', 'ai-quiz', 'ai-chat', 'vocab', 'wrong-answers', 'progress'];
+            const idx = tabNames.indexOf(tab);
+            if (idx >= 0 && idx < btns.length) {
+                btns[idx].classList.add('active');
+            }
             document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
             document.getElementById('tab-' + tab).classList.remove('hidden');
             if (tab === 'progress') loadProgress();
+            if (tab === 'vocab') loadVocab();
+            if (tab === 'ai-lessons') loadSavedLessons();
+            if (tab === 'wrong-answers') loadWrongAnswers();
         }
 
-        async function loadOverview() {
-            const res = await fetch('/api/users/progress', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const data = await res.json();
-            if (data.user) {
-                document.getElementById('stat-total').textContent = data.user.totalWordsLearned || 0;
-                document.getElementById('stat-mastered').textContent = data.user.progress?.mastered || 0;
-                document.getElementById('stat-streak').textContent = data.user.streak || 0;
-                document.getElementById('stat-level').textContent = data.user.level || 1;
-            }
+        function loadOverview() {
+            if (!currentUser) return;
+            document.getElementById('stat-total').textContent = currentUser.totalWordsLearned || 0;
+            document.getElementById('stat-mastered').textContent = currentUser.progress?.mastered || 0;
+            document.getElementById('stat-streak').textContent = currentUser.streak || 0;
+            document.getElementById('stat-level').textContent = currentUser.level || 1;
         }
 
         function speak(text) {
@@ -443,16 +976,83 @@
             }
         }
 
-        async function loadWords() {
-            const level = document.getElementById('word-level').value;
-            const res = await fetch('/api/words?level=' + level);
-            const words = await res.json();
+        let currentLessonText = '';
+        let isSpeaking = false;
+
+        function toggleLessonSpeech(text) {
+            if (!('speechSynthesis' in window)) {
+                alert('鎮ㄧ殑娴忚鍣ㄤ笉鏀寔璇煶鍔熻兘');
+                return;
+            }
+
+            const btn = document.querySelector('[onclick^="toggleLessonSpeech"]');
+            if (!btn) return;
+
+            if (isSpeaking) {
+                window.speechSynthesis.pause();
+                isSpeaking = false;
+                btn.innerHTML = '鈻讹笍 缁х画';
+            } else {
+                if (window.speechSynthesis.paused) {
+                    window.speechSynthesis.resume();
+                    isSpeaking = true;
+                    btn.innerHTML = '鈴革笍 鏆傚仠';
+                } else {
+                    window.speechSynthesis.cancel();
+                    currentLessonText = text;
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.7;
+                    utterance.pitch = 1;
+                    utterance.onend = () => {
+                        isSpeaking = false;
+                        if (btn) btn.innerHTML = '馃攰 鏈楄璇炬枃';
+                    };
+                    utterance.onerror = () => {
+                        isSpeaking = false;
+                        if (btn) btn.innerHTML = '馃攰 鏈楄璇炬枃';
+                    };
+                    window.speechSynthesis.speak(utterance);
+                    isSpeaking = true;
+                    btn.innerHTML = '鈴革笍 鏆傚仠';
+                }
+            }
+        }
+
+        function loadWords() {
+            const level = parseInt(document.getElementById('word-level').value);
+            const levelInfo = VOCABULARY_LEVELS[level];
+
+            const panel = document.getElementById('level-info-panel');
+            const content = document.getElementById('level-info-content');
+            panel.style.display = 'block';
+            content.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                    <div><strong>骞寸骇瀵瑰簲锛?/strong>${levelInfo.schoolLevel}</div>
+                    <div><strong>CEFR绛夌骇锛?/strong>CEFR ${levelInfo.cefr}</div>
+                    <div><strong>璇嶆眹鎬婚噺锛?/strong>绾?{levelInfo.wordCount}璇?/div>
+                    <div><strong>鍐呯疆璇嶆眹锛?/strong>${VOCABULARY_BY_LEVEL[level].length}涓?/div>
+                </div>
+                <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
+                    馃挕 鎻愮ず锛氬唴缃瘝姹囧涔犲畬鍚庯紝鍙€氳繃銆屸湪 AI鍗曡瘝銆嶅姛鑳界敓鎴愭洿澶氳绛夌骇璇嶆眹
+                </div>
+            `;
+
+            const builtInWords = VOCABULARY_BY_LEVEL[level].map(w => ({ ...w, id: Date.now() + Math.random(), level, addedByAI: false }));
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level === level);
+            const allWords = [...builtInWords, ...aiWords];
+
             const list = document.getElementById('words-list');
-            list.innerHTML = words.map(w => `
+            if (allWords.length === 0) {
+                list.innerHTML = '<p style="color: #9ca3af; text-align: center;">璇ョ骇鍒殏鏃犲崟璇嶏紝璇烽€夋嫨鍏朵粬绾у埆</p>';
+                return;
+            }
+            list.innerHTML = allWords.map(w => `
                 <div class="word-card">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="word">${w.word}</div>
                         <button class="speak-btn" onclick="speak('${w.word}')" title="鍙戦煶">馃攰</button>
+                        ${w.addedByAI ? '<span style="padding: 2px 6px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px;">AI</span>' : ''}
                     </div>
                     <div class="phonetic">${w.phonetic}</div>
                     <div class="meaning">${w.meaning}</div>
@@ -462,12 +1062,11 @@
             `).join('');
         }
 
-        async function loadLessons() {
-            const level = document.getElementById('lesson-level').value;
-            const res = await fetch('/api/lessons?level=' + level);
-            const lessons = await res.json();
+        function loadLessons() {
+            const level = parseInt(document.getElementById('lesson-level').value);
+            const filtered = lessons.filter(l => l.level <= level);
             const list = document.getElementById('lessons-list');
-            list.innerHTML = lessons.map(l => `
+            list.innerHTML = filtered.map(l => `
                 <div class="word-card">
                     <h3>${l.title}</h3>
                     <p style="margin: 12px 0; line-height: 1.6;">${l.content}</p>
@@ -479,14 +1078,36 @@
             `).join('');
         }
 
-        async function startLearning(wordId) {
-            const res = await fetch('/api/words/' + wordId);
-            currentLearningWord = await res.json();
-            document.getElementById('learning-word-title').innerHTML = `${currentLearningWord.word} <button class="speak-btn" onclick="speak('${currentLearningWord.word}')" title="鍙戦煶">馃攰</button>`;
+        function startLearning(wordId) {
+            let word = words.find(w => w.id === wordId);
+
+            if (!word) {
+                const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
+                word = aiWords.find(w => w.id === wordId);
+            }
+
+            if (!word) {
+                const level = parseInt(document.getElementById('word-level').value);
+                const builtInWords = VOCABULARY_BY_LEVEL[level];
+                const displayedWord = Array.from(document.querySelectorAll('.word-card'))
+                    .find(card => card.querySelector('button[onclick*="' + wordId + '"]'));
+                if (displayedWord) {
+                    const wordName = displayedWord.querySelector('.word').textContent;
+                    word = builtInWords.find(w => w.word === wordName);
+                    if (word) {
+                        word = { ...word, id: wordId, level };
+                    }
+                }
+            }
+
+            if (!word) return;
+            currentLearningWord = word;
+
+            document.getElementById('learning-word-title').innerHTML = `${word.word} <button class="speak-btn" onclick="speak('${word.word}')" title="鍙戦煶">馃攰</button>`;
             document.getElementById('learning-word-content').innerHTML = `
-                <div class="phonetic">${currentLearningWord.phonetic}</div>
-                <div class="meaning">${currentLearningWord.meaning}</div>
-                <div class="example">${currentLearningWord.example}</div>
+                <div class="phonetic">${word.phonetic}</div>
+                <div class="meaning">${word.meaning}</div>
+                <div class="example">${word.example}</div>
             `;
             currentRating = 0;
             document.querySelectorAll('.star').forEach(s => s.classList.remove('selected'));
@@ -500,22 +1121,79 @@
             });
         }
 
-        async function submitRating() {
+        function submitRating() {
             if (!currentRating) {
                 alert('璇烽€夋嫨璇勫垎');
                 return;
             }
-            await fetch('/api/words/learn', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ wordId: currentLearningWord.id, quality: currentRating })
-            });
+            const wordId = currentLearningWord.id;
+            if (!currentUser.wordProgress[wordId]) {
+                currentUser.wordProgress[wordId] = {
+                    repetitions: 0,
+                    interval: 1,
+                    easeFactor: 2.5,
+                    nextReviewDate: new Date().toISOString(),
+                    status: 'learning'
+                };
+                currentUser.totalWordsLearned++;
+                currentUser.progress.learning++;
+            }
+
+            const progress = currentUser.wordProgress[wordId];
+            if (currentRating >= 4) {
+                if (progress.repetitions === 0) {
+                    progress.interval = 1;
+                } else if (progress.repetitions === 1) {
+                    progress.interval = 6;
+                } else {
+                    progress.interval = Math.round(progress.interval * progress.easeFactor);
+                }
+                progress.easeFactor = Math.max(1.3, progress.easeFactor + (0.1 - (5 - currentRating) * (0.08 + (5 - currentRating) * 0.02)));
+                progress.repetitions++;
+                if (progress.repetitions >= 3 && currentRating >= 4) {
+                    progress.status = 'mastered';
+                    currentUser.progress.mastered++;
+                    currentUser.progress.learning--;
+                }
+            } else {
+                progress.repetitions = 0;
+                progress.interval = 1;
+                progress.status = 'learning';
+            }
+
+            const nextDate = new Date();
+            nextDate.setDate(nextDate.getDate() + progress.interval);
+            progress.nextReviewDate = nextDate.toISOString();
+
+            updateStreak();
+            saveUser();
             closeLearningModal();
             loadOverview();
             alert('瀛︿範璁板綍宸蹭繚瀛橈紒');
+        }
+
+        function updateStreak() {
+            const today = new Date().toDateString();
+            if (currentUser.lastStudyDate !== today) {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                if (currentUser.lastStudyDate === yesterday.toDateString()) {
+                    currentUser.streak++;
+                } else if (currentUser.lastStudyDate !== today) {
+                    currentUser.streak = 1;
+                }
+                currentUser.lastStudyDate = today;
+            }
+        }
+
+        function saveUser() {
+            localStorage.setItem('english-learning-user', JSON.stringify(currentUser));
+            const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
+            const index = users.findIndex(u => u.id === currentUser.id);
+            if (index !== -1) {
+                users[index] = currentUser;
+                localStorage.setItem('english-learning-users', JSON.stringify(users));
+            }
         }
 
         function closeLearningModal() {
@@ -523,20 +1201,55 @@
             currentLearningWord = null;
         }
 
-        async function generateQuiz() {
-            const res = await fetch('/api/ai/generate-quiz', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ type: 'vocabulary', count: 5 })
+        function generateRandomQuestions(count) {
+            const shuffled = [...words].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, count);
+
+            return selected.map(word => {
+                const otherWords = words.filter(w => w.id !== word.id);
+                const wrongOptions = [...otherWords].sort(() => Math.random() - 0.5).slice(0, 3);
+                const options = [...wrongOptions, { meaning: word.meaning }].sort(() => Math.random() - 0.5);
+                const answerIndex = options.findIndex(o => o.meaning === word.meaning);
+
+                return {
+                    question: `What is the meaning of "${word.word}"?`,
+                    options: options.map(o => o.meaning),
+                    answer: answerIndex
+                };
             });
-            const data = await res.json();
+        }
+
+        function generateQuiz() {
+            const level = currentUser.level || 1;
+
+            const builtInWords = [];
+            for (let i = 1; i <= level; i++) {
+                builtInWords.push(...VOCABULARY_BY_LEVEL[i].map(w => ({ ...w, level: i })));
+            }
+
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level <= level);
+            const allWords = [...builtInWords, ...aiWords];
+
+            const shuffled = [...allWords].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, 5);
+
+            const questions = selected.map(word => {
+                const otherWords = allWords.filter(w => w.word !== word.word);
+                const wrongOptions = [...otherWords].sort(() => Math.random() - 0.5).slice(0, 3);
+                const options = [...wrongOptions, { meaning: word.meaning }].sort(() => Math.random() - 0.5);
+                return {
+                    question: `What does "${word.word}" mean?`,
+                    options: options.map(o => o.meaning),
+                    correctAnswer: word.meaning
+                };
+            });
+
+            quizAnswers = new Array(questions.length).fill(null);
+
             const container = document.getElementById('quiz-container');
             container.innerHTML = `
                 <div id="quiz-questions">
-                    ${data.questions.map((q, i) => `
+                    ${questions.map((q, i) => `
                         <div style="margin-bottom: 20px;">
                             <h4>闂 ${i + 1}: ${q.question}</h4>
                             ${q.options.map((opt, j) => `
@@ -547,8 +1260,9 @@
                         </div>
                     `).join('')}
                 </div>
-                <button class="btn btn-primary" onclick="submitQuiz('${data.quizId}')">鎻愪氦绛旀</button>
+                <button class="btn btn-primary" onclick="submitQuiz()">鎻愪氦绛旀</button>
             `;
+            window.quizData = questions;
         }
 
         let quizAnswers = [];
@@ -559,65 +1273,242 @@
             document.getElementById(`quiz-${questionIdx}-${optionIdx}`).classList.add('selected');
         }
 
-        async function submitQuiz(quizId) {
-            const res = await fetch('/api/ai/evaluate-quiz', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ quizId, answers: quizAnswers })
+        function submitQuiz() {
+            if (!window.quizData) return;
+            let correct = 0;
+            let unanswered = 0;
+            window.quizData.forEach((q, i) => {
+                if (quizAnswers[i] === null || quizAnswers[i] === undefined) {
+                    unanswered++;
+                } else {
+                    const selectedOption = q.options[quizAnswers[i]];
+                    if (selectedOption === q.correctAnswer) {
+                        correct++;
+                        document.getElementById(`quiz-${i}-${quizAnswers[i]}`).classList.add('correct');
+                    } else {
+                        document.getElementById(`quiz-${i}-${quizAnswers[i]}`).classList.add('wrong');
+                        const correctIdx = q.options.indexOf(q.correctAnswer);
+                        addToWrongAnswers(q.question, quizAnswers[i], correctIdx, q.options);
+                    }
+                }
             });
-            const data = await res.json();
-            alert(`娴嬭瘯瀹屾垚锛佸緱鍒嗭細${data.score}/${data.totalQuestions} (${data.percentage}%)`);
+            const total = window.quizData.length;
+            const percentage = Math.round((correct / total) * 100);
+            alert(`娴嬭瘯瀹屾垚锛佸緱鍒嗭細${correct}/${total} (${percentage}%)${unanswered > 0 ? `\n鏈綔绛旓細${unanswered}棰榒 : ''}`);
             loadOverview();
+            loadWrongAnswers();
         }
 
-        async function loadProgress() {
-            const res = await fetch('/api/users/progress', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const data = await res.json();
-            const details = document.getElementById('progress-details');
-            if (data.user) {
-                const total = data.user.progress?.learning + data.user.progress?.mastered || 0;
-                const mastered = data.user.progress?.mastered || 0;
-                details.innerHTML = `
-                    <div style="margin-bottom: 20px;">
-                        <h3>鍗曡瘝鎺屾彙杩涘害</h3>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${total ? (mastered / total * 100) : 0}%"></div>
-                        </div>
-                        <p style="margin-top: 8px;">宸叉帉鎻?${mastered} / ${total} 涓崟璇?/p>
-                    </div>
-                    <div>
-                        <h3>瀛︿範缁熻</h3>
-                        <p>杩炵画瀛︿範锛?{data.user.streak || 0} 澶?/p>
-                        <p>褰撳墠绛夌骇锛歀evel ${data.user.level || 1}</p>
-                        <p>绱瀛︿範鍗曡瘝锛?{data.user.totalWordsLearned || 0} 涓?/p>
-                    </div>
-                `;
+        function addToWrongAnswers(question, userAnswer, correctAnswer, options) {
+            const wrongAnswers = JSON.parse(localStorage.getItem(getUserKey('english-learning-wrong-answers')) || '[]');
+            const existingIndex = wrongAnswers.findIndex(w => w.question === question);
+            if (existingIndex >= 0) {
+                wrongAnswers[existingIndex].attempts++;
+                wrongAnswers[existingIndex].lastAttempt = new Date().toISOString();
+            } else {
+                wrongAnswers.push({
+                    id: Date.now(),
+                    question: question,
+                    userAnswer: userAnswer,
+                    correctAnswer: correctAnswer,
+                    options: options,
+                    attempts: 1,
+                    lastAttempt: new Date().toISOString()
+                });
+            }
+            localStorage.setItem(getUserKey('english-learning-wrong-answers'), JSON.stringify(wrongAnswers));
+        }
+
+        function removeWrongAnswer(id) {
+            let wrongAnswers = JSON.parse(localStorage.getItem(getUserKey('english-learning-wrong-answers')) || '[]');
+            wrongAnswers = wrongAnswers.filter(w => w.id !== id);
+            localStorage.setItem(getUserKey('english-learning-wrong-answers'), JSON.stringify(wrongAnswers));
+            loadWrongAnswers();
+        }
+
+        function clearAllWrongAnswers() {
+            if (confirm('纭畾瑕佹竻绌烘墍鏈夐敊棰樺悧锛熸鎿嶄綔涓嶅彲鎾ら攢銆?)) {
+                localStorage.removeItem(getUserKey('english-learning-wrong-answers'));
+                loadWrongAnswers();
             }
         }
 
-        async function startLevelTest() {
-            const res = await fetch('/api/users/level-test', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const data = await res.json();
-            currentTestAnswers = new Array(data.questions.length).fill(null);
-            const container = document.getElementById('test-questions');
-            container.innerHTML = data.questions.map((q, i) => `
-                <div style="margin-bottom: 20px;">
-                    <h4>闂 ${i + 1}: ${q.question}</h4>
-                    ${q.options.map((opt, j) => `
-                        <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
-                            ${String.fromCharCode(65 + j)}. ${opt}
-                        </div>
-                    `).join('')}
+        function loadWrongAnswers() {
+            const wrongAnswers = JSON.parse(localStorage.getItem(getUserKey('english-learning-wrong-answers')) || '[]');
+            const container = document.getElementById('wrong-answers-list');
+            if (!container) return;
+
+            if (wrongAnswers.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: #6b7280; padding: 20px;">鏆傛棤閿欓璁板綍</p>`;
+                return;
+            }
+
+            container.innerHTML = wrongAnswers.map(w => `
+                <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; position: relative;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">${w.question}</div>
+                    <div style="font-size: 14px; margin-bottom: 4px;">
+                        <span style="color: #ef4444;">鎮ㄧ殑绛旀锛?{w.userAnswer !== null && w.userAnswer !== undefined ? w.options[w.userAnswer] : '鏈綔绛?}</span>
+                    </div>
+                    <div style="font-size: 14px; margin-bottom: 4px;">
+                        <span style="color: #10b981;">姝ｇ‘绛旀锛?{w.options[w.correctAnswer]}</span>
+                    </div>
+                    <div style="font-size: 12px; color: #6b7280;">
+                        閿欒娆℃暟锛?{w.attempts}娆?| 涓婃閿欒锛?{new Date(w.lastAttempt).toLocaleDateString()}
+                    </div>
+                    <button class="btn btn-danger" style="position: absolute; top: 12px; right: 12px; padding: 4px 8px; font-size: 12px;" onclick="removeWrongAnswer(${w.id})">馃棏锔?/button>
                 </div>
             `).join('');
+        }
+
+        function loadProgress() {
+            if (!currentUser) return;
+            const details = document.getElementById('progress-details');
+            const total = currentUser.progress?.learning + currentUser.progress?.mastered || 0;
+            const mastered = currentUser.progress?.mastered || 0;
+            details.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h3>鍗曡瘝鎺屾彙杩涘害</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${total ? (mastered / total * 100) : 0}%"></div>
+                    </div>
+                    <p style="margin-top: 8px;">宸叉帉鎻?${mastered} / ${total} 涓崟璇?/p>
+                </div>
+                <div>
+                    <h3>瀛︿範缁熻</h3>
+                    <p>杩炵画瀛︿範锛?{currentUser.streak || 0} 澶?/p>
+                    <p>褰撳墠绛夌骇锛歀evel ${currentUser.level || 1}</p>
+                    <p>绱瀛︿範鍗曡瘝锛?{currentUser.totalWordsLearned || 0} 涓?/p>
+                </div>
+            `;
+        }
+
+        async function startLevelTest() {
+            const container = document.getElementById('test-questions');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px;">馃</div>
+                    <p style="margin-top: 16px; color: #667eea;">AI姝ｅ湪鐢熸垚缁煎悎娴嬭瘯棰?..</p>
+                    <p style="font-size: 14px; color: #9ca3af;">棰勮15-20閬撻锛屾兜鐩栬瘝姹囥€佽娉曘€侀槄璇荤悊瑙?/p>
+                </div>
+            `;
             document.getElementById('test-modal').classList.remove('hidden');
+
+            try {
+                const prompt = `璇蜂负鑻辫瀛︿範鑰呯敓鎴?5閬撶患鍚堟按骞虫祴璇曢锛屾兜鐩栦互涓嬮鍨嬪拰闅惧害锛?- 璇嶆眹棰橈紙5棰橈級锛氳€冨療鏍稿績璇嶆眹鐨勭悊瑙ｅ拰浣跨敤锛岄毦搴︿粠鍩虹鍒伴珮绾?- 璇硶棰橈紙5棰橈級锛氳€冨療鏃舵€併€佽鎬併€佷粠鍙ョ瓑璇硶鐭ヨ瘑
+- 瀹屽舰濉┖锛?棰橈級锛氱粰鍑轰笂涓嬫枃锛岄€夋嫨鏈€鍚堥€傜殑璇嶅～绌?- 闃呰鐞嗚В锛?棰橈級锛氱粰鍑虹煭鏂囷紝鍥炵瓟鐩稿叧闂
+
+姣忎釜棰樼洰鍖呭惈锛?- question锛堥鐩弿杩帮級
+- options锛?涓€夐」鏁扮粍锛?- answer锛堟纭瓟妗堢殑绱㈠紩锛?-3锛?- difficulty锛堥毦搴︾瓑绾?-5锛?- type锛堥鍨嬶細vocabulary/grammar/cloze/reading锛?
+璇疯繑鍥炵函JSON鏍煎紡锛屽寘鍚玵uestions鏁扮粍锛屼笉瑕佹坊鍔犱换浣曢澶栨枃瀛椼€俙;
+
+                const response = await callAI(prompt, '浣犳槸涓€涓笓涓氱殑鑻辫姘村钩娴嬭瘯鍑洪鍔╂墜銆傝涓ユ牸鎸夌収瑕佹眰鐨凧SON鏍煎紡杩斿洖鏁版嵁锛屼笉瑕佹坊鍔犱换浣曢澶栬鏄庢枃瀛椼€?);
+                const levelQuestions = JSON.parse(response);
+
+                currentTestAnswers = new Array(levelQuestions.questions.length).fill(null);
+                const total = levelQuestions.questions.length;
+
+                container.innerHTML = `
+                    <div style="margin-bottom: 20px; padding: 12px; background: #f3f4f6; border-radius: 8px; text-align: center;">
+                        <span id="test-progress">闂 1/${total}</span>
+                    </div>
+                    ${levelQuestions.questions.map((q, i) => `
+                        <div id="test-question-${i}" class="${i === 0 ? '' : 'hidden'}" style="margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <h4>闂 ${i + 1}: ${q.question}</h4>
+                                <span style="font-size: 12px; padding: 4px 8px; background: #e5e7eb; border-radius: 4px;">${getTypeLabel(q.type)} 路 闅惧害 ${q.difficulty}</span>
+                            </div>
+                            ${q.options.map((opt, j) => `
+                                <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
+                                    ${String.fromCharCode(65 + j)}. ${opt}
+                                </div>
+                            `).join('')}
+                            <div class="quiz-option quiz-option-dontknow" onclick="selectTestAnswer(${i}, -1)" id="test-${i}--1">
+                                馃 杩欓涓嶄細
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" onclick="prevTestQuestion()" id="test-prev-btn" disabled>涓婁竴棰?/button>
+                        <button class="btn btn-primary" onclick="nextTestQuestion()" id="test-next-btn">涓嬩竴棰?/button>
+                    </div>
+                `;
+                window.levelTestData = levelQuestions.questions;
+                window.currentTestIndex = 0;
+            } catch (error) {
+                console.error('AI Level Test Error:', error);
+                const levelQuestions = generateRandomQuestions(10);
+                currentTestAnswers = new Array(levelQuestions.length).fill(null);
+                const total = levelQuestions.length;
+
+                container.innerHTML = `
+                    <div style="margin-bottom: 20px; padding: 12px; background: #f3f4f6; border-radius: 8px; text-align: center;">
+                        <span id="test-progress">闂 1/${total}</span>
+                    </div>
+                    ${levelQuestions.map((q, i) => `
+                        <div id="test-question-${i}" class="${i === 0 ? '' : 'hidden'}" style="margin-bottom: 20px;">
+                            <h4>闂 ${i + 1}: ${q.question}</h4>
+                            ${q.options.map((opt, j) => `
+                                <div class="quiz-option" onclick="selectTestAnswer(${i}, ${j})" id="test-${i}-${j}">
+                                    ${String.fromCharCode(65 + j)}. ${opt}
+                                </div>
+                            `).join('')}
+                            <div class="quiz-option quiz-option-dontknow" onclick="selectTestAnswer(${i}, -1)" id="test-${i}--1">
+                                馃 杩欓涓嶄細
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" onclick="prevTestQuestion()" id="test-prev-btn" disabled>涓婁竴棰?/button>
+                        <button class="btn btn-primary" onclick="nextTestQuestion()" id="test-next-btn">涓嬩竴棰?/button>
+                    </div>
+                `;
+                window.levelTestData = levelQuestions;
+                window.currentTestIndex = 0;
+            }
+        }
+
+        function getTypeLabel(type) {
+            const labels = { vocabulary: '璇嶆眹', grammar: '璇硶', cloze: '瀹屽舰濉┖', reading: '闃呰鐞嗚В' };
+            return labels[type] || type;
+        }
+
+        function restoreTestAnswerSelection(index) {
+            document.querySelectorAll(`[id^="test-${index}-"]`).forEach(el => el.classList.remove('selected'));
+            const answer = currentTestAnswers[index];
+            if (answer !== null && answer !== undefined) {
+                const el = document.getElementById(`test-${index}-${answer}`);
+                if (el) {
+                    el.classList.add('selected');
+                }
+            }
+        }
+
+        function prevTestQuestion() {
+            if (window.currentTestIndex > 0) {
+                document.getElementById(`test-question-${window.currentTestIndex}`).classList.add('hidden');
+                window.currentTestIndex--;
+                document.getElementById(`test-question-${window.currentTestIndex}`).classList.remove('hidden');
+                restoreTestAnswerSelection(window.currentTestIndex);
+                document.getElementById('test-progress').textContent = `闂 ${window.currentTestIndex + 1}/${window.levelTestData.length}`;
+                document.getElementById('test-prev-btn').disabled = window.currentTestIndex === 0;
+                document.getElementById('test-next-btn').textContent = '涓嬩竴棰?;
+            }
+        }
+
+        function nextTestQuestion() {
+            if (window.currentTestIndex < window.levelTestData.length - 1) {
+                document.getElementById(`test-question-${window.currentTestIndex}`).classList.add('hidden');
+                window.currentTestIndex++;
+                document.getElementById(`test-question-${window.currentTestIndex}`).classList.remove('hidden');
+                restoreTestAnswerSelection(window.currentTestIndex);
+                document.getElementById('test-progress').textContent = `闂 ${window.currentTestIndex + 1}/${window.levelTestData.length}`;
+                document.getElementById('test-prev-btn').disabled = false;
+                if (window.currentTestIndex === window.levelTestData.length - 1) {
+                    document.getElementById('test-next-btn').textContent = '瀹屾垚娴嬭瘯';
+                }
+            } else {
+                submitTest();
+            }
         }
 
         function selectTestAnswer(questionIdx, optionIdx) {
@@ -627,18 +1518,133 @@
         }
 
         async function submitTest() {
-            const res = await fetch('/api/users/level-test', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ answers: currentTestAnswers })
+            if (!window.levelTestData) return;
+
+            const container = document.getElementById('test-questions');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px;">馃</div>
+                    <p style="margin-top: 16px; color: #667eea;">AI姝ｅ湪鍒嗘瀽鎮ㄧ殑娴嬭瘯缁撴灉...</p>
+                    <p style="font-size: 14px; color: #9ca3af; margin-top: 8px;">鐢熸垚璇︾粏璇勪及鎶ュ憡涓?..</p>
+                </div>
+            `;
+
+            let correct = 0;
+            let unknownCount = 0;
+            const results = window.levelTestData.map((q, i) => {
+                const userAnswer = currentTestAnswers[i];
+                const isUnknown = userAnswer === -1;
+                const isCorrect = !isUnknown && userAnswer === q.answer;
+                if (isCorrect) correct++;
+                if (isUnknown) unknownCount++;
+                return {
+                    question: q.question,
+                    type: q.type,
+                    difficulty: q.difficulty,
+                    userAnswer: userAnswer,
+                    correctAnswer: q.answer,
+                    isCorrect: isCorrect,
+                    isUnknown: isUnknown,
+                    options: q.options
+                };
             });
-            const data = await res.json();
-            alert(`娴嬭瘯瀹屾垚锛乗n寰楀垎锛?{data.score}/${data.total}\n璇勫畾绛夌骇锛歀evel ${data.newLevel}`);
-            closeTestModal();
-            loadOverview();
+            const total = window.levelTestData.length;
+
+            try {
+                const prompt = `璇峰垎鏋愪互涓嬭嫳璇按骞虫祴璇曠粨鏋滐紝鐢熸垚璇︾粏鐨勮瘎浼版姤鍛娿€?
+娴嬭瘯缁撴灉锛?- 鎬诲垎锛?{correct}/${total}
+- 姝ｇ‘鐜囷細${Math.round(correct / total * 100)}%
+- 鏈綔绛旓紙閫夋嫨"杩欓涓嶄細"锛夛細${unknownCount}棰?
+閲嶈璇存槑锛?- userAnswer涓?1琛ㄧず鐢ㄦ埛閫夋嫨浜?杩欓涓嶄細"锛岃繖浠ｈ〃鐭ヨ瘑绌虹櫧锛屼笌绛旈敊锛堥€夐敊绛旀锛夋€ц川涓嶅悓
+- 璇勪及鏃跺簲灏?涓嶄細"瑙嗕负姣?绛旈敊"鏇翠弗閲嶇殑钖勫急鐜妭
+- 瀛︿範寤鸿搴斾紭鍏堥拡瀵圭敤鎴烽€夋嫨"涓嶄細"鐨勯鍨嬪拰闅惧害绾у埆
+
+棰樼洰璇︽儏锛?{JSON.stringify(results)}
+
+璇疯繑鍥濲SON鏍煎紡锛屽寘鍚細
+- overallLevel锛堢患鍚堣瘎瀹氱瓑绾?-5锛?涓哄垵绾э紝5涓洪珮绾э級
+- levelDescription锛堢瓑绾ф弿杩帮紝濡?鍒濈骇鍏ラ棬"銆?涓骇杩涢樁"绛夛級
+- strengths锛堜紭鍔块鍩燂紝濡傝瘝姹囥€佽娉曠瓑锛?- weaknesses锛堣杽寮遍鍩燂紝鐗瑰埆鍏虫敞閫夋嫨"涓嶄細"鐨勯鐩被鍨嬶級
+- recommendations锛堝涔犲缓璁紝鍏蜂綋鍙锛屼紭鍏堝缓璁涔?涓嶄細"鐩稿叧鐨勫唴瀹癸級
+- breakdown锛堝悇棰樺瀷寰楀垎鎯呭喌锛屽寘鍚瘝姹囥€佽娉曘€佸畬褰㈠～绌恒€侀槄璇荤悊瑙ｏ級
+
+纭繚杩斿洖绾疛SON锛屼笉瑕佹坊鍔犱换浣曢澶栨枃瀛椼€俙;
+
+                const response = await callAI(prompt, '浣犳槸涓€涓笓涓氱殑鑻辫瀛︿範璇勪及涓撳銆傝鏍规嵁娴嬭瘯缁撴灉缁欏嚭鍑嗙‘鐨勭瓑绾ц瘎瀹氬拰璇︾粏鐨勫涔犲缓璁€?);
+                const assessment = JSON.parse(response);
+
+                currentUser.level = assessment.overallLevel;
+                saveUser();
+
+                container.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <div style="font-size: 64px;">${getLevelEmoji(assessment.overallLevel)}</div>
+                        <h2 style="margin-top: 16px;">${assessment.levelDescription}</h2>
+                        <p style="font-size: 24px; font-weight: bold; color: #667eea;">寰楀垎锛?{correct}/${total}</p>
+                        <p style="color: #6b7280;">姝ｇ‘鐜囷細${Math.round(correct / total * 100)}%</p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #10b981; margin-bottom: 8px;">馃挭 浼樺娍棰嗗煙</h3>
+                        <ul style="padding-left: 20px; color: #4b5563;">
+                            ${assessment.strengths.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #f59e0b; margin-bottom: 8px;">馃摑 钖勫急棰嗗煙</h3>
+                        <ul style="padding-left: 20px; color: #4b5563;">
+                            ${assessment.weaknesses.map(w => `<li>${w}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 8px;">馃幆 瀛︿範寤鸿</h3>
+                        <ul style="padding-left: 20px; color: #4b5563;">
+                            ${assessment.recommendations.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    ${assessment.breakdown ? `
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #8b5cf6; margin-bottom: 8px;">馃搳 鍚勯鍨嬪緱鍒?/h3>
+                        <div style="display: grid; gap: 8px;">
+                            ${Object.entries(assessment.breakdown).map(([type, score]) => `
+                                <div style="display: flex; justify-content: space-between; padding: 8px; background: #f3f4f6; border-radius: 4px;">
+                                    <span>${getTypeLabel(type) || type}</span>
+                                    <span style="font-weight: bold;">${score}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <button class="btn btn-primary" onclick="closeTestModal()" style="width: 100%;">瀹屾垚</button>
+                `;
+            } catch (error) {
+                console.error('AI Assessment Error:', error);
+                let newLevel = Math.max(1, Math.min(5, Math.round(correct / total * 5)));
+                currentUser.level = newLevel;
+                saveUser();
+
+                container.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <div style="font-size: 64px;">${getLevelEmoji(newLevel)}</div>
+                        <h2 style="margin-top: 16px;">璇勫畾绛夌骇锛歀evel ${newLevel}</h2>
+                        <p style="font-size: 24px; font-weight: bold; color: #667eea;">寰楀垎锛?{correct}/${total}</p>
+                        <p style="color: #6b7280;">姝ｇ‘鐜囷細${Math.round(correct / total * 100)}%</p>
+                    </div>
+                    <div style="padding: 16px; background: #fffbeb; border-radius: 8px; margin-bottom: 20px;">
+                        <p style="color: #92400e;">AI璇勪及鏈嶅姟鏆傛椂涓嶅彲鐢紝宸蹭娇鐢ㄥ熀纭€璇勫垎绠楁硶銆?/p>
+                    </div>
+                    <button class="btn btn-primary" onclick="closeTestModal()" style="width: 100%;">瀹屾垚</button>
+                `;
+            }
+        }
+
+        function getLevelEmoji(level) {
+            const emojis = { 1: '馃尡', 2: '馃摎', 3: '馃摉', 4: '馃帗', 5: '馃専' };
+            return emojis[level] || '馃摎';
         }
 
         function closeTestModal() {
@@ -646,15 +1652,1190 @@
             currentTestAnswers = [];
         }
 
-        async function startDailyLearning() {
-            const res = await fetch('/api/words/daily', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const data = await res.json();
-            alert(`浠婃棩瀛︿範浠诲姟锛歕n- 澶嶄範鍗曡瘝锛?{data.reviewCount || 0} 涓猏n- 鏂板鍗曡瘝锛?{data.newCount || 0} 涓猔);
-            document.getElementById('word-level').value = localStorage.getItem('userLevel') || 1;
+        function startDailyLearning() {
+            const level = currentUser.level || 1;
+            const reviewCount = Object.values(currentUser.wordProgress || {}).filter(p => {
+                if (!p.nextReviewDate) return false;
+                return new Date(p.nextReviewDate) <= new Date();
+            }).length;
+            const newCount = 5;
+            alert(`浠婃棩瀛︿範浠诲姟锛歕n- 澶嶄範鍗曡瘝锛?{reviewCount} 涓猏n- 鏂板鍗曡瘝锛?{newCount} 涓猔);
+            document.getElementById('word-level').value = level;
             switchTab('words');
             loadWords();
+        }
+
+        function loadAIWordCache() {
+            const saved = localStorage.getItem(getUserKey('english-learning-last-word-batch'));
+            if (saved) {
+                const data = JSON.parse(saved);
+                aiWordCache = data.words || [];
+                lastWordTopic = data.topic || '';
+            }
+        }
+
+        function saveAIWordCache(topic) {
+            localStorage.setItem(getUserKey('english-learning-last-word-batch'), JSON.stringify({
+                words: aiWordCache,
+                topic: topic || lastWordTopic
+            }));
+        }
+
+        async function generateAIWords() {
+            const level = currentUser.level || 1;
+            const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+            const levelInfo = VOCABULARY_LEVELS[level];
+            const loadingDiv = document.getElementById('ai-words-loading');
+            const resultDiv = document.getElementById('ai-words-result');
+            const topics = ['鏃ュ父鐢ㄥ搧', '椋熺墿', '鍔ㄧ墿', '澶╂皵', '瀛︽牎', '瀹跺涵', '杩愬姩', '鏃呰', '鏃堕棿', '棰滆壊', '鑷劧', '绉戞妧', '鏂囧寲', '鑺傛棩', '鍋ュ悍'];
+            const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+
+            if (!VOCABULARY_BY_LEVEL || !VOCABULARY_BY_LEVEL[level]) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">璇嶆眹鏁版嵁鍔犺浇澶辫触锛岃鍒锋柊椤甸潰</p>`;
+                return;
+            }
+
+            if (!levelInfo) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">绛夌骇淇℃伅鍔犺浇澶辫触锛岃鍒锋柊椤甸潰</p>`;
+                return;
+            }
+
+            if (!generatedWordsHistory[level]) {
+                generatedWordsHistory[level] = [...VOCABULARY_BY_LEVEL[level].map(w => w.word)];
+            }
+
+            const currentHistory = generatedWordsHistory[level];
+            const coveredCount = currentHistory.length;
+            const totalCount = levelInfo.wordCount;
+            const progress = Math.round((coveredCount / totalCount) * 100);
+
+            if (coveredCount >= totalCount) {
+                resultDiv.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6b7280;">
+                        <div style="font-size: 64px;">馃帀</div>
+                        <h3 style="margin-top: 16px;">鎭枩锛佽绛夌骇璇嶆眹宸插叏閮ㄨ鐩?/h3>
+                        <p style="margin-top: 8px;">宸茬敓鎴?${coveredCount} / ${totalCount} 涓崟璇?/p>
+                    </div>
+                `;
+                return;
+            }
+
+            loadingDiv.style.display = 'block';
+            resultDiv.innerHTML = '';
+
+            try {
+                const excludeWords = currentHistory.join(', ') || '鏃?;
+                const prompt = `璇蜂负鑻辫姘村钩涓?${levelDesc}"鐨勫涔犺€呯敓鎴?2涓€傚悎鐨勮嫳璇崟璇嶏紝涓婚涓?${randomTopic}"銆傝姹傦細1. 杩欎簺鍗曡瘝瑕佸洿缁曞悓涓€涓富棰橈紝鐩镐簰涔嬮棿鏈夐€昏緫鍏宠仈锛岃兘澶熻嚜鐒跺湴缁勫悎鎴愪竴绡囪鏂囷紱2. 鍖呭惈鍚嶈瘝銆佸姩璇嶃€佸舰瀹硅瘝绛変笉鍚岃瘝鎬х殑鍗曡瘝锛?. 閬垮厤閲嶅浠ヤ笅宸茬敓鎴愮殑鍗曡瘝锛?{excludeWords}锛?. 纭繚鐢熸垚鐨勫崟璇嶉兘鏄姘村钩鐨勫父鐢ㄨ瘝姹囷紱5. 杩斿洖JSON鏍煎紡锛屽寘鍚玦d銆亀ord锛堝崟璇嶏級銆乸honetic锛堥煶鏍囷級銆乵eaning锛堜腑鏂囬噴涔夛級銆乪xample锛堜緥鍙ワ級銆乼ips锛堣蹇嗘妧宸э級銆傜‘淇濊繑鍥炵函JSON锛屼笉瑕佸寘鍚叾浠栨枃瀛椼€?
+绀轰緥JSON鏍煎紡锛?[
+    {"id": 1, "word": "apple", "phonetic": "/藞忙pl/", "meaning": "鑻规灉", "example": "I eat an apple every day.", "tips": "a+pple锛屾兂璞¤嫻鏋滅牳鍦ㄥご涓?},
+    {"id": 2, "word": "book", "phonetic": "/b蕣k/", "meaning": "涔?, "example": "This is a good book.", "tips": "b+ook锛屼功鐪嬭捣鏉ュ儚鎵撳紑鐨刼ok"}
+]`;
+
+                const response = await callAI(prompt, '浣犳槸涓€涓笓涓氱殑鑻辫璇嶆眹鐢熸垚鍔╂墜銆傝涓ユ牸鎸夌収瑕佹眰鐨凧SON鏍煎紡杩斿洖鏁版嵁锛屼笉瑕佹坊鍔犱换浣曢澶栬鏄庢枃瀛楋紝涓嶈鍖呭惈markdown浠ｇ爜鍧楁爣璁般€?);
+
+                let cleanResponse = response.trim();
+                if (cleanResponse.startsWith('```json')) {
+                    cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+                } else if (cleanResponse.startsWith('```')) {
+                    cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                }
+
+                aiWordCache = JSON.parse(cleanResponse);
+
+                if (!Array.isArray(aiWordCache)) {
+                    throw new Error('AI杩斿洖鐨勬暟鎹牸寮忎笉姝ｇ‘');
+                }
+
+                aiWordCache.forEach(w => {
+                    if (!currentHistory.includes(w.word)) {
+                        currentHistory.push(w.word);
+                    }
+                });
+
+                saveGeneratedWordsHistory();
+                saveAIWordCache(randomTopic);
+
+                const newCoveredCount = currentHistory.length;
+                const newProgress = Math.round((newCoveredCount / totalCount) * 100);
+
+                resultDiv.innerHTML = `
+                    <div style="margin-bottom: 16px; padding: 12px; background: #f0fdf4; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span>馃摎 鏈鐢熸垚涓婚锛?{randomTopic} 路 鍏?${aiWordCache.length} 涓崟璇嶏紙鍙敤浜庣敓鎴愯鏂囷級</span>
+                            <span style="font-weight: bold; color: #10b981;">瑕嗙洊杩涘害锛?{newCoveredCount}/${totalCount} (${newProgress}%)</span>
+                        </div>
+                        <div style="height: 8px; background: #d1fae5; border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; background: #10b981; width: ${newProgress}%; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                    ${aiWordCache.map((w, idx) => `
+                        <div class="word-card">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="word">${w.word}</div>
+                                <button class="speak-btn" onclick="speak('${w.word}')" title="鍙戦煶">馃攰</button>
+                            </div>
+                            <div class="phonetic">${w.phonetic}</div>
+                            <div class="meaning">${w.meaning}</div>
+                            <div class="example">${w.example}</div>
+                            <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
+                                馃挕 璁板繂鎶€宸э細${w.tips}
+                            </div>
+                            <button class="btn btn-success" onclick="addAIWord(${idx})" style="margin-top: 12px;">娣诲姞鍒扮敓璇嶆湰</button>
+                        </div>
+                    `).join('')}
+                `;
+            } catch (error) {
+                console.error('AI鍗曡瘝鐢熸垚澶辫触:', error);
+                generateFallbackAIWords(randomTopic);
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        function generateFallbackAIWords(topic) {
+            const level = currentUser.level || 1;
+            const resultDiv = document.getElementById('ai-words-result');
+            const VOCABULARY_BY_LEVEL = window.VOCABULARY_BY_LEVEL || {};
+
+            const builtInWords = VOCABULARY_BY_LEVEL[level] || [];
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level <= level);
+            const allWords = [...builtInWords, ...aiWords];
+
+            if (allWords.length === 0) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">鏆傛棤瓒冲璇嶆眹鐢熸垚锛岃鍏堝涔犲崟璇?/p>`;
+                return;
+            }
+
+            const shuffled = [...allWords].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, Math.min(12, allWords.length));
+
+            aiWordCache = selected.map((w, idx) => ({
+                id: idx + 1,
+                word: w.word,
+                phonetic: w.phonetic || '',
+                meaning: w.meaning,
+                example: w.example || '鏆傛棤渚嬪彞',
+                tips: w.tips || '鏆傛棤璁板繂鎶€宸?
+            }));
+
+            const currentHistory = generatedWordsHistory[level] || [];
+            aiWordCache.forEach(w => {
+                if (!currentHistory.includes(w.word)) {
+                    currentHistory.push(w.word);
+                }
+            });
+
+            saveGeneratedWordsHistory();
+            saveAIWordCache(topic);
+
+            resultDiv.innerHTML = `
+                <div style="margin-bottom: 16px; padding: 12px; background: #fef3c7; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span>鈿狅笍 AI鐢熸垚澶辫触锛屼娇鐢ㄥ鐢ㄩ搴?路 涓婚锛?{topic}</span>
+                        <span style="font-weight: bold; color: #f59e0b;">鍏?${aiWordCache.length} 涓崟璇?/span>
+                    </div>
+                </div>
+                ${aiWordCache.map((w, idx) => `
+                    <div class="word-card">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="word">${w.word}</div>
+                            <button class="speak-btn" onclick="speak('${w.word}')" title="鍙戦煶">馃攰</button>
+                        </div>
+                        <div class="phonetic">${w.phonetic}</div>
+                        <div class="meaning">${w.meaning}</div>
+                        <div class="example">${w.example}</div>
+                        <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
+                            馃挕 璁板繂鎶€宸э細${w.tips}
+                        </div>
+                        <button class="btn btn-success" onclick="addAIWord(${idx})" style="margin-top: 12px;">娣诲姞鍒扮敓璇嶆湰</button>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function addAIWord(index) {
+            const w = aiWordCache[index];
+            if (!w) return;
+
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
+            if (aiWords.some(aw => aw.word === w.word)) {
+                showToast('杩欎釜鍗曡瘝宸茬粡鍦ㄥ涔犲垪琛ㄤ腑浜?);
+                return;
+            }
+
+            const newWord = {
+                id: Date.now(),
+                word: w.word,
+                phonetic: w.phonetic,
+                meaning: w.meaning,
+                example: w.example,
+                level: currentUser.level || 1,
+                addedByAI: true,
+                addedDate: new Date().toISOString(),
+                repetitions: 0,
+                easeFactor: 2.5,
+                interval: 0,
+                nextReviewDate: new Date().toISOString(),
+                lastReviewDate: null,
+                status: 'new'
+            };
+
+            aiWords.push(newWord);
+            localStorage.setItem(getUserKey('english-learning-ai-words'), JSON.stringify(aiWords));
+
+            showToast(`鉁?宸叉坊鍔犲崟璇?"${w.word}" 鍒扮敓璇嶆湰`);
+            updateAIWordsCount();
+        }
+
+        function addLessonWord(index) {
+            const keyWords = window.currentLessonKeyWords || [];
+            const w = keyWords[index];
+            if (!w) return;
+
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
+            if (aiWords.some(aw => aw.word === w.word)) {
+                showToast('杩欎釜鍗曡瘝宸茬粡鍦ㄥ涔犲垪琛ㄤ腑浜?);
+                return;
+            }
+
+            const newWord = {
+                id: Date.now(),
+                word: w.word,
+                phonetic: w.phonetic,
+                meaning: w.chineseMeaning,
+                example: w.example,
+                level: currentUser.level || 1,
+                addedByAI: true,
+                addedDate: new Date().toISOString(),
+                repetitions: 0,
+                easeFactor: 2.5,
+                interval: 0,
+                nextReviewDate: new Date().toISOString(),
+                lastReviewDate: null,
+                status: 'new'
+            };
+
+            aiWords.push(newWord);
+            localStorage.setItem(getUserKey('english-learning-ai-words'), JSON.stringify(aiWords));
+
+            showToast(`鉁?宸叉坊鍔犲崟璇?"${w.word}" 鍒扮敓璇嶆湰`);
+            updateAIWordsCount();
+        }
+
+        let vocabReviewWords = [];
+        let vocabReviewIndex = 0;
+
+        function loadVocab() {
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
+            const now = new Date();
+            const dueForReview = aiWords.filter(w => new Date(w.nextReviewDate) <= now);
+            const mastered = aiWords.filter(w => w.status === 'mastered');
+            const learning = aiWords.filter(w => w.status === 'learning');
+            const newWords = aiWords.filter(w => w.status === 'new');
+
+            const statsDiv = document.getElementById('vocab-stats');
+            statsDiv.innerHTML = `
+                <div style="padding: 12px; background: #eff6ff; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${dueForReview.length}</div>
+                    <div style="font-size: 12px; color: #6b7280;">寰呭涔?/div>
+                </div>
+                <div style="padding: 12px; background: #f0fdf4; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #10b981;">${mastered.length}</div>
+                    <div style="font-size: 12px; color: #6b7280;">宸叉帉鎻?/div>
+                </div>
+                <div style="padding: 12px; background: #fffbeb; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${learning.length}</div>
+                    <div style="font-size: 12px; color: #6b7280;">瀛︿範涓?/div>
+                </div>
+                <div style="padding: 12px; background: #fef2f2; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #ef4444;">${newWords.length}</div>
+                    <div style="font-size: 12px; color: #6b7280;">鏂拌瘝</div>
+                </div>
+            `;
+
+            const listDiv = document.getElementById('vocab-list');
+            if (aiWords.length === 0) {
+                listDiv.innerHTML = '<p style="color: #9ca3af; text-align: center;">鐢熻瘝鏈负绌猴紝璇峰厛娣诲姞鍗曡瘝</p>';
+                return;
+            }
+
+            listDiv.innerHTML = aiWords.map(w => `
+                <div class="word-card" style="margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="word">${w.word}</div>
+                        <button class="speak-btn" onclick="speak('${w.word}')" title="鍙戦煶">馃攰</button>
+                        <span style="font-size: 12px; padding: 2px 6px; background: ${getStatusColor(w.status)}; color: white; border-radius: 4px;">${getStatusLabel(w.status)}</span>
+                    </div>
+                    <div class="phonetic">${w.phonetic}</div>
+                    <div class="meaning">${w.meaning}</div>
+                    <div class="example">${w.example}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; color: #6b7280;">
+                        <span>閲嶅娆℃暟锛?{w.repetitions}娆?/span>
+                        <span>涓嬫澶嶄範锛?{formatDate(w.nextReviewDate)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusColor(status) {
+            const colors = { new: '#ef4444', learning: '#f59e0b', mastered: '#10b981' };
+            return colors[status] || '#6b7280';
+        }
+
+        function getStatusLabel(status) {
+            const labels = { new: '鏂拌瘝', learning: '瀛︿範涓?, mastered: '宸叉帉鎻? };
+            return labels[status] || status;
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = date.getTime() - now.getTime();
+            const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            if (days < 0) return '浠婂ぉ';
+            if (days === 0) return '浠婂ぉ';
+            if (days === 1) return '鏄庡ぉ';
+            return `${days}澶╁悗`;
+        }
+
+        function startVocabReview() {
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
+            const now = new Date();
+            vocabReviewWords = aiWords.filter(w => new Date(w.nextReviewDate) <= now);
+
+            if (vocabReviewWords.length === 0) {
+                showToast('馃帀 娌℃湁闇€瑕佸涔犵殑鍗曡瘝锛?);
+                return;
+            }
+
+            vocabReviewIndex = 0;
+            document.getElementById('vocab-review-modal').classList.remove('hidden');
+            showVocabFlashcard();
+        }
+
+        function showVocabFlashcard() {
+            if (vocabReviewIndex >= vocabReviewWords.length) {
+                closeVocabReview();
+                showToast('馃帀 澶嶄範瀹屾垚锛?);
+                loadVocab();
+                return;
+            }
+
+            const w = vocabReviewWords[vocabReviewIndex];
+            document.getElementById('vocab-review-progress').textContent = `杩涘害锛?{vocabReviewIndex + 1}/${vocabReviewWords.length}`;
+            document.getElementById('flashcard-word').textContent = w.word;
+            document.getElementById('flashcard-phonetic').textContent = w.phonetic;
+            document.getElementById('flashcard-meaning').textContent = w.meaning;
+            document.getElementById('flashcard-example').textContent = w.example;
+
+            const cardInner = document.getElementById('flashcard-inner');
+            cardInner.style.transform = 'rotateY(0deg)';
+        }
+
+        function flipFlashcard() {
+            const cardInner = document.getElementById('flashcard-inner');
+            const currentTransform = cardInner.style.transform;
+            cardInner.style.transform = currentTransform === 'rotateY(180deg)' ? 'rotateY(0deg)' : 'rotateY(180deg)';
+        }
+
+        function rateVocabWord(rating) {
+            const w = vocabReviewWords[vocabReviewIndex];
+            updateVocabSM2(w, rating);
+            vocabReviewIndex++;
+            showVocabFlashcard();
+        }
+
+        function updateVocabSM2(word, rating) {
+            if (rating >= 3) {
+                if (word.repetitions === 0) {
+                    word.interval = 1;
+                } else if (word.repetitions === 1) {
+                    word.interval = 6;
+                } else {
+                    word.interval = Math.round(word.interval * word.easeFactor);
+                }
+                word.easeFactor = Math.max(1.3, word.easeFactor + (0.1 - (5 - rating) * (0.08 + (5 - rating) * 0.02)));
+                word.repetitions++;
+                if (word.repetitions >= 3 && rating >= 4) {
+                    word.status = 'mastered';
+                } else if (word.status === 'new') {
+                    word.status = 'learning';
+                }
+            } else {
+                word.repetitions = 0;
+                word.interval = 1;
+                word.status = 'learning';
+            }
+
+            const nextDate = new Date();
+            nextDate.setDate(nextDate.getDate() + word.interval);
+            word.nextReviewDate = nextDate.toISOString();
+            word.lastReviewDate = new Date().toISOString();
+
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
+            const idx = aiWords.findIndex(w => w.id === word.id);
+            if (idx >= 0) {
+                aiWords[idx] = word;
+                localStorage.setItem(getUserKey('english-learning-ai-words'), JSON.stringify(aiWords));
+            }
+        }
+
+        function closeVocabReview() {
+            document.getElementById('vocab-review-modal').classList.add('hidden');
+        }
+
+        async function startVocabQuiz() {
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
+            const now = new Date();
+            const dueWords = aiWords.filter(w => new Date(w.nextReviewDate) <= now);
+
+            if (dueWords.length === 0) {
+                showToast('馃帀 娌℃湁闇€瑕佹祴楠岀殑鍗曡瘝锛?);
+                return;
+            }
+
+            const wordsForQuiz = dueWords.slice(0, 5);
+            const wordsStr = wordsForQuiz.map(w => `${w.word}(${w.meaning})`).join(', ');
+
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'vocab-quiz-loading';
+            loadingDiv.style.cssText = 'text-align: center; padding: 40px;';
+            loadingDiv.innerHTML = '<div style="font-size: 48px;">馃</div><p style="margin-top: 16px;">AI姝ｅ湪鐢熸垚娴嬮獙棰?..</p>';
+
+            const container = document.getElementById('tab-vocab').querySelector('.card');
+            container.innerHTML = '';
+            container.appendChild(loadingDiv);
+
+            try {
+                const prompt = `璇锋牴鎹互涓嬪崟璇嶇敓鎴?閬撴祴楠岄锛?{wordsStr}銆傞鐩被鍨嬪寘鎷€夋嫨棰樸€佸～绌洪銆傝杩斿洖JSON鏍煎紡锛屽寘鍚玵uestions鏁扮粍锛屾瘡涓鐩寘鍚細question锛堥鐩級銆乷ptions锛?涓€夐」鏁扮粍锛夈€乤nswer锛堟纭瓟妗堢殑绱㈠紩锛?-3锛夈€亀ord锛堣€冨療鐨勫崟璇嶏級銆傜‘淇濊繑鍥炵函JSON锛屼笉瑕佸寘鍚叾浠栨枃瀛椼€俙;
+
+                const response = await callAI(prompt, '浣犳槸涓€涓笓涓氱殑鑻辫娴嬮獙鍑洪鍔╂墜銆傝涓ユ牸鎸夌収瑕佹眰鐨凧SON鏍煎紡杩斿洖鏁版嵁锛屼笉瑕佹坊鍔犱换浣曢澶栬鏄庢枃瀛椼€?);
+                const quiz = JSON.parse(response);
+
+                let score = 0;
+                const results = [];
+
+                container.innerHTML = `
+                    <h2>馃摑 鐢熻瘝鏈祴楠?/h2>
+                    <div id="vocab-quiz-questions">
+                        ${quiz.questions.map((q, i) => `
+                            <div style="margin-bottom: 20px;">
+                                <h4>闂 ${i + 1}: ${q.question}</h4>
+                                ${q.options.map((opt, j) => `
+                                    <div class="quiz-option" onclick="selectVocabQuizAnswer(${i}, ${j})" id="vocab-quiz-${i}-${j}">
+                                        ${String.fromCharCode(65 + j)}. ${opt}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="btn btn-primary" onclick="submitVocabQuiz()" style="width: 100%;">鎻愪氦绛旀</button>
+                `;
+
+                window.vocabQuizData = quiz.questions;
+                window.vocabQuizAnswers = new Array(quiz.questions.length).fill(null);
+                window.vocabQuizWords = wordsForQuiz;
+            } catch (error) {
+                container.innerHTML = '<p style="color: #ef4444; text-align: center;">鐢熸垚澶辫触锛岃閲嶈瘯</p>';
+            }
+        }
+
+        function selectVocabQuizAnswer(questionIdx, optionIdx) {
+            window.vocabQuizAnswers[questionIdx] = optionIdx;
+            document.querySelectorAll(`[id^="vocab-quiz-${questionIdx}-"]`).forEach(el => el.classList.remove('selected'));
+            document.getElementById(`vocab-quiz-${questionIdx}-${optionIdx}`).classList.add('selected');
+        }
+
+        function submitVocabQuiz() {
+            const quizData = window.vocabQuizData;
+            const answers = window.vocabQuizAnswers;
+            const words = window.vocabQuizWords;
+
+            let score = 0;
+            quizData.forEach((q, i) => {
+                if (answers[i] === q.answer) score++;
+            });
+
+            quizData.forEach((q, i) => {
+                const word = words.find(w => w.word === q.word);
+                if (word) {
+                    const rating = answers[i] === q.answer ? 5 : 0;
+                    updateVocabSM2(word, rating);
+                }
+            });
+
+            const container = document.getElementById('tab-vocab').querySelector('.card');
+            container.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 64px;">${score === quizData.length ? '馃帀' : '馃挭'}</div>
+                    <h2>娴嬮獙瀹屾垚锛?/h2>
+                    <p style="font-size: 24px; font-weight: bold; color: #667eea;">寰楀垎锛?{score}/${quizData.length}</p>
+                    <button class="btn btn-primary" onclick="loadVocab()" style="margin-top: 16px;">杩斿洖鐢熻瘝鏈?/button>
+                </div>
+            `;
+
+            showToast(`娴嬮獙瀹屾垚锛佸緱鍒嗭細${score}/${quizData.length}`);
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                z-index: 9999;
+                font-size: 16px;
+                animation: fadeIn 0.3s;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 2000);
+        }
+
+        function updateAIWordsCount() {
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
+            const countBadge = document.getElementById('ai-words-count');
+            if (countBadge) {
+                countBadge.textContent = aiWords.length;
+                countBadge.style.display = aiWords.length > 0 ? 'inline-block' : 'none';
+            }
+        }
+
+        async function generateAILesson() {
+            const level = currentUser.level || 1;
+            const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+            const userTopic = document.getElementById('ai-lesson-topic').value;
+            const loadingDiv = document.getElementById('ai-lesson-loading');
+            const resultDiv = document.getElementById('ai-lesson-result');
+
+            if (aiWordCache.length === 0) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">鏆傛棤鍙敤鍗曡瘝锛岃鍏堝湪銆屸湪 AI鍗曡瘝銆嶄腑鐢熸垚鍗曡瘝</p>`;
+                return;
+            }
+
+            const wordList = aiWordCache.map(w => w.word).join(', ');
+            const autoTopic = userTopic || (lastWordTopic || '鏍规嵁鍗曡瘝鍐呭鑷姩纭畾');
+
+            loadingDiv.style.display = 'block';
+            resultDiv.innerHTML = '';
+            isSpeaking = false;
+
+            try {
+                let prompt = '';
+
+                if (userTopic) {
+                    prompt = `璇蜂负鑻辫姘村钩涓?${levelDesc}"鐨勫涔犺€呭啓涓€绡囧叧浜?${userTopic}"鐨勮鏂囥€傝姹傦細1. 鏍规嵁闅惧害鎻忚堪鎺у埗璇炬枃闀垮害鍜岄毦搴︼紱2. 璇炬枃涓渶瑕佸寘鍚互涓嬪崟璇嶏紝灏介噺鑷劧铻嶅叆锛?{wordList}锛?. 璇█绠€鍗曟槗鎳傦紝璁╁涔犺€呰兘澶熼€氳繃璇炬枃宸╁浐鍗曡瘝锛?. 杩斿洖鏍煎紡涓篔SON锛屽寘鍚玹itle锛堟爣棰橈級銆乧ontent锛堣鏂囧唴瀹癸級銆乲eyWords锛堥噸鐐瑰崟璇嶆暟缁勶紝姣忎釜鍗曡瘝鍖呭惈锛歸ord銆乸honetic銆乸artOfSpeech銆乧hineseMeaning銆乪xample锛夈€傜‘淇濊繑鍥炵函JSON锛屼笉瑕佸寘鍚叾浠栨枃瀛椼€俙;
+                } else {
+                    prompt = `璇蜂负鑻辫姘村钩涓?${levelDesc}"鐨勫涔犺€呭啓涓€绡囪鏂囥€傝姹傦細1. 鏍规嵁浠ヤ笅鍗曡瘝纭畾涓€涓悎閫傜殑涓婚锛屼富棰樿閫傚悎杩欎簺鍗曡瘝锛?{wordList}锛?. 鏍规嵁闅惧害鎻忚堪鎺у埗璇炬枃闀垮害鍜岄毦搴︼紱3. 璇炬枃涓繀椤诲寘鍚笂杩版墍鏈夊崟璇嶏紱4. 璇█绠€鍗曟槗鎳傦紝璁╁涔犺€呰兘澶熼€氳繃璇炬枃宸╁浐鍗曡瘝锛?. 杩斿洖鏍煎紡涓篔SON锛屽寘鍚玹itle锛堟爣棰橈級銆乧ontent锛堣鏂囧唴瀹癸級銆乲eyWords锛堥噸鐐瑰崟璇嶆暟缁勶紝姣忎釜鍗曡瘝鍖呭惈锛歸ord銆乸honetic銆乸artOfSpeech銆乧hineseMeaning銆乪xample锛夈€傜‘淇濊繑鍥炵函JSON锛屼笉瑕佸寘鍚叾浠栨枃瀛椼€俙;
+                }
+
+                const response = await callAI(prompt, '浣犳槸涓€涓笓涓氱殑鑻辫璇炬枃鐢熸垚鍔╂墜銆傝涓ユ牸鎸夌収瑕佹眰鐨凧SON鏍煎紡杩斿洖鏁版嵁锛屼笉瑕佹坊鍔犱换浣曢澶栬鏄庢枃瀛椼€?);
+
+                const cleanResponse = response.replace(/```json/g, '').replace(/```/g, '').trim();
+                const lesson = JSON.parse(cleanResponse);
+                currentLesson = { ...lesson, level, savedDate: new Date().toISOString() };
+
+                let contentWithAudio = lesson.content;
+                lesson.keyWords.forEach(w => {
+                    const regex = new RegExp(`\\b(${w.word})\\b`, 'gi');
+                    contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}')" title="鐐瑰嚮鍚彂闊? style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
+                });
+
+                resultDiv.innerHTML = `
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3>${lesson.title}</h3>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-outline" onclick="saveCurrentLesson()" style="padding: 8px 16px; font-size: 14px;">馃捑 淇濆瓨璇炬枃</button>
+                                <button class="btn btn-success" onclick="toggleLessonSpeech('${lesson.content.replace(/'/g, "\\'")}')" style="padding: 8px 16px; font-size: 14px;">
+                                    馃攰 鏈楄璇炬枃
+                                </button>
+                            </div>
+                        </div>
+                        <p style="margin: 12px 0; line-height: 1.8;">${contentWithAudio}</p>
+                        <h4>馃摉 閲嶇偣鍗曡瘝锛堝叡${lesson.keyWords.length}涓級锛?/h4>
+                        <div style="margin: 8px 0;">
+                            ${lesson.keyWords.map((w, idx) => `
+                                <div class="word-card" style="margin-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="word">${w.word}</div>
+                                        <button class="speak-btn" onclick="speak('${w.word}')" title="鍙戦煶">馃攰</button>
+                                        <span style="font-size: 12px; padding: 2px 6px; background: #e0e7ff; color: #4338ca; border-radius: 4px;">${w.partOfSpeech}</span>
+                                    </div>
+                                    <div class="phonetic">${w.phonetic}</div>
+                                    <div class="meaning">${w.chineseMeaning}</div>
+                                    <div class="example">${w.example}</div>
+                                    <button class="btn btn-success" onclick="addLessonWord(${idx})" style="margin-top: 12px;">鉃?娣诲姞鍒扮敓璇嶆湰</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                window.currentLessonKeyWords = lesson.keyWords;
+            } catch (error) {
+                console.error('AI璇炬枃鐢熸垚澶辫触:', error);
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">鐢熸垚澶辫触锛岃閲嶈瘯<br><span style="font-size: 12px;">閿欒淇℃伅: ${error.message}</span></p>`;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        function saveCurrentLesson() {
+            if (!currentLesson) {
+                showToast('娌℃湁鍙繚瀛樼殑璇炬枃');
+                return;
+            }
+
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+            const existingIndex = savedLessons.findIndex(l => l.title === currentLesson.title && l.level === currentLesson.level);
+
+            if (existingIndex >= 0) {
+                savedLessons[existingIndex] = currentLesson;
+            } else {
+                currentLesson.id = Date.now();
+                savedLessons.push(currentLesson);
+            }
+
+            localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
+            showToast('鉁?璇炬枃宸蹭繚瀛?);
+            loadSavedLessons();
+        }
+
+        function loadSavedLessons() {
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+            const container = document.getElementById('saved-lessons-list');
+
+            if (savedLessons.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 12px;">馃摎 宸蹭繚瀛樿鏂囷紙${savedLessons.length}绡囷級</h4>
+                    <div style="display: flex; flex-wrap: gap: 8px;">
+                        ${savedLessons.map(lesson => `
+                            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <span style="font-weight: bold;">${lesson.title}</span>
+                                    <span style="font-size: 12px; color: #6b7280; margin-left: 8px;">Level ${lesson.level}</span>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn btn-outline" onclick="viewSavedLesson(${lesson.id})" style="padding: 4px 8px; font-size: 12px;">鏌ョ湅</button>
+                                    <button class="btn btn-danger" onclick="deleteSavedLesson(${lesson.id})" style="padding: 4px 8px; font-size: 12px;">馃棏锔?鍒犻櫎</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function viewSavedLesson(lessonId) {
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+            const lesson = savedLessons.find(l => l.id === lessonId);
+            if (!lesson) return;
+
+            currentLesson = lesson;
+            isSpeaking = false;
+
+            let contentWithAudio = lesson.content;
+            lesson.keyWords.forEach(w => {
+                const regex = new RegExp(`\\b(${w.word})\\b`, 'gi');
+                contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}')" title="鐐瑰嚮鍚彂闊? style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
+            });
+
+            const resultDiv = document.getElementById('ai-lesson-result');
+            resultDiv.innerHTML = `
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3>${lesson.title}</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-success" onclick="toggleLessonSpeech('${lesson.content.replace(/'/g, "\\'")}')" style="padding: 8px 16px; font-size: 14px;">
+                                馃攰 鏈楄璇炬枃
+                            </button>
+                        </div>
+                    </div>
+                    <p style="margin: 12px 0; line-height: 1.8;">${contentWithAudio}</p>
+                    <h4>馃摉 閲嶇偣鍗曡瘝锛堝叡${lesson.keyWords.length}涓級锛?/h4>
+                    <div style="margin: 8px 0;">
+                        ${lesson.keyWords.map((w, idx) => `
+                            <div class="word-card" style="margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="word">${w.word}</div>
+                                    <button class="speak-btn" onclick="speak('${w.word}')" title="鍙戦煶">馃攰</button>
+                                    <span style="font-size: 12px; padding: 2px 6px; background: #e0e7ff; color: #4338ca; border-radius: 4px;">${w.partOfSpeech}</span>
+                                </div>
+                                <div class="phonetic">${w.phonetic}</div>
+                                <div class="meaning">${w.chineseMeaning}</div>
+                                <div class="example">${w.example}</div>
+                                <button class="btn btn-success" onclick="addLessonWordFromSaved(${idx})" style="margin-top: 12px;">鉃?娣诲姞鍒扮敓璇嶆湰</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            window.currentLessonKeyWords = lesson.keyWords;
+        }
+
+        function deleteSavedLesson(lessonId) {
+            let savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+            savedLessons = savedLessons.filter(l => l.id !== lessonId);
+            localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
+            showToast('鉁?璇炬枃宸插垹闄?);
+            loadSavedLessons();
+        }
+
+        function addLessonWordFromSaved(index) {
+            addLessonWord(index);
+        }
+
+        async function generateAIQuiz() {
+            const level = currentUser.level || 1;
+            const loadingDiv = document.getElementById('ai-quiz-loading');
+            const container = document.getElementById('ai-quiz-container');
+
+            loadingDiv.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const prompt = `璇蜂负鑻辫姘村钩涓篖evel ${level}鐨勫涔犺€呯敓鎴?閬撳鏍峰寲鐨勮嫳璇祴璇曢銆傞鍨嬪寘鎷細閫夋嫨棰樸€佸～绌洪銆佺炕璇戦銆傝杩斿洖JSON鏍煎紡锛屽寘鍚玵uestions鏁扮粍锛屾瘡涓鐩寘鍚細type锛堥鍨嬶細choice/fill/translate锛夈€乹uestion锛堥鐩級銆乷ptions锛堥€夐」锛岄€夋嫨棰樼敤锛夈€乤nswer锛堟纭瓟妗堬級銆傜‘淇濊繑鍥炵函JSON锛屼笉瑕佸寘鍚叾浠栨枃瀛椼€?
+绀轰緥JSON鏍煎紡锛?{
+    "questions": [
+        {
+            "type": "choice",
+            "question": "What is the meaning of 'apple'?",
+            "options": ["鑻规灉", "棣欒晧", "姗樺瓙", "姊?],
+            "answer": "鑻规灉"
+        },
+        {
+            "type": "fill",
+            "question": "She ___ (go) to school every day.",
+            "answer": "goes"
+        },
+        {
+            "type": "translate",
+            "question": "Translate: 鎴戝枩娆㈠涔犺嫳璇?,
+            "answer": "I like learning English"
+        }
+    ]
+}`;
+
+                const response = await callAI(prompt, '浣犳槸涓€涓笓涓氱殑鑻辫娴嬭瘯棰樼敓鎴愬姪鎵嬨€傝涓ユ牸鎸夌収瑕佹眰鐨凧SON鏍煎紡杩斿洖鏁版嵁锛屼笉瑕佹坊鍔犱换浣曢澶栬鏄庢枃瀛楋紝涓嶈鍖呭惈markdown浠ｇ爜鍧楁爣璁般€?);
+
+                let cleanResponse = response.trim();
+                if (cleanResponse.startsWith('```json')) {
+                    cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+                } else if (cleanResponse.startsWith('```')) {
+                    cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                }
+
+                const quizData = JSON.parse(cleanResponse);
+
+                window.aiQuizData = quizData.questions;
+                window.aiQuizAnswers = [];
+
+                container.innerHTML = `
+                    <div id="ai-quiz-questions">
+                        ${quizData.questions.map((q, i) => {
+                    if (q.type === 'choice') {
+                        return `
+                                    <div style="margin-bottom: 20px;">
+                                        <h4>闂 ${i + 1} (閫夋嫨棰?: ${q.question}</h4>
+                                        ${q.options.map((opt, j) => `
+                                            <div class="quiz-option" onclick="selectAIQuizAnswer(${i}, ${j})" id="ai-quiz-${i}-${j}">
+                                                <span class="quiz-option-letter">${String.fromCharCode(65 + j)}</span>
+                                                <span class="quiz-option-text">${opt}</span>
+                                                <span class="quiz-option-check">鉁?/span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                `;
+                    } else if (q.type === 'fill') {
+                        return `
+                                    <div style="margin-bottom: 20px;">
+                                        <h4>闂 ${i + 1} (濉┖棰?: ${q.question}</h4>
+                                        <input type="text" class="input" onchange="selectAIQuizAnswer(${i}, this.value)" placeholder="璇疯緭鍏ョ瓟妗? style="width: 100%;">
+                                    </div>
+                                `;
+                    } else {
+                        return `
+                                    <div style="margin-bottom: 20px;">
+                                        <h4>闂 ${i + 1} (缈昏瘧棰?: ${q.question}</h4>
+                                        <textarea class="input" onchange="selectAIQuizAnswer(${i}, this.value)" placeholder="璇疯緭鍏ョ炕璇? style="width: 100%; height: 80px;"></textarea>
+                                    </div>
+                                `;
+                    }
+                }).join('')}
+                    </div>
+                    <button class="btn btn-primary" onclick="submitAIQuiz()" style="margin-top: 20px;">鎻愪氦绛旀</button>
+                `;
+            } catch (error) {
+                console.error('AI Quiz Generation Error:', error);
+                container.innerHTML = `
+                    <p style="color: #ef4444; text-align: center;">AI鐢熸垚澶辫触锛屾鍦ㄤ娇鐢ㄥ鐢ㄩ搴?..</p>
+                    <button class="btn btn-primary" onclick="generateFallbackQuiz()" style="margin-top: 12px; display: block; margin-left: auto; margin-right: auto;">浣跨敤澶囩敤棰樺簱</button>
+                `;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        function generateFallbackQuiz() {
+            const level = currentUser.level || 1;
+            const container = document.getElementById('ai-quiz-container');
+
+            const builtInWords = [];
+            for (let i = 1; i <= level; i++) {
+                builtInWords.push(...VOCABULARY_BY_LEVEL[i].map(w => ({ ...w, level: i })));
+            }
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level <= level);
+            const allWords = [...builtInWords, ...aiWords];
+
+            if (allWords.length === 0) {
+                container.innerHTML = `<p style="color: #ef4444; text-align: center;">鏆傛棤瓒冲璇嶆眹鐢熸垚娴嬭瘯锛岃鍏堝涔犲崟璇?/p>`;
+                return;
+            }
+
+            const shuffled = [...allWords].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, Math.min(5, allWords.length));
+
+            const questions = selected.map(word => {
+                const otherWords = allWords.filter(w => w.word !== word.word);
+                const wrongOptions = [...otherWords].sort(() => Math.random() - 0.5).slice(0, 3);
+                const options = [...wrongOptions, { meaning: word.meaning }].sort(() => Math.random() - 0.5);
+                return {
+                    type: 'choice',
+                    question: `What does "${word.word}" mean?`,
+                    options: options.map(o => o.meaning),
+                    answer: word.meaning
+                };
+            });
+
+            window.aiQuizData = questions;
+            window.aiQuizAnswers = [];
+
+            container.innerHTML = `
+                <div id="ai-quiz-questions">
+                    ${questions.map((q, i) => `
+                        <div style="margin-bottom: 20px;">
+                            <h4>闂 ${i + 1} (閫夋嫨棰?: ${q.question}</h4>
+                            ${q.options.map((opt, j) => `
+                                <div class="quiz-option" onclick="selectAIQuizAnswer(${i}, ${j})" id="ai-quiz-${i}-${j}">
+                                    <span class="quiz-option-letter">${String.fromCharCode(65 + j)}</span>
+                                    <span class="quiz-option-text">${opt}</span>
+                                    <span class="quiz-option-check">鉁?/span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="btn btn-primary" onclick="submitAIQuiz()" style="margin-top: 20px;">鎻愪氦绛旀</button>
+            `;
+        }
+
+        function selectAIQuizAnswer(idx, optionIdx) {
+            if (typeof optionIdx === 'number') {
+                window.aiQuizAnswers[idx] = { type: 'choice', idx: optionIdx, answer: window.aiQuizData[idx].options[optionIdx] };
+                const options = document.querySelectorAll(`[id^="ai-quiz-${idx}-"]`);
+                options.forEach(el => el.classList.remove('selected'));
+                document.getElementById(`ai-quiz-${idx}-${optionIdx}`).classList.add('selected');
+            } else {
+                window.aiQuizAnswers[idx] = { type: 'text', answer: optionIdx };
+            }
+        }
+
+        async function submitAIQuiz() {
+            if (!window.aiQuizData) return;
+
+            let correct = 0;
+            window.aiQuizData.forEach((q, i) => {
+                const userAnswerObj = window.aiQuizAnswers[i];
+                const userAnswer = userAnswerObj ? userAnswerObj.answer : null;
+                const isCorrect = userAnswer && userAnswer.toLowerCase().includes(q.answer.toLowerCase());
+
+                if (isCorrect) {
+                    correct++;
+                    if (q.type === 'choice') {
+                        document.getElementById(`ai-quiz-${i}-${userAnswerObj.idx}`).classList.add('correct');
+                    }
+                } else {
+                    if (q.type === 'choice') {
+                        if (userAnswerObj) {
+                            document.getElementById(`ai-quiz-${i}-${userAnswerObj.idx}`).classList.add('wrong');
+                        }
+                        const correctIdx = q.options.indexOf(q.answer);
+                        if (correctIdx >= 0) {
+                            document.getElementById(`ai-quiz-${i}-${correctIdx}`).classList.add('correct');
+                        }
+                    }
+                    addToWrongAnswers(q.question, userAnswer || '', q.answer, q.options || []);
+                }
+            });
+
+            const total = window.aiQuizData.length;
+            const percentage = Math.round((correct / total) * 100);
+            alert(`AI娴嬭瘯瀹屾垚锛佸緱鍒嗭細${correct}/${total} (${percentage}%)`);
+
+            if (percentage >= 80 && currentUser.level < 5) {
+                currentUser.level++;
+                saveUser();
+                alert(`馃帀 鎭枩锛佹偍鐨勭瓑绾у凡鎻愬崌鍒?Level ${currentUser.level}`);
+            }
+
+            loadOverview();
+            loadWrongAnswers();
+        }
+
+        let chatMessages = [];
+        let voiceRecognition = null;
+        let isVoiceInputting = false;
+
+        function toggleVoiceInput() {
+            const btn = document.getElementById('voice-btn');
+
+            if (isVoiceInputting) {
+                if (voiceRecognition) {
+                    voiceRecognition.stop();
+                }
+                isVoiceInputting = false;
+                btn.innerHTML = '馃帳';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-secondary');
+                updateVoiceStatus('宸插仠姝?);
+                return;
+            }
+
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showVoiceInputNotice();
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            voiceRecognition = new SpeechRecognition();
+            voiceRecognition.lang = 'en-US';
+            voiceRecognition.interimResults = true;
+            voiceRecognition.continuous = false;
+
+            voiceRecognition.onstart = function () {
+                isVoiceInputting = true;
+                btn.innerHTML = '馃敶 褰曢煶涓?..';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-danger');
+                document.getElementById('chat-input').placeholder = '姝ｅ湪鍚偍璇磋瘽...';
+                updateVoiceStatus('鉁?楹﹀厠椋庡凡寮€鍚紝璇峰紑濮嬭璇濓紙璇磋嫳璇級');
+            };
+
+            voiceRecognition.onresult = function (event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                document.getElementById('chat-input').value = transcript;
+                updateVoiceStatus('馃摑 璇嗗埆涓細' + transcript);
+            };
+
+            voiceRecognition.onend = function () {
+                isVoiceInputting = false;
+                btn.innerHTML = '馃帳';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-secondary');
+                document.getElementById('chat-input').placeholder = '杈撳叆鑻辫鍙ュ瓙...';
+                const finalText = document.getElementById('chat-input').value;
+                if (!finalText) {
+                    showVoiceInputNotice();
+                } else {
+                    updateVoiceStatus('鉁?璇嗗埆瀹屾垚');
+                }
+            };
+
+            voiceRecognition.onerror = function (event) {
+                console.error('璇煶璇嗗埆閿欒:', event.error);
+                isVoiceInputting = false;
+                btn.innerHTML = '馃帳';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-secondary');
+                document.getElementById('chat-input').placeholder = '杈撳叆鑻辫鍙ュ瓙...';
+
+                if (event.error === 'network' || event.error === 'service-not-allowed') {
+                    showVoiceInputNotice();
+                } else {
+                    let errorMsg = '璇煶璇嗗埆鍑洪敊';
+                    switch (event.error) {
+                        case 'not-allowed':
+                            errorMsg = '鉂?璇峰厑璁搁害鍏嬮鏉冮檺锛氱偣鍑绘祻瑙堝櫒鍦板潃鏍忓乏渚х殑閿佸浘鏍?鈫?鍏佽楹﹀厠椋?;
+                            break;
+                        case 'no-speech':
+                            errorMsg = '鉂?鏈娴嬪埌璇煶锛岃灏濊瘯澶у０璇磋瘽';
+                            break;
+                        case 'audio-capture':
+                            errorMsg = '鉂?鏃犳硶璁块棶楹﹀厠椋庯紝璇锋鏌ヨ澶囨槸鍚︽湁楹﹀厠椋?;
+                            break;
+                        default:
+                            errorMsg = '鉂?閿欒锛? + event.error;
+                    }
+                    updateVoiceStatus(errorMsg);
+                }
+            };
+
+            try {
+                voiceRecognition.start();
+                updateVoiceStatus('馃攧 姝ｅ湪鍚姩璇煶璇嗗埆...');
+            } catch (error) {
+                console.error('鍚姩澶辫触:', error);
+                showVoiceInputNotice();
+            }
+        }
+
+        function showVoiceInputNotice() {
+            updateVoiceStatus('鈿狅笍 璇煶杈撳叆鍦ㄥ綋鍓嶇綉缁滅幆澧冧笅涓嶅彲鐢?);
+            const notice = document.createElement('div');
+            notice.style.cssText = 'margin-top: 12px; padding: 16px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; font-size: 14px; line-height: 1.6;';
+            notice.innerHTML = `
+                <p style="font-weight: bold; color: #92400e; margin-bottom: 8px;">馃摫 璇煶杈撳叆鎻愮ず</p>
+                <p>鐢变簬缃戠粶鐜闄愬埗锛孋hrome娴忚鍣ㄧ殑璇煶璇嗗埆鏈嶅姟鏆傛椂涓嶅彲鐢ㄣ€?/p>
+                <p style="margin-top: 8px;"><strong>瑙ｅ喅鏂规锛?/strong></p>
+                <ul style="margin: 8px 0 0 20px; padding: 0;">
+                    <li>馃摬 <strong>iOS鐢ㄦ埛</strong>锛氳浣跨敤 Safari 娴忚鍣ㄦ墦寮€鏈簲鐢紙浣跨敤Apple璇煶鏈嶅姟锛?/li>
+                    <li>馃 <strong>Android鐢ㄦ埛</strong>锛氳浣跨敤鏂囨湰杈撳叆鏂瑰紡锛屾垨浣跨敤VPN</li>
+                    <li>馃敜 鏆傛椂鍙互鐩存帴鍦ㄨ緭鍏ユ涓緭鍏ヨ嫳璇彞瀛?/li>
+                </ul>
+            `;
+
+            const chatArea = document.querySelector('#tab-ai-chat .card');
+            const existingNotice = chatArea.querySelector('.voice-notice');
+            if (existingNotice) {
+                existingNotice.remove();
+            }
+            notice.className = 'voice-notice';
+            chatArea.appendChild(notice);
+        }
+
+
+
+        function updateVoiceStatus(msg) {
+            let statusDiv = document.getElementById('voice-status');
+            if (!statusDiv) {
+                const chatArea = document.querySelector('#tab-ai-chat .card');
+                statusDiv = document.createElement('div');
+                statusDiv.id = 'voice-status';
+                statusDiv.style.cssText = 'margin-top: 8px; padding: 8px 12px; background: #f8fafc; border-radius: 8px; font-size: 13px; color: #6b7280; text-align: center;';
+                chatArea.appendChild(statusDiv);
+            }
+            statusDiv.textContent = msg;
+        }
+
+        let currentChatTopic = '';
+
+        function startChatWithTopic() {
+            const topicSelect = document.getElementById('chat-topic');
+            currentChatTopic = topicSelect.value;
+            if (!currentChatTopic) {
+                const topics = ['鏃ュ父瀵硅瘽', '鏃呰', '椁愬巺鐐归', '璐墿', '宸ヤ綔闈㈣瘯', '瀛︽牎鐢熸椿', '澶╂皵', '鐖卞ソ', '鍋ュ悍'];
+                currentChatTopic = topics[Math.floor(Math.random() * topics.length)];
+            }
+            const container = document.getElementById('chat-messages');
+            const levelInfo = VOCABULARY_LEVELS[currentUser.level || 1];
+            container.innerHTML = `
+                <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                    <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
+                        馃幆 璇濋锛?{currentChatTopic}
+                        <br><small style="color: #6b7280;">闅惧害锛?{levelInfo.cefr}</small>
+                        <br>Let's talk about ${currentChatTopic} in English! I'll start the conversation.
+                    </div>
+                </div>
+            `;
+            chatMessages = [];
+            setTimeout(() => {
+                const levelDesc = LEVEL_DESCRIPTIONS[currentUser.level || 1] || LEVEL_DESCRIPTIONS[1];
+                const prompt = `璇峰紑鍚叧浜?${currentChatTopic}"鐨勫璇濄€備綘鏄璇濈殑涓诲鑰咃紝涓诲姩鎻愰棶寮曞鐢ㄦ埛鍙備笌銆傞毦搴︾骇鍒細${levelDesc}銆傝鐢ㄨ嫳璇洖澶嶃€俙;
+                callAI(prompt, `浣犳槸涓€涓嫳璇璇濈粌涔犱紮浼达紝涓诲鍏充簬"${currentChatTopic}"鐨勫璇濄€傜敤鑻辫鎻愰棶锛屽紩瀵肩敤鎴峰弬涓庡璇濄€傛牴鎹敤鎴锋按骞筹紙CEFR ${levelInfo.cefr}锛夎皟鏁磋瑷€闅惧害銆俙).then(response => {
+                    chatMessages.push({ role: 'assistant', content: response });
+                    container.innerHTML += `
+                        <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                            <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
+                                ${response}
+                            </div>
+                            <button class="speak-btn" onclick="speak('${response.replace(/'/g, "\\'")}')" title="鍚彂闊? style="margin-left: 8px;">馃攰</button>
+                        </div>
+                    `;
+                    container.scrollTop = container.scrollHeight;
+                    if (document.getElementById('chat-auto-speak').checked) {
+                        speak(response);
+                    }
+                }).catch(e => {
+                    console.error('Chat error:', e);
+                });
+            }, 500);
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const container = document.getElementById('chat-messages');
+            chatMessages.push({ role: 'user', content: message });
+
+            container.innerHTML += `
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+                    <div style="background: #667eea; color: white; padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%;">
+                        ${message}
+                    </div>
+                </div>
+            `;
+
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const levelInfo = VOCABULARY_LEVELS[currentUser.level || 1];
+                const topicPrompt = currentChatTopic ? `璇濋锛?{currentChatTopic}銆俙 : '';
+                const prompt = `${topicPrompt}鐢ㄦ埛璇达細${message}\n璇风敤鑻辫鍥炲锛屼繚鎸佸璇濊嚜鐒躲€備綘鏄璇濈殑涓诲鑰咃紝閫傚綋鎻愰棶寮曞鐢ㄦ埛缁х画瀵硅瘽銆傜敤鎴峰綋鍓嶇瓑绾э細Level ${currentUser.level || 1} (CEFR ${levelInfo.cefr})銆俙;
+                const response = await callAI(prompt, `浣犳槸涓€涓嫳璇璇濈粌涔犱紮浼达紝涓诲瀵硅瘽銆?{currentChatTopic ? `璇濋鏄?${currentChatTopic}"銆俙 : ''}鐢ㄨ嫳璇笌鐢ㄦ埛杩涜鑷劧瀵硅瘽锛岄€傚綋鎻愰棶寮曞銆傛牴鎹敤鎴锋按骞筹紙CEFR ${levelInfo.cefr}锛夎皟鏁磋瑷€闅惧害銆俙);
+
+                chatMessages.push({ role: 'assistant', content: response });
+
+                container.innerHTML += `
+                    <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                        <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
+                            ${response}
+                        </div>
+                        <button class="speak-btn" onclick="speak('${response.replace(/'/g, "\\'")}')" title="鍚彂闊? style="margin-left: 8px;">馃攰</button>
+                    </div>
+                `;
+
+                container.scrollTop = container.scrollHeight;
+
+                if (document.getElementById('chat-auto-speak').checked) {
+                    speak(response);
+                }
+            } catch (error) {
+                container.innerHTML += `
+                    <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                        <div style="background: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 16px 16px 16px 0;">
+                            瀵硅瘽澶辫触锛岃閲嶈瘯
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function clearChat() {
+            chatMessages = [];
+            currentChatTopic = '';
+            document.getElementById('chat-messages').innerHTML = '';
+            const topicSelect = document.getElementById('chat-topic');
+            if (topicSelect) {
+                topicSelect.value = '';
+            }
         }
     </script>
 </body>
