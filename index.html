@@ -532,10 +532,17 @@
             5: '困难，高中及以上水平，使用高级词汇和复杂句型，包含复合句和非谓语动词，每篇课文不超过250词'
         };
 
+        function getUserKey(key) {
+            if (!currentUser || !currentUser.id) {
+                return key;
+            }
+            return `${key}-${currentUser.id}`;
+        }
+
         let generatedWordsHistory = {};
 
         function loadGeneratedWordsHistory() {
-            const saved = localStorage.getItem('english-learning-generated-history');
+            const saved = localStorage.getItem(getUserKey('english-learning-generated-history'));
             if (saved) {
                 generatedWordsHistory = JSON.parse(saved);
             } else {
@@ -544,7 +551,7 @@
         }
 
         function saveGeneratedWordsHistory() {
-            localStorage.setItem('english-learning-generated-history', JSON.stringify(generatedWordsHistory));
+            localStorage.setItem(getUserKey('english-learning-generated-history'), JSON.stringify(generatedWordsHistory));
         }
 
         async function callAI(prompt, systemMessage = '你是一个专业的英语学习助手，帮助用户学习英语词汇、语法和对话。请用中文回复，内容清晰易懂。') {
@@ -724,6 +731,8 @@
             if (user) {
                 currentUser = user;
                 localStorage.setItem('english-learning-user', JSON.stringify(user));
+                loadGeneratedWordsHistory();
+                loadAIWordCache();
                 showMainPage();
             } else {
                 alert('用户名或密码错误');
@@ -761,6 +770,10 @@
 
         function logout() {
             currentUser = null;
+            aiWordCache = [];
+            generatedWordsHistory = {};
+            lastWordTopic = '';
+            currentLesson = null;
             localStorage.removeItem('english-learning-user');
             document.getElementById('login-page').classList.remove('hidden');
             document.getElementById('main-page').classList.add('hidden');
@@ -871,7 +884,7 @@
             `;
 
             const builtInWords = VOCABULARY_BY_LEVEL[level].map(w => ({ ...w, id: Date.now() + Math.random(), level, addedByAI: false }));
-            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]').filter(w => w.level === level);
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level === level);
             const allWords = [...builtInWords, ...aiWords];
 
             const list = document.getElementById('words-list');
@@ -914,7 +927,7 @@
             let word = words.find(w => w.id === wordId);
 
             if (!word) {
-                const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+                const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
                 word = aiWords.find(w => w.id === wordId);
             }
 
@@ -1059,7 +1072,7 @@
                 builtInWords.push(...VOCABULARY_BY_LEVEL[i].map(w => ({ ...w, level: i })));
             }
 
-            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]').filter(w => w.level <= level);
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level <= level);
             const allWords = [...builtInWords, ...aiWords];
 
             const shuffled = [...allWords].sort(() => Math.random() - 0.5);
@@ -1435,7 +1448,7 @@
         let lastWordTopic = '';
 
         function loadAIWordCache() {
-            const saved = localStorage.getItem('english-learning-last-word-batch');
+            const saved = localStorage.getItem(getUserKey('english-learning-last-word-batch'));
             if (saved) {
                 const data = JSON.parse(saved);
                 aiWordCache = data.words || [];
@@ -1444,7 +1457,7 @@
         }
 
         function saveAIWordCache(topic) {
-            localStorage.setItem('english-learning-last-word-batch', JSON.stringify({
+            localStorage.setItem(getUserKey('english-learning-last-word-batch'), JSON.stringify({
                 words: aiWordCache,
                 topic: topic || lastWordTopic
             }));
@@ -1538,7 +1551,7 @@
             const w = aiWordCache[index];
             if (!w) return;
 
-            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
             if (aiWords.some(aw => aw.word === w.word)) {
                 showToast('这个单词已经在学习列表中了');
                 return;
@@ -1562,7 +1575,7 @@
             };
 
             aiWords.push(newWord);
-            localStorage.setItem('english-learning-ai-words', JSON.stringify(aiWords));
+            localStorage.setItem(getUserKey('english-learning-ai-words'), JSON.stringify(aiWords));
 
             showToast(`✅ 已添加单词 "${w.word}" 到生词本`);
             updateAIWordsCount();
@@ -1573,7 +1586,7 @@
             const w = keyWords[index];
             if (!w) return;
 
-            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
             if (aiWords.some(aw => aw.word === w.word)) {
                 showToast('这个单词已经在学习列表中了');
                 return;
@@ -1597,7 +1610,7 @@
             };
 
             aiWords.push(newWord);
-            localStorage.setItem('english-learning-ai-words', JSON.stringify(aiWords));
+            localStorage.setItem(getUserKey('english-learning-ai-words'), JSON.stringify(aiWords));
 
             showToast(`✅ 已添加单词 "${w.word}" 到生词本`);
             updateAIWordsCount();
@@ -1607,7 +1620,7 @@
         let vocabReviewIndex = 0;
 
         function loadVocab() {
-            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
             const now = new Date();
             const dueForReview = aiWords.filter(w => new Date(w.nextReviewDate) <= now);
             const mastered = aiWords.filter(w => w.status === 'mastered');
@@ -1680,7 +1693,7 @@
         }
 
         function startVocabReview() {
-            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
             const now = new Date();
             vocabReviewWords = aiWords.filter(w => new Date(w.nextReviewDate) <= now);
 
@@ -1753,11 +1766,11 @@
             word.nextReviewDate = nextDate.toISOString();
             word.lastReviewDate = new Date().toISOString();
 
-            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
             const idx = aiWords.findIndex(w => w.id === word.id);
             if (idx >= 0) {
                 aiWords[idx] = word;
-                localStorage.setItem('english-learning-ai-words', JSON.stringify(aiWords));
+                localStorage.setItem(getUserKey('english-learning-ai-words'), JSON.stringify(aiWords));
             }
         }
 
@@ -1766,7 +1779,7 @@
         }
 
         async function startVocabQuiz() {
-            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
             const now = new Date();
             const dueWords = aiWords.filter(w => new Date(w.nextReviewDate) <= now);
 
@@ -1881,7 +1894,7 @@
         }
 
         function updateAIWordsCount() {
-            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
             const countBadge = document.getElementById('ai-words-count');
             if (countBadge) {
                 countBadge.textContent = aiWords.length;
@@ -1976,7 +1989,7 @@
                 return;
             }
 
-            const savedLessons = JSON.parse(localStorage.getItem('english-learning-saved-lessons') || '[]');
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
             const existingIndex = savedLessons.findIndex(l => l.title === currentLesson.title && l.level === currentLesson.level);
 
             if (existingIndex >= 0) {
@@ -1986,13 +1999,13 @@
                 savedLessons.push(currentLesson);
             }
 
-            localStorage.setItem('english-learning-saved-lessons', JSON.stringify(savedLessons));
+            localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
             showToast('✅ 课文已保存');
             loadSavedLessons();
         }
 
         function loadSavedLessons() {
-            const savedLessons = JSON.parse(localStorage.getItem('english-learning-saved-lessons') || '[]');
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
             const container = document.getElementById('saved-lessons-list');
 
             if (savedLessons.length === 0) {
@@ -2022,7 +2035,7 @@
         }
 
         function viewSavedLesson(lessonId) {
-            const savedLessons = JSON.parse(localStorage.getItem('english-learning-saved-lessons') || '[]');
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
             const lesson = savedLessons.find(l => l.id === lessonId);
             if (!lesson) return;
 
@@ -2069,9 +2082,9 @@
         }
 
         function deleteSavedLesson(lessonId) {
-            let savedLessons = JSON.parse(localStorage.getItem('english-learning-saved-lessons') || '[]');
+            let savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
             savedLessons = savedLessons.filter(l => l.id !== lessonId);
-            localStorage.setItem('english-learning-saved-lessons', JSON.stringify(savedLessons));
+            localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
             showToast('✅ 课文已删除');
             loadSavedLessons();
         }
