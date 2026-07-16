@@ -300,13 +300,18 @@
                     <h2>📚 单词学习</h2>
                     <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
                         <select id="word-level" class="input" style="width: auto;">
-                            <option value="1">Level 1 - 入门</option>
-                            <option value="2">Level 2 - 基础</option>
-                            <option value="3">Level 3 - 进阶</option>
-                            <option value="4">Level 4 - 高级</option>
-                            <option value="5">Level 5 - 精通</option>
+                            <option value="1">Level 1 - 入门 (小学3-4年级/CEFR A1/约500词)</option>
+                            <option value="2">Level 2 - 基础 (小学5-6年级/CEFR A2/约500词)</option>
+                            <option value="3">Level 3 - 进阶 (初中1-2年级/CEFR B1/约1000词)</option>
+                            <option value="4">Level 4 - 高级 (初中3-高中1年级/CEFR B2/约700词)</option>
+                            <option value="5">Level 5 - 精通 (高中及以上/CEFR C1/约800词)</option>
                         </select>
                         <button class="btn btn-primary" onclick="loadWords()">加载单词</button>
+                    </div>
+                    <div id="level-info-panel"
+                        style="background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none;">
+                        <div style="font-weight: bold; color: #0369a1; margin-bottom: 8px;">📊 等级说明</div>
+                        <div id="level-info-content"></div>
                     </div>
                     <div id="words-list"></div>
                 </div>
@@ -510,6 +515,7 @@
         </div>
     </div>
 
+    <script src="vocabulary-data.js"></script>
     <script>
         const AI_CONFIG = {
             apiKey: 'sk-a3a7d3678f8148b2b487c879a034a2d4',
@@ -830,15 +836,33 @@
 
         function loadWords() {
             const level = parseInt(document.getElementById('word-level').value);
-            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
-            const allWords = [...words, ...aiWords];
-            const filtered = allWords.filter(w => w.level === level);
+            const levelInfo = VOCABULARY_LEVELS[level];
+
+            const panel = document.getElementById('level-info-panel');
+            const content = document.getElementById('level-info-content');
+            panel.style.display = 'block';
+            content.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                    <div><strong>年级对应：</strong>${levelInfo.schoolLevel}</div>
+                    <div><strong>CEFR等级：</strong>CEFR ${levelInfo.cefr}</div>
+                    <div><strong>词汇总量：</strong>约${levelInfo.wordCount}词</div>
+                    <div><strong>内置词汇：</strong>${VOCABULARY_BY_LEVEL[level].length}个</div>
+                </div>
+                <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
+                    💡 提示：内置词汇学习完后，可通过「✨ AI单词」功能生成更多该等级词汇
+                </div>
+            `;
+
+            const builtInWords = VOCABULARY_BY_LEVEL[level].map(w => ({ ...w, id: Date.now() + Math.random(), level, addedByAI: false }));
+            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]').filter(w => w.level === level);
+            const allWords = [...builtInWords, ...aiWords];
+
             const list = document.getElementById('words-list');
-            if (filtered.length === 0) {
+            if (allWords.length === 0) {
                 list.innerHTML = '<p style="color: #9ca3af; text-align: center;">该级别暂无单词，请选择其他级别</p>';
                 return;
             }
-            list.innerHTML = filtered.map(w => `
+            list.innerHTML = allWords.map(w => `
                 <div class="word-card">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="word">${w.word}</div>
@@ -870,13 +894,35 @@
         }
 
         function startLearning(wordId) {
-            currentLearningWord = words.find(w => w.id === wordId);
-            if (!currentLearningWord) return;
-            document.getElementById('learning-word-title').innerHTML = `${currentLearningWord.word} <button class="speak-btn" onclick="speak('${currentLearningWord.word}')" title="发音">🔊</button>`;
+            let word = words.find(w => w.id === wordId);
+
+            if (!word) {
+                const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]');
+                word = aiWords.find(w => w.id === wordId);
+            }
+
+            if (!word) {
+                const level = parseInt(document.getElementById('word-level').value);
+                const builtInWords = VOCABULARY_BY_LEVEL[level];
+                const displayedWord = Array.from(document.querySelectorAll('.word-card'))
+                    .find(card => card.querySelector('button[onclick*="' + wordId + '"]'));
+                if (displayedWord) {
+                    const wordName = displayedWord.querySelector('.word').textContent;
+                    word = builtInWords.find(w => w.word === wordName);
+                    if (word) {
+                        word = { ...word, id: wordId, level };
+                    }
+                }
+            }
+
+            if (!word) return;
+            currentLearningWord = word;
+
+            document.getElementById('learning-word-title').innerHTML = `${word.word} <button class="speak-btn" onclick="speak('${word.word}')" title="发音">🔊</button>`;
             document.getElementById('learning-word-content').innerHTML = `
-                <div class="phonetic">${currentLearningWord.phonetic}</div>
-                <div class="meaning">${currentLearningWord.meaning}</div>
-                <div class="example">${currentLearningWord.example}</div>
+                <div class="phonetic">${word.phonetic}</div>
+                <div class="meaning">${word.meaning}</div>
+                <div class="example">${word.example}</div>
             `;
             currentRating = 0;
             document.querySelectorAll('.star').forEach(s => s.classList.remove('selected'));
@@ -990,12 +1036,20 @@
 
         function generateQuiz() {
             const level = currentUser.level || 1;
-            const availableWords = words.filter(w => w.level <= level);
-            const shuffled = [...availableWords].sort(() => Math.random() - 0.5);
+
+            const builtInWords = [];
+            for (let i = 1; i <= level; i++) {
+                builtInWords.push(...VOCABULARY_BY_LEVEL[i].map(w => ({ ...w, level: i })));
+            }
+
+            const aiWords = JSON.parse(localStorage.getItem('english-learning-ai-words') || '[]').filter(w => w.level <= level);
+            const allWords = [...builtInWords, ...aiWords];
+
+            const shuffled = [...allWords].sort(() => Math.random() - 0.5);
             const selected = shuffled.slice(0, 5);
 
             const questions = selected.map(word => {
-                const otherWords = words.filter(w => w.id !== word.id && w.level <= level);
+                const otherWords = allWords.filter(w => w.word !== word.word);
                 const wrongOptions = [...otherWords].sort(() => Math.random() - 0.5).slice(0, 3);
                 const options = [...wrongOptions, { meaning: word.meaning }].sort(() => Math.random() - 0.5);
                 return {
