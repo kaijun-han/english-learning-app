@@ -721,6 +721,16 @@
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
                 showMainPage();
+                const wordLevelSelect = document.getElementById('word-level');
+                const lessonLevelSelect = document.getElementById('lesson-level');
+                if (wordLevelSelect) {
+                    wordLevelSelect.value = currentUser.level || 1;
+                }
+                if (lessonLevelSelect) {
+                    lessonLevelSelect.value = currentUser.level || 1;
+                }
+                loadWords();
+                loadLessons();
             }
         }
 
@@ -736,7 +746,18 @@
                 localStorage.setItem('english-learning-user', JSON.stringify(user));
                 loadGeneratedWordsHistory();
                 loadAIWordCache();
+                clearUIData();
                 showMainPage();
+                const wordLevelSelect = document.getElementById('word-level');
+                const lessonLevelSelect = document.getElementById('lesson-level');
+                if (wordLevelSelect) {
+                    wordLevelSelect.value = currentUser.level || 1;
+                }
+                if (lessonLevelSelect) {
+                    lessonLevelSelect.value = currentUser.level || 1;
+                }
+                loadWords();
+                loadLessons();
             } else {
                 alert('用户名或密码错误');
             }
@@ -771,12 +792,23 @@
             alert('注册成功，请登录');
         }
 
+        function clearUIData() {
+            document.getElementById('ai-words-result').innerHTML = '';
+            document.getElementById('ai-lesson-result').innerHTML = '';
+            document.getElementById('saved-lessons-list').innerHTML = '';
+            document.getElementById('vocab-list').innerHTML = '';
+            document.getElementById('level-info-panel').style.display = 'none';
+            document.getElementById('word-list').innerHTML = '';
+            document.getElementById('lesson-list').innerHTML = '';
+        }
+
         function logout() {
             currentUser = null;
             aiWordCache = [];
             generatedWordsHistory = {};
             lastWordTopic = '';
             currentLesson = null;
+            clearUIData();
             localStorage.removeItem('english-learning-user');
             document.getElementById('login-page').classList.remove('hidden');
             document.getElementById('main-page').classList.add('hidden');
@@ -787,6 +819,16 @@
             document.getElementById('main-page').classList.remove('hidden');
             loadOverview();
             updateAIWordsCount();
+            if (currentUser) {
+                const wordLevelSelect = document.getElementById('word-level');
+                const lessonLevelSelect = document.getElementById('lesson-level');
+                if (wordLevelSelect) {
+                    wordLevelSelect.value = currentUser.level || 1;
+                }
+                if (lessonLevelSelect) {
+                    lessonLevelSelect.value = currentUser.level || 1;
+                }
+            }
         }
 
         function switchTab(tab) {
