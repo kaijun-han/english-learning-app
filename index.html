@@ -2332,6 +2332,13 @@
 
         function selectAIQuizAnswer(idx, answer) {
             window.aiQuizAnswers[idx] = answer;
+            const options = document.querySelectorAll(`[id^="ai-quiz-${idx}-"]`);
+            options.forEach(el => el.classList.remove('selected'));
+            options.forEach((opt, j) => {
+                if (opt.textContent.includes(answer)) {
+                    opt.classList.add('selected');
+                }
+            });
         }
 
         async function submitAIQuiz() {
@@ -2340,8 +2347,31 @@
             let correct = 0;
             window.aiQuizData.forEach((q, i) => {
                 const userAnswer = window.aiQuizAnswers[i];
-                if (userAnswer && userAnswer.toLowerCase().includes(q.answer.toLowerCase())) {
+                const isCorrect = userAnswer && userAnswer.toLowerCase().includes(q.answer.toLowerCase());
+
+                if (isCorrect) {
                     correct++;
+                    if (q.type === 'choice') {
+                        const options = document.querySelectorAll(`[id^="ai-quiz-${i}-"]`);
+                        options.forEach(opt => {
+                            if (opt.textContent.includes(userAnswer)) {
+                                opt.classList.add('correct');
+                            }
+                        });
+                    }
+                } else {
+                    if (q.type === 'choice') {
+                        const options = document.querySelectorAll(`[id^="ai-quiz-${i}-"]`);
+                        options.forEach(opt => {
+                            if (opt.textContent.includes(userAnswer)) {
+                                opt.classList.add('wrong');
+                            }
+                            if (opt.textContent.includes(q.answer)) {
+                                opt.classList.add('correct');
+                            }
+                        });
+                    }
+                    addToWrongAnswers(q.question, userAnswer || '', q.answer, q.options || []);
                 }
             });
 
@@ -2356,6 +2386,7 @@
             }
 
             loadOverview();
+            loadWrongAnswers();
         }
 
         let chatMessages = [];
