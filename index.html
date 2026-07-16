@@ -1472,6 +1472,16 @@
             const topics = ['日常用品', '食物', '动物', '天气', '学校', '家庭', '运动', '旅行', '时间', '颜色', '自然', '科技', '文化', '节日', '健康'];
             const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
+            if (!VOCABULARY_BY_LEVEL || !VOCABULARY_BY_LEVEL[level]) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">词汇数据加载失败，请刷新页面</p>`;
+                return;
+            }
+
+            if (!levelInfo) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">等级信息加载失败，请刷新页面</p>`;
+                return;
+            }
+
             if (!generatedWordsHistory[level]) {
                 generatedWordsHistory[level] = [...VOCABULARY_BY_LEVEL[level].map(w => w.word)];
             }
@@ -1541,7 +1551,8 @@
                     `).join('')}
                 `;
             } catch (error) {
-                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">生成失败，请重试</p>`;
+                console.error('AI单词生成失败:', error);
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">生成失败，请重试<br><span style="font-size: 12px;">错误信息: ${error.message}</span></p>`;
             } finally {
                 loadingDiv.style.display = 'none';
             }
