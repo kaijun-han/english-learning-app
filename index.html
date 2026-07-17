@@ -4,7 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI英语学习智能体</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>AI英语学习智能体 v2.1</title>
     <style>
         * {
             margin: 0;
@@ -127,32 +130,42 @@
 
         .nav {
             display: flex;
-            gap: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
             margin-bottom: 20px;
-            overflow-x: auto;
-            overflow-y: hidden;
-            white-space: nowrap;
-            padding-bottom: 8px;
-            scrollbar-width: none;
-        }
-
-        .nav::-webkit-scrollbar {
-            display: none;
+            justify-content: flex-start;
         }
 
         .nav-btn {
-            padding: 10px 20px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.15);
             color: white;
             cursor: pointer;
             font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.02);
         }
 
         .nav-btn.active {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+        }
+
+        .nav-btn.logout-btn {
+            background: rgba(239, 68, 68, 0.7);
+        }
+
+        .nav-btn.logout-btn:hover {
+            background: rgba(239, 68, 68, 0.9);
         }
 
         .hidden {
@@ -298,18 +311,17 @@
 
         <div id="main-page" class="hidden">
             <div class="nav">
-                <button class="nav-btn active" onclick="switchTab('home')">首页</button>
-                <button class="nav-btn" onclick="switchTab('words')">单词学习</button>
-                <button class="nav-btn" onclick="switchTab('lessons')">课文学习</button>
-                <button class="nav-btn" onclick="switchTab('ai-words')">✨ AI单词 <span id="ai-words-count"
-                        style="display: none; padding: 2px 6px; background: #ef4444; color: white; border-radius: 10px; font-size: 12px;">0</span></button>
+                <button class="nav-btn active" onclick="switchTab('home')">🏠 首页</button>
+                <button class="nav-btn" onclick="switchTab('words')">📚 单词学习</button>
+                <button class="nav-btn" onclick="switchTab('lessons')">📖 课文学习</button>
+                <button class="nav-btn" onclick="switchTab('ai-words')">✨ AI单词</button>
                 <button class="nav-btn" onclick="switchTab('ai-lessons')">✨ AI课文</button>
                 <button class="nav-btn" onclick="switchTab('ai-quiz')">✨ AI测试</button>
                 <button class="nav-btn" onclick="switchTab('ai-chat')">✨ AI对话</button>
                 <button class="nav-btn" onclick="switchTab('vocab')">📖 生词本</button>
                 <button class="nav-btn" onclick="switchTab('wrong-answers')">📝 错题本</button>
-                <button class="nav-btn" onclick="switchTab('progress')">学习进度</button>
-                <button class="nav-btn" onclick="logout()" style="margin-left: auto;">退出</button>
+                <button class="nav-btn" onclick="switchTab('progress')">📊 学习进度</button>
+                <button class="nav-btn logout-btn" onclick="logout()">🚪 退出</button>
             </div>
 
             <div id="tab-home">
@@ -792,6 +804,24 @@
         let currentLesson = null;
 
         function init() {
+            const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
+            if (users.length === 0) {
+                const defaultUser = {
+                    id: 1,
+                    username: 'test',
+                    password: '123456',
+                    level: 1,
+                    streak: 0,
+                    lastStudyDate: null,
+                    totalWordsLearned: 0,
+                    progress: { learning: 0, mastered: 0 },
+                    wordProgress: {},
+                    createdAt: new Date().toISOString()
+                };
+                users.push(defaultUser);
+                localStorage.setItem('english-learning-users', JSON.stringify(users));
+            }
+
             loadGeneratedWordsHistory();
             loadAIWordCache();
             const savedUser = localStorage.getItem('english-learning-user');
@@ -1261,7 +1291,7 @@
                     } else {
                         document.getElementById(`quiz-${i}-${quizAnswers[i]}`).classList.add('wrong');
                         const correctIdx = q.options.indexOf(q.correctAnswer);
-                        addToWrongAnswers(q.question, quizAnswers[i], correctIdx, q.options);
+                        addToWrongAnswers(q.question, quizAnswers[i], correctIdx, q.options, q.explanation);
                     }
                 }
             });
@@ -1272,12 +1302,15 @@
             loadWrongAnswers();
         }
 
-        function addToWrongAnswers(question, userAnswer, correctAnswer, options) {
+        function addToWrongAnswers(question, userAnswer, correctAnswer, options, explanation) {
             const wrongAnswers = JSON.parse(localStorage.getItem(getUserKey('english-learning-wrong-answers')) || '[]');
             const existingIndex = wrongAnswers.findIndex(w => w.question === question);
             if (existingIndex >= 0) {
                 wrongAnswers[existingIndex].attempts++;
                 wrongAnswers[existingIndex].lastAttempt = new Date().toISOString();
+                if (explanation) {
+                    wrongAnswers[existingIndex].explanation = explanation;
+                }
             } else {
                 wrongAnswers.push({
                     id: Date.now(),
@@ -1285,6 +1318,7 @@
                     userAnswer: userAnswer,
                     correctAnswer: correctAnswer,
                     options: options,
+                    explanation: explanation || '',
                     attempts: 1,
                     lastAttempt: new Date().toISOString()
                 });
@@ -1316,21 +1350,38 @@
                 return;
             }
 
-            container.innerHTML = wrongAnswers.map(w => `
-                <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; position: relative;">
-                    <div style="font-weight: bold; margin-bottom: 8px;">${w.question}</div>
-                    <div style="font-size: 14px; margin-bottom: 4px;">
-                        <span style="color: #ef4444;">您的答案：${w.userAnswer !== null && w.userAnswer !== undefined ? w.options[w.userAnswer] : '未作答'}</span>
+            container.innerHTML = wrongAnswers.map(w => {
+                const userAnswerText = typeof w.userAnswer === 'number' && w.options && w.options[w.userAnswer]
+                    ? w.options[w.userAnswer]
+                    : (w.userAnswer !== null && w.userAnswer !== undefined ? w.userAnswer : '未作答');
+
+                const correctAnswerText = typeof w.correctAnswer === 'number' && w.options && w.options[w.correctAnswer]
+                    ? w.options[w.correctAnswer]
+                    : (w.correctAnswer !== null && w.correctAnswer !== undefined ? w.correctAnswer : '未知');
+
+                return `
+                    <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; position: relative; margin-bottom: 12px; background: #f9fafb; border-radius: 8px;">
+                        <div style="font-weight: bold; margin-bottom: 8px; font-size: 15px;">${w.question}</div>
+                        <div style="font-size: 14px; margin-bottom: 4px;">
+                            <span style="color: #ef4444; font-weight: bold;">您的答案：</span>
+                            <span style="color: #ef4444;">${userAnswerText}</span>
+                        </div>
+                        <div style="font-size: 14px; margin-bottom: 4px;">
+                            <span style="color: #10b981; font-weight: bold;">正确答案：</span>
+                            <span style="color: #10b981;">${correctAnswerText}</span>
+                        </div>
+                        ${w.explanation ? `
+                            <div style="font-size: 13px; margin-top: 8px; padding: 8px; background: #e0e7ff; border-radius: 6px; color: #4338ca;">
+                                <span style="font-weight: bold;">💡 解析：</span>${w.explanation}
+                            </div>
+                        ` : ''}
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                            错误次数：${w.attempts}次 | 上次错误：${new Date(w.lastAttempt).toLocaleDateString()}
+                        </div>
+                        <button class="btn btn-danger" style="position: absolute; top: 12px; right: 12px; padding: 4px 8px; font-size: 12px;" onclick="removeWrongAnswer(${w.id})">🗑️</button>
                     </div>
-                    <div style="font-size: 14px; margin-bottom: 4px;">
-                        <span style="color: #10b981;">正确答案：${w.options[w.correctAnswer]}</span>
-                    </div>
-                    <div style="font-size: 12px; color: #6b7280;">
-                        错误次数：${w.attempts}次 | 上次错误：${new Date(w.lastAttempt).toLocaleDateString()}
-                    </div>
-                    <button class="btn btn-danger" style="position: absolute; top: 12px; right: 12px; padding: 4px 8px; font-size: 12px;" onclick="removeWrongAnswer(${w.id})">🗑️</button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function loadProgress() {
@@ -1711,10 +1762,28 @@
 
             try {
                 const excludeWords = currentHistory.join(', ') || '无';
-                const prompt = `请为英语水平为"${levelDesc}"的学习者生成12个适合的英语单词，主题为"${randomTopic}"。要求：1. 这些单词要围绕同一个主题，相互之间有逻辑关联，能够自然地组合成一篇课文；2. 包含名词、动词、形容词等不同词性的单词；3. 避免重复以下已生成的单词：${excludeWords}；4. 确保生成的单词都是该水平的常用词汇；5. 返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。`;
+                const prompt = `请为英语水平为"${levelDesc}"的学习者生成12个适合的英语单词，主题为"${randomTopic}"。要求：1. 这些单词要围绕同一个主题，相互之间有逻辑关联，能够自然地组合成一篇课文；2. 包含名词、动词、形容词等不同词性的单词；3. 避免重复以下已生成的单词：${excludeWords}；4. 确保生成的单词都是该水平的常用词汇；5. 返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。
 
-                const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
-                aiWordCache = JSON.parse(response);
+示例JSON格式：
+[
+    {"id": 1, "word": "apple", "phonetic": "/ˈæpl/", "meaning": "苹果", "example": "I eat an apple every day.", "tips": "a+pple，想象苹果砸在头上"},
+    {"id": 2, "word": "book", "phonetic": "/bʊk/", "meaning": "书", "example": "This is a good book.", "tips": "b+ook，书看起来像打开的ook"}
+]`;
+
+                const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字，不要包含markdown代码块标记。');
+
+                let cleanResponse = response.trim();
+                if (cleanResponse.startsWith('```json')) {
+                    cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+                } else if (cleanResponse.startsWith('```')) {
+                    cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                }
+
+                aiWordCache = JSON.parse(cleanResponse);
+
+                if (!Array.isArray(aiWordCache)) {
+                    throw new Error('AI返回的数据格式不正确');
+                }
 
                 aiWordCache.forEach(w => {
                     if (!currentHistory.includes(w.word)) {
@@ -1756,10 +1825,71 @@
                 `;
             } catch (error) {
                 console.error('AI单词生成失败:', error);
-                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">生成失败，请重试<br><span style="font-size: 12px;">错误信息: ${error.message}</span></p>`;
+                generateFallbackAIWords(randomTopic);
             } finally {
                 loadingDiv.style.display = 'none';
             }
+        }
+
+        function generateFallbackAIWords(topic) {
+            const level = currentUser.level || 1;
+            const resultDiv = document.getElementById('ai-words-result');
+            const VOCABULARY_BY_LEVEL = window.VOCABULARY_BY_LEVEL || {};
+
+            const builtInWords = VOCABULARY_BY_LEVEL[level] || [];
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level <= level);
+            const allWords = [...builtInWords, ...aiWords];
+
+            if (allWords.length === 0) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">暂无足够词汇生成，请先学习单词</p>`;
+                return;
+            }
+
+            const shuffled = [...allWords].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, Math.min(12, allWords.length));
+
+            aiWordCache = selected.map((w, idx) => ({
+                id: idx + 1,
+                word: w.word,
+                phonetic: w.phonetic || '',
+                meaning: w.meaning,
+                example: w.example || '暂无例句',
+                tips: w.tips || '暂无记忆技巧'
+            }));
+
+            const currentHistory = generatedWordsHistory[level] || [];
+            aiWordCache.forEach(w => {
+                if (!currentHistory.includes(w.word)) {
+                    currentHistory.push(w.word);
+                }
+            });
+
+            saveGeneratedWordsHistory();
+            saveAIWordCache(topic);
+
+            resultDiv.innerHTML = `
+                <div style="margin-bottom: 16px; padding: 12px; background: #fef3c7; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span>⚠️ AI生成失败，使用备用题库 · 主题：${topic}</span>
+                        <span style="font-weight: bold; color: #f59e0b;">共 ${aiWordCache.length} 个单词</span>
+                    </div>
+                </div>
+                ${aiWordCache.map((w, idx) => `
+                    <div class="word-card">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="word">${w.word}</div>
+                            <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                        </div>
+                        <div class="phonetic">${w.phonetic}</div>
+                        <div class="meaning">${w.meaning}</div>
+                        <div class="example">${w.example}</div>
+                        <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
+                            💡 记忆技巧：${w.tips}
+                        </div>
+                        <button class="btn btn-success" onclick="addAIWord(${idx})" style="margin-top: 12px;">添加到生词本</button>
+                    </div>
+                `).join('')}
+            `;
         }
 
         function addAIWord(index) {
@@ -2315,10 +2445,90 @@
             container.innerHTML = '';
 
             try {
-                const prompt = `请为英语水平为Level ${level}的学习者生成5道多样化的英语测试题。题型包括：选择题、填空题、翻译题。请返回JSON格式，包含questions数组，每个题目包含：type（题型：choice/fill/translate）、question（题目）、options（选项，选择题用）、answer（正确答案）。确保返回纯JSON，不要包含其他文字。`;
+                const today = new Date().toLocaleDateString('zh-CN');
 
-                const response = await callAI(prompt, '你是一个专业的英语测试题生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
-                const quizData = JSON.parse(response);
+                const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
+                const todayWords = aiWords.filter(w => {
+                    const created = new Date(w.createdAt || w.timestamp || Date.now()).toLocaleDateString('zh-CN');
+                    return created === today;
+                });
+
+                const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+                const todayLessons = savedLessons.filter(l => {
+                    const saved = new Date(l.savedAt || Date.now()).toLocaleDateString('zh-CN');
+                    return saved === today;
+                });
+
+                const selectedWords = todayWords;
+
+                const structuredWords = selectedWords.map((w, idx) =>
+                    `${idx + 1}. ${w.word} - ${w.meaning}${w.phonetic ? ` (${w.phonetic})` : ''}`
+                ).join('\n');
+
+                const lessonsText = todayLessons.length > 0
+                    ? todayLessons.map(l => l.title).join(', ')
+                    : '暂无';
+
+                const prompt = `请为英语水平为Level ${level}的学习者生成测试题。
+
+【今日学习单词列表】（共${selectedWords.length}个，每个都必须考察）：
+${structuredWords || '暂无今日学习单词'}
+
+【今日学习课文】：${lessonsText}
+
+【出题要求】：
+1. 共10道题，全部必须基于今日学习内容（单词和课文），不得出通用复习题
+2. 如果有今日学习单词，每一个单词都必须至少出现在一道题目中，不得遗漏
+3. 如果单词数量少于10个，可以针对同一个单词出多种类型的题目（如词义理解、用法填空、翻译、语法变形等）
+4. 如果有今日学习课文，必须出基于课文内容的题目（如课文理解、句子翻译、语法分析等）
+5. 题型要多样化：选择题、填空题、翻译题、语法题、词义辨析题等
+6. 每道题都要有详细的答案解析
+
+【输出格式】：
+请返回纯JSON格式，包含questions数组，每个题目包含：
+- type（题型：choice/fill/translate/grammar）
+- question（题目）
+- options（选项，选择题用，数组格式）
+- answer（正确答案）
+- explanation（答案解析，简要说明为什么这个答案正确）
+
+确保返回纯JSON，不要包含其他文字。
+
+示例JSON格式：
+{
+    "questions": [
+        {
+            "type": "choice",
+            "question": "What is the meaning of 'apple'?",
+            "options": ["苹果", "香蕉", "橘子", "梨"],
+            "answer": "苹果",
+            "explanation": "apple是英语中表示苹果的单词，属于水果类词汇。"
+        },
+        {
+            "type": "fill",
+            "question": "She ___ (go) to school every day.",
+            "answer": "goes",
+            "explanation": "主语She是第三人称单数，every day表示习惯性动作，所以动词go需要变成goes。"
+        },
+        {
+            "type": "translate",
+            "question": "Translate: 我喜欢学习英语",
+            "answer": "I like learning English",
+            "explanation": "'喜欢'对应like，'学习英语'对应learning English。"
+        }
+    ]
+}`;
+
+                const response = await callAI(prompt, '你是一个专业的英语测试题生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字，不要包含markdown代码块标记。');
+
+                let cleanResponse = response.trim();
+                if (cleanResponse.startsWith('```json')) {
+                    cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+                } else if (cleanResponse.startsWith('```')) {
+                    cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                }
+
+                const quizData = JSON.parse(cleanResponse);
 
                 window.aiQuizData = quizData.questions;
                 window.aiQuizAnswers = [];
@@ -2346,6 +2556,23 @@
                                         <input type="text" class="input" onchange="selectAIQuizAnswer(${i}, this.value)" placeholder="请输入答案" style="width: 100%;">
                                     </div>
                                 `;
+                    } else if (q.type === 'grammar') {
+                        return `
+                                    <div style="margin-bottom: 20px;">
+                                        <h4>问题 ${i + 1} (语法题): ${q.question}</h4>
+                                        ${q.options && q.options.length > 0 ? `
+                                            ${q.options.map((opt, j) => `
+                                                <div class="quiz-option" onclick="selectAIQuizAnswer(${i}, ${j})" id="ai-quiz-${i}-${j}">
+                                                    <span class="quiz-option-letter">${String.fromCharCode(65 + j)}</span>
+                                                    <span class="quiz-option-text">${opt}</span>
+                                                    <span class="quiz-option-check">✓</span>
+                                                </div>
+                                            `).join('')}
+                                        ` : `
+                                            <input type="text" class="input" onchange="selectAIQuizAnswer(${i}, this.value)" placeholder="请输入答案" style="width: 100%;">
+                                        `}
+                                    </div>
+                                `;
                     } else {
                         return `
                                     <div style="margin-bottom: 20px;">
@@ -2359,10 +2586,67 @@
                     <button class="btn btn-primary" onclick="submitAIQuiz()" style="margin-top: 20px;">提交答案</button>
                 `;
             } catch (error) {
-                container.innerHTML = `<p style="color: #ef4444; text-align: center;">生成失败，请重试</p>`;
+                console.error('AI Quiz Generation Error:', error);
+                container.innerHTML = `
+                    <p style="color: #ef4444; text-align: center;">AI生成失败，正在使用备用题库...</p>
+                    <button class="btn btn-primary" onclick="generateFallbackQuiz()" style="margin-top: 12px; display: block; margin-left: auto; margin-right: auto;">使用备用题库</button>
+                `;
             } finally {
                 loadingDiv.style.display = 'none';
             }
+        }
+
+        function generateFallbackQuiz() {
+            const level = currentUser.level || 1;
+            const container = document.getElementById('ai-quiz-container');
+
+            const builtInWords = [];
+            for (let i = 1; i <= level; i++) {
+                builtInWords.push(...VOCABULARY_BY_LEVEL[i].map(w => ({ ...w, level: i })));
+            }
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level <= level);
+            const allWords = [...builtInWords, ...aiWords];
+
+            if (allWords.length === 0) {
+                container.innerHTML = `<p style="color: #ef4444; text-align: center;">暂无足够词汇生成测试，请先学习单词</p>`;
+                return;
+            }
+
+            const shuffled = [...allWords].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, Math.min(5, allWords.length));
+
+            const questions = selected.map(word => {
+                const otherWords = allWords.filter(w => w.word !== word.word);
+                const wrongOptions = [...otherWords].sort(() => Math.random() - 0.5).slice(0, 3);
+                const options = [...wrongOptions, { meaning: word.meaning }].sort(() => Math.random() - 0.5);
+                return {
+                    type: 'choice',
+                    question: `What does "${word.word}" mean?`,
+                    options: options.map(o => o.meaning),
+                    answer: word.meaning
+                };
+            });
+
+            window.aiQuizData = questions;
+            window.aiQuizAnswers = [];
+
+            container.innerHTML = `
+                <div id="ai-quiz-questions">
+                    ${questions.map((q, i) => `
+                        <div style="margin-bottom: 20px;">
+                            <h4>问题 ${i + 1} (选择题): ${q.question}</h4>
+                            ${q.options.map((opt, j) => `
+                                <div class="quiz-option" onclick="selectAIQuizAnswer(${i}, ${j})" id="ai-quiz-${i}-${j}">
+                                    <span class="quiz-option-letter">${String.fromCharCode(65 + j)}</span>
+                                    <span class="quiz-option-text">${opt}</span>
+                                    <span class="quiz-option-check">✓</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="btn btn-primary" onclick="submitAIQuiz()" style="margin-top: 20px;">提交答案</button>
+            `;
         }
 
         function selectAIQuizAnswer(idx, optionIdx) {
@@ -2400,9 +2684,44 @@
                             document.getElementById(`ai-quiz-${i}-${correctIdx}`).classList.add('correct');
                         }
                     }
-                    addToWrongAnswers(q.question, userAnswer || '', q.answer, q.options || []);
+                    addToWrongAnswers(q.question, userAnswer || '', q.answer, q.options || [], q.explanation);
+                }
+
+                const resultDiv = document.createElement('div');
+                resultDiv.style.cssText = 'margin-top: 8px; padding: 10px; border-radius: 6px;';
+
+                if (isCorrect) {
+                    resultDiv.style.background = '#d1fae5';
+                    resultDiv.style.color = '#065f46';
+                    resultDiv.innerHTML = `<span style="font-weight: bold;">✓ 回答正确！</span>`;
+                } else {
+                    resultDiv.style.background = '#fef2f2';
+                    resultDiv.style.color = '#991b1b';
+                    resultDiv.innerHTML = `
+                        <div><span style="font-weight: bold;">✗ 回答错误</span></div>
+                        <div style="margin-top: 4px; font-size: 13px;">
+                            <span style="color: #ef4444;">您的答案：${userAnswer || '未作答'}</span>
+                        </div>
+                        <div style="font-size: 13px;">
+                            <span style="color: #10b981;">正确答案：${q.answer}</span>
+                        </div>
+                    `;
+                }
+
+                if (q.explanation) {
+                    const expDiv = document.createElement('div');
+                    expDiv.style.cssText = 'margin-top: 8px; padding: 8px; background: #e0e7ff; border-radius: 6px; color: #4338ca; font-size: 13px;';
+                    expDiv.innerHTML = `<span style="font-weight: bold;">💡 解析：</span>${q.explanation}`;
+                    resultDiv.appendChild(expDiv);
+                }
+
+                const questionDiv = document.querySelector(`#ai-quiz-questions > div:nth-child(${i + 1})`);
+                if (questionDiv) {
+                    questionDiv.appendChild(resultDiv);
                 }
             });
+
+            document.querySelector('#ai-quiz-container button')?.remove();
 
             const total = window.aiQuizData.length;
             const percentage = Math.round((correct / total) * 100);
