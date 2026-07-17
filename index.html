@@ -514,9 +514,22 @@
             <div class="card" style="max-width: 600px; width: 90%;">
                 <button class="btn btn-danger" onclick="closeTestModal()" style="float: right;">✕</button>
                 <h2>📝 英语水平测试</h2>
-                <div id="test-questions"></div>
-                <button class="btn btn-primary" onclick="submitTest()"
-                    style="margin-top: 16px; width: 100%;">提交测试</button>
+                <div id="test-start" style="margin-bottom: 16px;">
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; margin-bottom: 6px; font-weight: bold;">选择测试等级：</label>
+                        <select id="test-level-select" class="input" style="margin-bottom: 0;">
+                            <option value="1">Level 1 - 小学3-4年级水平</option>
+                            <option value="2">Level 2 - 小学5-6年级水平</option>
+                            <option value="3">Level 3 - 初中1-2年级水平</option>
+                            <option value="4">Level 4 - 初中3年级-高中1年级水平</option>
+                            <option value="5">Level 5 - 高中及以上水平</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="startLevelTest()" style="width: 100%;">开始测试</button>
+                </div>
+                <div id="test-questions" style="display: none;"></div>
+                <button id="test-submit-btn" class="btn btn-primary" onclick="submitTest()"
+                    style="margin-top: 16px; width: 100%; display: none;">提交测试</button>
             </div>
         </div>
 
@@ -1408,17 +1421,24 @@
 
         async function startLevelTest() {
             const container = document.getElementById('test-questions');
+            const startDiv = document.getElementById('test-start');
+            const submitBtn = document.getElementById('test-submit-btn');
+
+            startDiv.style.display = 'none';
+            container.style.display = 'block';
+            submitBtn.style.display = 'none';
+
             container.innerHTML = `
                 <div style="text-align: center; padding: 40px;">
                     <div style="font-size: 48px;">🤖</div>
                     <p style="margin-top: 16px; color: #667eea;">AI正在生成综合测试题...</p>
-                    <p style="font-size: 14px; color: #9ca3af;">预计15-20道题，涵盖词汇、语法、阅读理解</p>
+                    <p style="font-size: 14px; color: #9ca3af;">预计12-15道题，涵盖词汇、语法、阅读理解</p>
                 </div>
             `;
             document.getElementById('test-modal').classList.remove('hidden');
 
             try {
-                const level = currentUser.level || 1;
+                const level = parseInt(document.getElementById('test-level-select').value) || (currentUser.level || 1);
                 const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
 
                 const questionDistribution = {
@@ -1705,6 +1725,9 @@
         function closeTestModal() {
             document.getElementById('test-modal').classList.add('hidden');
             currentTestAnswers = [];
+            document.getElementById('test-start').style.display = 'block';
+            document.getElementById('test-questions').style.display = 'none';
+            document.getElementById('test-submit-btn').style.display = 'none';
         }
 
         function startDailyLearning() {
