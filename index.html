@@ -2269,10 +2269,43 @@
             try {
                 let prompt = '';
 
+                const lengthRequirements = {
+                    1: "约100-150词，简单句为主，结构清晰，适合入门学习者",
+                    2: "约120-180词，简单句和少量并列句，词汇简单",
+                    3: "约200-280词，包含复合句和状语从句，词汇略有难度",
+                    4: "约300-400词，包含定语从句和复杂句型，词汇较丰富",
+                    5: "约400-500词，复杂句式和高级词汇，接近真实文章"
+                };
+
                 if (userTopic) {
-                    prompt = `请为英语水平为"${levelDesc}"的学习者写一篇关于"${userTopic}"的课文。要求：1. 根据难度描述控制课文长度和难度；2. 课文中需要包含以下单词，尽量自然融入：${wordList}；3. 语言简单易懂，让学习者能够通过课文巩固单词；4. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）。确保返回纯JSON，不要包含其他文字。`;
+                    prompt = `请为英语水平为"${levelDesc}"的学习者写一篇关于"${userTopic}"的课文。
+
+要求：
+1. 文章长度：${lengthRequirements[level] || lengthRequirements[1]}
+2. 课文中需要包含以下单词，尽量自然融入：${wordList}
+3. 文章要有完整的主题和故事情节，具有阅读性（包含开头、发展、结尾）
+4. 语言风格：根据难度级别适当控制，确保学习者能够理解并通过课文巩固单词
+5. 返回格式为JSON，包含：
+   - title（标题）
+   - content（课文内容，段落分明）
+   - keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）
+
+确保返回纯JSON，不要包含其他文字。`;
                 } else {
-                    prompt = `请为英语水平为"${levelDesc}"的学习者写一篇课文。要求：1. 根据以下单词确定一个合适的主题，主题要适合这些单词：${wordList}；2. 根据难度描述控制课文长度和难度；3. 课文中必须包含上述所有单词；4. 语言简单易懂，让学习者能够通过课文巩固单词；5. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）。确保返回纯JSON，不要包含其他文字。`;
+                    prompt = `请为英语水平为"${levelDesc}"的学习者写一篇课文。
+
+要求：
+1. 根据以下单词确定一个合适的主题，主题要适合这些单词：${wordList}
+2. 文章长度：${lengthRequirements[level] || lengthRequirements[1]}
+3. 课文中必须包含上述所有单词，自然融入
+4. 文章要有完整的主题和故事情节，具有阅读性（包含开头、发展、结尾）
+5. 语言风格：根据难度级别适当控制，确保学习者能够理解并通过课文巩固单词
+6. 返回格式为JSON，包含：
+   - title（标题）
+   - content（课文内容，段落分明）
+   - keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）
+
+确保返回纯JSON，不要包含其他文字。`;
                 }
 
                 const response = await callAI(prompt, '你是一个专业的英语课文生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
