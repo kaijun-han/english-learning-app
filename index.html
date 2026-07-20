@@ -619,6 +619,10 @@
                 <div style="display: flex; gap: 12px;">
                     <input type="text" id="chat-input" class="input" placeholder="输入英语句子..." style="flex: 1;"
                         onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                    <button class="btn btn-secondary" onclick="document.getElementById('image-upload').click()"
+                        title="上传图片">📷</button>
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                        onchange="handleImageUpload(this)">
                     <button class="btn btn-secondary" onclick="toggleVoiceInput()" id="voice-btn"
                         title="语音输入">🎤</button>
                     <button class="btn btn-primary" onclick="sendChatMessage()">发送</button>
@@ -1055,7 +1059,28 @@
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'en-US';
-                utterance.rate = 0.8;
+
+                const level = currentUser.level || 1;
+                if (level === 1) {
+                    utterance.rate = 0.6;
+                    utterance.pitch = 1.1;
+                } else if (level === 2) {
+                    utterance.rate = 0.7;
+                    utterance.pitch = 1.05;
+                } else if (level === 3) {
+                    utterance.rate = 0.8;
+                    utterance.pitch = 1.0;
+                } else {
+                    utterance.rate = 0.9;
+                    utterance.pitch = 0.95;
+                }
+
+                const voices = window.speechSynthesis.getVoices();
+                const femaleVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English'));
+                if (femaleVoice) {
+                    utterance.voice = femaleVoice;
+                }
+
                 window.speechSynthesis.speak(utterance);
             } else {
                 alert('您的浏览器不支持语音功能');
@@ -2910,6 +2935,28 @@ ${structuredWords || '暂无今日学习单词'}
         let chatMessages = [];
         let voiceRecognition = null;
         let isVoiceInputting = false;
+        let currentImageBase64 = '';
+
+        function handleImageUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                currentImageBase64 = e.target.result;
+                const preview = document.createElement('div');
+                preview.style.cssText = 'margin-bottom: 8px; padding: 8px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; gap: 8px;';
+                preview.innerHTML = `
+                    <img src="${currentImageBase64}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                    <span style="font-size: 14px; color: #6b7280;">图片已上传，可输入问题询问图片内容</span>
+                    <button onclick="this.parentElement.remove(); currentImageBase64 = ''" style="margin-left: auto; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; font-size: 12px;">✕</button>
+                `;
+                const inputContainer = document.getElementById('chat-input').parentElement;
+                inputContainer.parentNode.insertBefore(preview, inputContainer);
+            };
+            reader.readAsDataURL(file);
+            input.value = '';
+        }
 
         function toggleVoiceInput() {
             const btn = document.getElementById('voice-btn');
@@ -3142,20 +3189,41 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
         async function sendChatMessage() {
             const input = document.getElementById('chat-input');
             const message = input.value.trim();
-            if (!message) return;
+
+            if (!message && !currentImageBase64) return;
 
             const container = document.getElementById('chat-messages');
-            chatMessages.push({ role: 'user', content: message });
+            const hasImage = !!currentImageBase64;
 
-            container.innerHTML += `
-                <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
-                    <div style="background: #667eea; color: white; padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%;">
-                        ${message}
+            chatMessages.push({ role: 'user', content: message || '(图片)', image: hasImage ? '有图片' : undefined });
+
+            let userMessageHtml = '';
+            if (hasImage) {
+                userMessageHtml += `
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+                        <div style="background: #667eea; color: white; padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%;">
+                            <img src="${currentImageBase64}" style="max-width: 200px; border-radius: 8px; margin-bottom: 8px;">
+                            ${message ? `<div>${message}</div>` : ''}
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            } else {
+                userMessageHtml += `
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+                        <div style="background: #667eea; color: white; padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%;">
+                            ${message}
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML += userMessageHtml;
 
             input.value = '';
+            currentImageBase64 = '';
+            const preview = document.querySelector('#chat-input').parentNode.previousElementSibling;
+            if (preview && preview.querySelector('img')) {
+                preview.remove();
+            }
             container.scrollTop = container.scrollHeight;
 
             try {
@@ -3173,13 +3241,15 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
                 const rules = levelSpecificRules[level] || levelSpecificRules[3];
 
                 const aiWords = aiWordCache.length > 0 ? aiWordCache.map(w => w.word).join(', ') : '';
+                const imagePrompt = hasImage ? '【用户上传了图片】：请根据图片内容用英语描述或回答用户问题。' : '';
                 const prompt = `请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
 【当前等级】：Level ${level}
 【等级描述】：${levelDesc}
 【语言规则】：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。
 ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` : ''}
+${imagePrompt}
 【注意】：不要重复之前已经说过的话或问过的问题，根据对话历史自然推进话题。`;
-                const response = await callAI(prompt, `你是一个友好的英语对话伙伴。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，可以分享观点或提问。不要重复之前说过的话。`, chatMessages);
+                const response = await callAI(prompt, `你是一个友好的英语对话伙伴。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。${hasImage ? '用户上传了图片，请根据图片内容用英语描述或回答。' : ''}自然延续对话，每次回复2-3句话，可以分享观点或提问。不要重复之前说过的话。`, chatMessages);
 
                 chatMessages.push({ role: 'assistant', content: response });
 
