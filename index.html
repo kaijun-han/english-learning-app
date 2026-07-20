@@ -3203,14 +3203,40 @@ ${structuredWords || '暂无今日学习单词'}
         async function initVoskModel() {
             if (voskModel) return voskModel;
             try {
-                updateVoiceStatus('🔄 正在加载语音模型...');
-                await window.vosk.ready();
-                voskModel = await window.vosk.createModel('https://cdn.jsdelivr.net/npm/vosk-model-small-en-us-0.15@0.0.1/model.json');
+                updateVoiceStatus('🔄 正在初始化语音引擎...');
+
+                const voskReadyPromise = new Promise((resolve, reject) => {
+                    if (window.vosk && window.vosk.ready) {
+                        window.vosk.ready().then(resolve).catch(reject);
+                    } else {
+                        setTimeout(() => {
+                            if (window.vosk && window.vosk.Recognizer) {
+                                resolve();
+                            } else {
+                                reject(new Error('Vosk library not loaded'));
+                            }
+                        }, 5000);
+                    }
+                });
+
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('初始化超时')), 10000);
+                });
+
+                await Promise.race([voskReadyPromise, timeoutPromise]);
+                updateVoiceStatus('📦 正在下载语音模型（约50MB）...');
+
+                const modelPromise = window.vosk.createModel('https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip');
+                const modelTimeout = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('模型下载超时')), 60000);
+                });
+
+                voskModel = await Promise.race([modelPromise, modelTimeout]);
                 updateVoiceStatus('✅ 语音模型加载完成');
                 return voskModel;
             } catch (error) {
                 console.error('Vosk模型加载失败:', error);
-                updateVoiceStatus('❌ 语音模型加载失败');
+                updateVoiceStatus('❌ 语音模型加载失败：' + error.message);
                 return null;
             }
         }
