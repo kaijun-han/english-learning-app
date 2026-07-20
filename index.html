@@ -873,6 +873,8 @@
                 localStorage.setItem('english-learning-user', JSON.stringify(user));
                 loadGeneratedWordsHistory();
                 loadAIWordCache();
+                chatMessages = [];
+                currentChatTopic = '';
                 clearUIData();
                 showMainPage();
                 const wordLevelSelect = document.getElementById('word-level');
@@ -940,6 +942,8 @@
             generatedWordsHistory = {};
             lastWordTopic = '';
             currentLesson = null;
+            chatMessages = [];
+            currentChatTopic = '';
             clearUIData();
             localStorage.removeItem('english-learning-user');
             document.getElementById('login-page').classList.remove('hidden');
@@ -2992,7 +2996,11 @@ ${structuredWords || '暂无今日学习单词'}
             const todayContent = getTodayLearningContent();
 
             if (!currentChatTopic) {
-                if (todayContent.words.length > 0 || todayContent.lessons.length > 0) {
+                if (lastWordTopic) {
+                    currentChatTopic = lastWordTopic;
+                } else if (todayContent.lessons.length > 0) {
+                    currentChatTopic = todayContent.lessons[0].title;
+                } else if (todayContent.words.length > 0) {
                     currentChatTopic = '今日学习内容';
                 } else {
                     const topics = ['日常对话', '旅行', '餐厅点餐', '购物', '工作面试', '学校生活', '天气', '爱好', '健康'];
