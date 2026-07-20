@@ -1207,7 +1207,60 @@
             document.getElementById('stat-level').textContent = currentUser.level || 1;
         }
 
+        let audioContext = null;
+        let audioSource = null;
+
         function speak(text) {
+            if (audioSource) {
+                audioSource.stop();
+                audioSource = null;
+            }
+
+            const level = currentUser.level || 1;
+            let rate = "0%";
+            if (level === 1) {
+                rate = "-40%";
+            } else if (level === 2) {
+                rate = "-30%";
+            } else if (level === 3) {
+                rate = "-20%";
+            } else {
+                rate = "-10%";
+            }
+
+            const voice = "en-US-JennyNeural";
+
+            const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US"><voice name="${voice}"><prosody rate="${rate}" pitch="0%">${text}</prosody></voice></speak>`;
+
+            fetch("https://edge.microsoft.com/tts/v1/cognitiveservices/speak", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/ssml+xml",
+                    "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                },
+                body: ssml
+            })
+                .then(response => response.arrayBuffer())
+                .then(buffer => {
+                    if (!audioContext) {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    return audioContext.decodeAudioData(buffer);
+                })
+                .then(audioBuffer => {
+                    audioSource = audioContext.createBufferSource();
+                    audioSource.buffer = audioBuffer;
+                    audioSource.connect(audioContext.destination);
+                    audioSource.start(0);
+                })
+                .catch(error => {
+                    console.error("Edge TTS error:", error);
+                    fallbackSpeak(text);
+                });
+        }
+
+        function fallbackSpeak(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
