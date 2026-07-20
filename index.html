@@ -1211,6 +1211,7 @@
         let audioSource = null;
         let gainNode = null;
         let filterNode = null;
+        let lowShelfFilter = null;
 
         function speak(text, isWord = false) {
             if (audioSource) {
@@ -1230,7 +1231,7 @@
                 rate = "-10%";
             }
 
-            const voice = "en-US-JennyNeural";
+            const voice = "en-US-AriaNeural";
 
             let spokenText = text;
             if (isWord) {
@@ -1238,6 +1239,8 @@
             }
 
             const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US"><voice name="${voice}"><prosody rate="${rate}" pitch="0%">${spokenText}</prosody></voice></speak>`;
+
+            const endsWithM = isWord && /[mM]$/.test(text.trim());
 
             fetch("https://edge.microsoft.com/tts/v1/cognitiveservices/speak", {
                 method: "POST",
@@ -1264,25 +1267,39 @@
                     filterNode.frequency.value = 3000;
                     filterNode.gain.value = isWord ? 5 : 0;
 
+                    if (endsWithM) {
+                        lowShelfFilter = audioContext.createBiquadFilter();
+                        lowShelfFilter.type = 'lowshelf';
+                        lowShelfFilter.frequency.value = 800;
+                        lowShelfFilter.gain.value = 8;
+                    }
+
                     gainNode = audioContext.createGain();
                     gainNode.gain.value = 1;
 
                     audioSource.connect(filterNode);
-                    filterNode.connect(gainNode);
+                    if (endsWithM) {
+                        filterNode.connect(lowShelfFilter);
+                        lowShelfFilter.connect(gainNode);
+                    } else {
+                        filterNode.connect(gainNode);
+                    }
                     gainNode.connect(audioContext.destination);
 
                     if (isWord) {
                         const totalDuration = audioBuffer.duration;
-                        const tailStartTime = totalDuration * 0.6;
+                        const tailStartTime = totalDuration * 0.5;
                         const tailEndTime = totalDuration;
 
+                        const maxGain = endsWithM ? 1.5 : 1.35;
+
                         gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-                        gainNode.gain.linearRampToValueAtTime(1.25, audioContext.currentTime + (tailStartTime));
-                        gainNode.gain.linearRampToValueAtTime(1.35, audioContext.currentTime + (tailEndTime - 0.05));
+                        gainNode.gain.linearRampToValueAtTime(endsWithM ? 1.3 : 1.25, audioContext.currentTime + (tailStartTime));
+                        gainNode.gain.linearRampToValueAtTime(maxGain, audioContext.currentTime + (tailEndTime - 0.05));
                         gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + tailEndTime);
 
                         const startRate = 1;
-                        const endRate = 0.55;
+                        const endRate = endsWithM ? 0.5 : 0.55;
                         audioSource.playbackRate.setValueAtTime(startRate, audioContext.currentTime);
                         audioSource.playbackRate.linearRampToValueAtTime(endRate, audioContext.currentTime + tailStartTime);
                         audioSource.playbackRate.linearRampToValueAtTime(endRate, audioContext.currentTime + tailEndTime);
