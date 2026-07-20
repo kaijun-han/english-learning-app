@@ -8,7 +8,6 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>AI英语学习智能体 v2.2</title>
-    <script src="https://cdn.jsdelivr.net/npm/vosk@0.3.45/dist/vosk.js"></script>
     <style>
         * {
             margin: 0;
@@ -3195,163 +3194,111 @@ ${structuredWords || '暂无今日学习单词'}
         let chatMessages = [];
         let voiceRecognition = null;
         let isVoiceInputting = false;
-        let voskModel = null;
-        let voskRecognizer = null;
-        let voiceAudioContext = null;
-        let audioStream = null;
 
-        async function initVoskModel() {
-            if (voskModel) return voskModel;
-            try {
-                updateVoiceStatus('🔄 正在初始化语音引擎...');
-
-                const voskReadyPromise = new Promise((resolve, reject) => {
-                    if (window.vosk && window.vosk.ready) {
-                        window.vosk.ready().then(resolve).catch(reject);
-                    } else {
-                        setTimeout(() => {
-                            if (window.vosk && window.vosk.Recognizer) {
-                                resolve();
-                            } else {
-                                reject(new Error('Vosk library not loaded'));
-                            }
-                        }, 5000);
-                    }
-                });
-
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('初始化超时')), 10000);
-                });
-
-                await Promise.race([voskReadyPromise, timeoutPromise]);
-                updateVoiceStatus('📦 正在下载语音模型（约50MB）...');
-
-                const modelPromise = window.vosk.createModel('https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip');
-                const modelTimeout = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('模型下载超时')), 60000);
-                });
-
-                voskModel = await Promise.race([modelPromise, modelTimeout]);
-                updateVoiceStatus('✅ 语音模型加载完成');
-                return voskModel;
-            } catch (error) {
-                console.error('Vosk模型加载失败:', error);
-                updateVoiceStatus('❌ 语音模型加载失败：' + error.message);
-                return null;
-            }
-        }
-
-        async function toggleVoiceInput() {
+        function toggleVoiceInput() {
             const btn = document.getElementById('voice-btn');
 
             if (isVoiceInputting) {
-                if (voskRecognizer) {
-                    voskRecognizer.stop();
-                    voskRecognizer = null;
-                }
-                if (audioStream) {
-                    audioStream.getTracks().forEach(track => track.stop());
-                    audioStream = null;
+                if (voiceRecognition) {
+                    voiceRecognition.stop();
                 }
                 isVoiceInputting = false;
                 btn.innerHTML = '🎤';
                 btn.classList.remove('btn-danger');
                 btn.classList.add('btn-secondary');
-                document.getElementById('chat-input').placeholder = '输入英语句子...';
                 updateVoiceStatus('已停止');
                 return;
             }
 
-            if (!window.vosk) {
-                updateVoiceStatus('❌ 语音识别组件加载中，请稍后重试');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showVoiceInputNotice();
                 return;
             }
 
-            updateVoiceStatus('🔄 正在准备语音识别...');
-            const model = await initVoskModel();
-            if (!model) {
-                updateVoiceStatus('❌ 语音模型加载失败，请检查网络连接');
-                return;
-            }
+            voiceRecognition = new SpeechRecognition();
+            voiceRecognition.lang = 'en-US';
+            voiceRecognition.interimResults = true;
+            voiceRecognition.continuous = false;
 
-            try {
-                voiceAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-                const sampleRate = voiceAudioContext.sampleRate;
-                voskRecognizer = new window.vosk.Recognizer({ model: model, sampleRate: sampleRate });
-                voskRecognizer.setMaxAlternatives(1);
-                voskRecognizer.setWords(true);
-
-                const source = voiceAudioContext.createMediaStreamSource(audioStream);
-                const processor = voiceAudioContext.createScriptProcessor(4096, 1, 1);
-
-                processor.onaudioprocess = function (event) {
-                    if (!isVoiceInputting || !voskRecognizer) return;
-                    const inputBuffer = event.inputBuffer.getChannelData(0);
-                    voskRecognizer.acceptWaveform(inputBuffer);
-                };
-
-                voskRecognizer.onresult = function (event) {
-                    const result = JSON.parse(event.result);
-                    if (result.text && result.text.trim()) {
-                        document.getElementById('chat-input').value = result.text;
-                        updateVoiceStatus('📝 识别结果：' + result.text);
-                    }
-                };
-
-                voskRecognizer.onpartialresult = function (event) {
-                    const result = JSON.parse(event.result);
-                    if (result.partial && result.partial.trim()) {
-                        updateVoiceStatus('🎧 正在识别：' + result.partial);
-                    }
-                };
-
-                voskRecognizer.onend = function () {
-                    if (isVoiceInputting) {
-                        toggleVoiceInput();
-                    }
-                };
-
-                source.connect(processor);
-                processor.connect(audioContext.destination);
-
+            voiceRecognition.onstart = function () {
                 isVoiceInputting = true;
                 btn.innerHTML = '🔴 录音中...';
                 btn.classList.remove('btn-secondary');
                 btn.classList.add('btn-danger');
                 document.getElementById('chat-input').placeholder = '正在听您说话...';
                 updateVoiceStatus('✅ 麦克风已开启，请开始说英语');
+            };
 
-            } catch (error) {
-                console.error('语音识别启动失败:', error);
+            voiceRecognition.onresult = function (event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                document.getElementById('chat-input').value = transcript;
+                updateVoiceStatus('📝 识别中：' + transcript);
+            };
+
+            voiceRecognition.onend = function () {
                 isVoiceInputting = false;
                 btn.innerHTML = '🎤';
                 btn.classList.remove('btn-danger');
                 btn.classList.add('btn-secondary');
+                document.getElementById('chat-input').placeholder = '输入英语句子...';
+                const finalText = document.getElementById('chat-input').value;
+                if (!finalText) {
+                    updateVoiceStatus('⚠️ 未识别到语音，请检查网络连接');
+                } else {
+                    updateVoiceStatus('✅ 识别完成');
+                }
+            };
 
-                if (error.name === 'NotAllowedError') {
-                    updateVoiceStatus('❌ 请允许麦克风权限：点击浏览器地址栏左侧的锁图标 → 允许麦克风');
-                } else if (error.name === 'NotFoundError') {
+            voiceRecognition.onerror = function (event) {
+                console.error('语音识别错误:', event.error);
+                isVoiceInputting = false;
+                btn.innerHTML = '🎤';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-secondary');
+                document.getElementById('chat-input').placeholder = '输入英语句子...';
+
+                if (event.error === 'network') {
+                    updateVoiceStatus('❌ 网络错误：语音识别服务暂时不可用');
+                    showVoiceInputNotice();
+                } else if (event.error === 'service-not-allowed') {
+                    updateVoiceStatus('❌ 语音服务不可用：当前网络环境不支持');
+                    showVoiceInputNotice();
+                } else if (event.error === 'not-allowed') {
+                    updateVoiceStatus('❌ 麦克风权限被拒绝：请点击浏览器地址栏左侧的锁图标 → 允许麦克风');
+                } else if (event.error === 'no-speech') {
+                    updateVoiceStatus('❌ 未检测到语音，请尝试大声说话');
+                } else if (event.error === 'audio-capture') {
                     updateVoiceStatus('❌ 无法访问麦克风，请检查设备是否有麦克风');
                 } else {
-                    updateVoiceStatus('❌ 语音识别启动失败：' + error.message);
+                    updateVoiceStatus('❌ 语音识别出错：' + event.error);
                 }
+            };
+
+            try {
+                voiceRecognition.start();
+                updateVoiceStatus('🔄 正在启动语音识别...');
+            } catch (error) {
+                console.error('启动失败:', error);
+                showVoiceInputNotice();
             }
         }
 
         function showVoiceInputNotice() {
-            updateVoiceStatus('⚠️ 语音输入在当前网络环境下不可用');
             const notice = document.createElement('div');
             notice.style.cssText = 'margin-top: 12px; padding: 16px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; font-size: 14px; line-height: 1.6;';
             notice.innerHTML = `
                 <p style="font-weight: bold; color: #92400e; margin-bottom: 8px;">📱 语音输入提示</p>
-                <p>当前已使用离线语音识别引擎（Vosk），无需网络连接即可使用。</p>
-                <p style="margin-top: 8px;"><strong>注意事项：</strong></p>
+                <p>由于网络环境或浏览器限制，语音输入功能暂时不可用。</p>
+                <p style="margin-top: 8px;"><strong>解决方案：</strong></p>
                 <ul style="margin: 8px 0 0 20px; padding: 0;">
-                    <li>🎯 首次使用需要下载语音模型（约50MB），请确保网络畅通</li>
-                    <li>🌐 模型下载完成后，可离线使用语音输入功能</li>
-                    <li>🔤 如果识别效果不佳，可以直接在输入框中输入英语句子</li>
+                    <li>📲 <strong>iOS用户</strong>：请使用 Safari 浏览器（使用Apple语音服务）</li>
+                    <li>🌐 <strong>Android用户</strong>：请使用Chrome浏览器并确保网络畅通</li>
+                    <li>🔤 暂时可以直接在输入框中输入英语句子</li>
+                    <li>💡 建议在WiFi环境下使用语音功能</li>
                 </ul>
             `;
 
