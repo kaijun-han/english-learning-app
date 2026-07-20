@@ -3133,16 +3133,17 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
                     });
                 }, 500);
             }
+        }
 
-            async function sendChatMessage() {
-                const input = document.getElementById('chat-input');
-                const message = input.value.trim();
-                if (!message) return;
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
 
-                const container = document.getElementById('chat-messages');
-                chatMessages.push({ role: 'user', content: message });
+            const container = document.getElementById('chat-messages');
+            chatMessages.push({ role: 'user', content: message });
 
-                container.innerHTML += `
+            container.innerHTML += `
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
                     <div style="background: #667eea; color: white; padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%;">
                         ${message}
@@ -3150,35 +3151,35 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
                 </div>
             `;
 
-                input.value = '';
-                container.scrollTop = container.scrollHeight;
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
 
-                try {
-                    const level = currentUser.level || 1;
-                    const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+            try {
+                const level = currentUser.level || 1;
+                const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
 
-                    const levelSpecificRules = {
-                        1: '使用最基础的日常词汇，简单句型（主谓宾结构），只用一般现在时，每个句子不超过8个单词',
-                        2: '使用基础日常词汇和常用短语，简单时态（一般现在时、一般过去时），每个句子不超过10个单词',
-                        3: '使用常用词汇和固定搭配，掌握基本时态和句型，每个句子不超过12个单词',
-                        4: '使用较复杂词汇和从句，掌握多种时态和语态，每个句子不超过15个单词',
-                        5: '使用高级词汇和复杂句型，包含复合句和非谓语动词，每个句子不超过18个单词'
-                    };
+                const levelSpecificRules = {
+                    1: '使用最基础的日常词汇，简单句型（主谓宾结构），只用一般现在时，每个句子不超过8个单词',
+                    2: '使用基础日常词汇和常用短语，简单时态（一般现在时、一般过去时），每个句子不超过10个单词',
+                    3: '使用常用词汇和固定搭配，掌握基本时态和句型，每个句子不超过12个单词',
+                    4: '使用较复杂词汇和从句，掌握多种时态和语态，每个句子不超过15个单词',
+                    5: '使用高级词汇和复杂句型，包含复合句和非谓语动词，每个句子不超过18个单词'
+                };
 
-                    const rules = levelSpecificRules[level] || levelSpecificRules[3];
+                const rules = levelSpecificRules[level] || levelSpecificRules[3];
 
-                    const aiWords = aiWordCache.length > 0 ? aiWordCache.map(w => w.word).join(', ') : '';
-                    const prompt = `请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
+                const aiWords = aiWordCache.length > 0 ? aiWordCache.map(w => w.word).join(', ') : '';
+                const prompt = `请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
 【当前等级】：Level ${level}
 【等级描述】：${levelDesc}
 【语言规则】：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。
 ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` : ''}
 【注意】：不要重复之前已经说过的话或问过的问题，根据对话历史自然推进话题。`;
-                    const response = await callAI(prompt, `你是一个友好的英语对话伙伴。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，可以分享观点或提问。不要重复之前说过的话。`, chatMessages);
+                const response = await callAI(prompt, `你是一个友好的英语对话伙伴。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，可以分享观点或提问。不要重复之前说过的话。`, chatMessages);
 
-                    chatMessages.push({ role: 'assistant', content: response });
+                chatMessages.push({ role: 'assistant', content: response });
 
-                    container.innerHTML += `
+                container.innerHTML += `
                     <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
                         <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
                             ${response}
@@ -3187,31 +3188,31 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
                     </div>
                 `;
 
-                    container.scrollTop = container.scrollHeight;
+                container.scrollTop = container.scrollHeight;
 
-                    if (document.getElementById('chat-auto-speak').checked) {
-                        speak(response);
-                    }
-                } catch (error) {
-                    container.innerHTML += `
+                if (document.getElementById('chat-auto-speak').checked) {
+                    speak(response);
+                }
+            } catch (error) {
+                container.innerHTML += `
                     <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
                         <div style="background: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 16px 16px 16px 0;">
                             对话失败，请重试
                         </div>
                     </div>
                 `;
-                }
             }
+        }
 
-            function clearChat() {
-                chatMessages = [];
-                currentChatTopic = '';
-                document.getElementById('chat-messages').innerHTML = '';
-                const topicSelect = document.getElementById('chat-topic');
-                if (topicSelect) {
-                    topicSelect.value = '';
-                }
+        function clearChat() {
+            chatMessages = [];
+            currentChatTopic = '';
+            document.getElementById('chat-messages').innerHTML = '';
+            const topicSelect = document.getElementById('chat-topic');
+            if (topicSelect) {
+                topicSelect.value = '';
             }
+        }
     </script>
 </body>
 
