@@ -1911,6 +1911,7 @@
                 });
 
                 saveGeneratedWordsHistory();
+                lastWordTopic = randomTopic;
                 saveAIWordCache(randomTopic);
 
                 const newCoveredCount = currentHistory.length;
@@ -1984,6 +1985,7 @@
             });
 
             saveGeneratedWordsHistory();
+            lastWordTopic = topic;
             saveAIWordCache(topic);
 
             resultDiv.innerHTML = `
