@@ -3001,10 +3001,10 @@ ${structuredWords || '暂无今日学习单词'}
             const todayContent = getTodayLearningContent();
 
             if (!currentChatTopic) {
-                if (lastWordTopic) {
-                    currentChatTopic = lastWordTopic;
-                } else if (todayContent.lessons.length > 0) {
+                if (todayContent.lessons.length > 0) {
                     currentChatTopic = todayContent.lessons[0].title;
+                } else if (todayContent.words.length > 0 && lastWordTopic) {
+                    currentChatTopic = lastWordTopic;
                 } else if (todayContent.words.length > 0) {
                     currentChatTopic = '今日学习内容';
                 } else {
