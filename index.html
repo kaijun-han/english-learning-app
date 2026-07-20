@@ -330,6 +330,13 @@
                 <div class="card">
                     <h2>👋 欢迎回来！</h2>
                     <p id="greeting" style="margin: 12px 0; color: #6b7280;">今天也要努力学习哦！</p>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <span style="font-size: 16px; color: #6b7280;">当前等级：</span>
+                        <span id="current-level-display"
+                            style="font-size: 20px; font-weight: bold; color: #8b5cf6;">Level 1</span>
+                        <button class="btn btn-outline" onclick="changeLevel()"
+                            style="padding: 4px 12px; font-size: 12px;">修改</button>
+                    </div>
                     <button class="btn btn-primary" onclick="openTestModal()">📝 英语水平测试</button>
                     <button class="btn btn-success" onclick="startDailyLearning()" style="margin-left: 12px;">📚
                         开始今日学习</button>
@@ -965,12 +972,56 @@
             if (currentUser) {
                 const wordLevelSelect = document.getElementById('word-level');
                 const lessonLevelSelect = document.getElementById('lesson-level');
+                const levelDisplay = document.getElementById('current-level-display');
                 if (wordLevelSelect) {
                     wordLevelSelect.value = currentUser.level || 1;
                 }
                 if (lessonLevelSelect) {
                     lessonLevelSelect.value = currentUser.level || 1;
                 }
+                if (levelDisplay) {
+                    levelDisplay.textContent = `Level ${currentUser.level || 1}`;
+                }
+            }
+        }
+
+        function changeLevel() {
+            const levels = ['1', '2', '3', '4', '5'];
+            const levelNames = ['Level 1 - 小学3-4年级', 'Level 2 - 小学5-6年级', 'Level 3 - 初中1-2年级', 'Level 4 - 初中3年级-高中1年级', 'Level 5 - 高中及以上'];
+            const currentLevel = currentUser.level || 1;
+            const currentIndex = levels.indexOf(currentLevel.toString());
+
+            let selected = prompt(`请选择英语水平等级：\n${levelNames.join('\n')}\n\n当前等级：${levelNames[currentIndex]}\n\n输入 1-5 选择等级：`);
+            selected = parseInt(selected);
+
+            if (selected >= 1 && selected <= 5) {
+                currentUser.level = selected;
+                localStorage.setItem('english-learning-user', JSON.stringify(currentUser));
+
+                const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
+                const userIndex = users.findIndex(u => u.username === currentUser.username);
+                if (userIndex !== -1) {
+                    users[userIndex].level = selected;
+                    localStorage.setItem('english-learning-users', JSON.stringify(users));
+                }
+
+                const levelDisplay = document.getElementById('current-level-display');
+                if (levelDisplay) {
+                    levelDisplay.textContent = `Level ${selected}`;
+                }
+
+                const wordLevelSelect = document.getElementById('word-level');
+                const lessonLevelSelect = document.getElementById('lesson-level');
+                if (wordLevelSelect) {
+                    wordLevelSelect.value = selected;
+                }
+                if (lessonLevelSelect) {
+                    lessonLevelSelect.value = selected;
+                }
+
+                alert(`等级已修改为 Level ${selected}`);
+            } else if (selected !== null) {
+                alert('请输入 1-5 之间的数字');
             }
         }
 
