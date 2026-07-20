@@ -1209,10 +1209,12 @@
 
         let audioContext = null;
         let audioSource = null;
+        let gainNode = null;
+        let filterNode = null;
 
         function speak(text, isWord = false) {
             if (audioSource) {
-                audioSource.stop();
+                try { audioSource.stop(); } catch (e) { }
                 audioSource = null;
             }
 
@@ -1256,7 +1258,36 @@
                 .then(audioBuffer => {
                     audioSource = audioContext.createBufferSource();
                     audioSource.buffer = audioBuffer;
-                    audioSource.connect(audioContext.destination);
+
+                    filterNode = audioContext.createBiquadFilter();
+                    filterNode.type = 'highshelf';
+                    filterNode.frequency.value = 3000;
+                    filterNode.gain.value = isWord ? 5 : 0;
+
+                    gainNode = audioContext.createGain();
+                    gainNode.gain.value = 1;
+
+                    audioSource.connect(filterNode);
+                    filterNode.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    if (isWord) {
+                        const totalDuration = audioBuffer.duration;
+                        const tailStartTime = totalDuration * 0.6;
+                        const tailEndTime = totalDuration;
+
+                        gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+                        gainNode.gain.linearRampToValueAtTime(1.25, audioContext.currentTime + (tailStartTime));
+                        gainNode.gain.linearRampToValueAtTime(1.35, audioContext.currentTime + (tailEndTime - 0.05));
+                        gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + tailEndTime);
+
+                        const startRate = 1;
+                        const endRate = 0.55;
+                        audioSource.playbackRate.setValueAtTime(startRate, audioContext.currentTime);
+                        audioSource.playbackRate.linearRampToValueAtTime(endRate, audioContext.currentTime + tailStartTime);
+                        audioSource.playbackRate.linearRampToValueAtTime(endRate, audioContext.currentTime + tailEndTime);
+                    }
+
                     audioSource.start(0);
                 })
                 .catch(error => {
