@@ -1210,7 +1210,7 @@
         let audioContext = null;
         let audioSource = null;
 
-        function speak(text) {
+        function speak(text, isWord = false) {
             if (audioSource) {
                 audioSource.stop();
                 audioSource = null;
@@ -1230,7 +1230,12 @@
 
             const voice = "en-US-JennyNeural";
 
-            const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US"><voice name="${voice}"><prosody rate="${rate}" pitch="0%">${text}</prosody></voice></speak>`;
+            let spokenText = text;
+            if (isWord) {
+                spokenText = `${text}<break time="150ms"/>`;
+            }
+
+            const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US"><voice name="${voice}"><prosody rate="${rate}" pitch="0%">${spokenText}</prosody></voice></speak>`;
 
             fetch("https://edge.microsoft.com/tts/v1/cognitiveservices/speak", {
                 method: "POST",
@@ -1256,11 +1261,11 @@
                 })
                 .catch(error => {
                     console.error("Edge TTS error:", error);
-                    fallbackSpeak(text);
+                    fallbackSpeak(text, isWord);
                 });
         }
 
-        function fallbackSpeak(text) {
+        function fallbackSpeak(text, isWord = false) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
@@ -1368,7 +1373,7 @@
                 <div class="word-card">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="word">${w.word}</div>
-                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                        <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                         ${w.addedByAI ? '<span style="padding: 2px 6px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px;">AI</span>' : ''}
                     </div>
                     <div class="phonetic">${w.phonetic}</div>
@@ -1389,7 +1394,7 @@
                     <p style="margin: 12px 0; line-height: 1.6;">${l.content}</p>
                     <h4>关键词汇：</h4>
                     <div style="margin: 8px 0;">
-                        ${l.words?.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; margin-right: 8px; cursor: pointer;" onclick="speak('${w.word}')" title="点击发音">${w.word} - ${w.meaning} 🔊</span>`).join('') || ''}
+                        ${l.words?.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; margin-right: 8px; cursor: pointer;" onclick="speak('${w.word}', true)" title="点击发音">${w.word} - ${w.meaning} 🔊</span>`).join('') || ''}
                     </div>
                 </div>
             `).join('');
@@ -2173,7 +2178,7 @@
                         <div class="word-card">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div class="word">${w.word}</div>
-                                <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                                <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                             </div>
                             <div class="phonetic">${w.phonetic}</div>
                             <div class="meaning">${w.meaning}</div>
@@ -2245,7 +2250,7 @@
                     <div class="word-card">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div class="word">${w.word}</div>
-                            <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                            <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                         </div>
                         <div class="phonetic">${w.phonetic}</div>
                         <div class="meaning">${w.meaning}</div>
@@ -2370,7 +2375,7 @@
                 <div class="word-card" style="margin-bottom: 12px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="word">${w.word}</div>
-                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                        <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                         <span style="font-size: 12px; padding: 2px 6px; background: ${getStatusColor(w.status)}; color: white; border-radius: 4px;">${getStatusLabel(w.status)}</span>
                     </div>
                     <div class="phonetic">${w.phonetic}</div>
@@ -2685,7 +2690,7 @@
                 let contentWithAudio = lesson.content;
                 lesson.keyWords.forEach(w => {
                     const regex = new RegExp(`\\b(${w.word})\\b`, 'gi');
-                    contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}')" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
+                    contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}', true)" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
                 });
 
                 resultDiv.innerHTML = `
@@ -2706,7 +2711,7 @@
                                 <div class="word-card" style="margin-bottom: 12px;">
                                     <div style="display: flex; align-items: center; gap: 8px;">
                                         <div class="word">${w.word}</div>
-                                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                                        <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                                         <span style="font-size: 12px; padding: 2px 6px; background: #e0e7ff; color: #4338ca; border-radius: 4px;">${w.partOfSpeech}</span>
                                     </div>
                                     <div class="phonetic">${w.phonetic}</div>
@@ -2789,7 +2794,7 @@
             let contentWithAudio = lesson.content;
             lesson.keyWords.forEach(w => {
                 const regex = new RegExp(`\\b(${w.word})\\b`, 'gi');
-                contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}')" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
+                contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}', true)" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
             });
 
             const resultDiv = document.getElementById('ai-lesson-result');
@@ -2810,7 +2815,7 @@
                             <div class="word-card" style="margin-bottom: 12px;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <div class="word">${w.word}</div>
-                                    <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                                    <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                                     <span style="font-size: 12px; padding: 2px 6px; background: #e0e7ff; color: #4338ca; border-radius: 4px;">${w.partOfSpeech}</span>
                                 </div>
                                 <div class="phonetic">${w.phonetic}</div>
