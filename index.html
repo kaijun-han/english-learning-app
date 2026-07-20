@@ -1207,32 +1207,25 @@
             document.getElementById('stat-level').textContent = currentUser.level || 1;
         }
 
-        function speak(text, isWord = false) {
+        function speak(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'en-US';
 
                 const level = currentUser.level || 1;
-
-                if (isWord) {
-                    utterance.rate = Math.max(0.4, level === 1 ? 0.4 : level === 2 ? 0.5 : level === 3 ? 0.6 : 0.7);
-                    utterance.pitch = level === 1 ? 1.2 : level === 2 ? 1.1 : 1.0;
-                    utterance.volume = 1.0;
+                if (level === 1) {
+                    utterance.rate = 0.6;
+                    utterance.pitch = 1.2;
+                } else if (level === 2) {
+                    utterance.rate = 0.7;
+                    utterance.pitch = 1.1;
+                } else if (level === 3) {
+                    utterance.rate = 0.8;
+                    utterance.pitch = 1.0;
                 } else {
-                    if (level === 1) {
-                        utterance.rate = 0.6;
-                        utterance.pitch = 1.1;
-                    } else if (level === 2) {
-                        utterance.rate = 0.7;
-                        utterance.pitch = 1.05;
-                    } else if (level === 3) {
-                        utterance.rate = 0.8;
-                        utterance.pitch = 1.0;
-                    } else {
-                        utterance.rate = 0.9;
-                        utterance.pitch = 0.95;
-                    }
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1.0;
                 }
 
                 const voices = window.speechSynthesis.getVoices();
@@ -1322,7 +1315,7 @@
                 <div class="word-card">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="word">${w.word}</div>
-                        <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
+                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
                         ${w.addedByAI ? '<span style="padding: 2px 6px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px;">AI</span>' : ''}
                     </div>
                     <div class="phonetic">${w.phonetic}</div>
@@ -1343,7 +1336,7 @@
                     <p style="margin: 12px 0; line-height: 1.6;">${l.content}</p>
                     <h4>关键词汇：</h4>
                     <div style="margin: 8px 0;">
-                        ${l.words?.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; margin-right: 8px; cursor: pointer;" onclick="speak('${w.word}', true)" title="点击发音">${w.word} - ${w.meaning} 🔊</span>`).join('') || ''}
+                        ${l.words?.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; margin-right: 8px; cursor: pointer;" onclick="speak('${w.word}')" title="点击发音">${w.word} - ${w.meaning} 🔊</span>`).join('') || ''}
                     </div>
                 </div>
             `).join('');
@@ -2127,7 +2120,7 @@
                         <div class="word-card">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div class="word">${w.word}</div>
-                                <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
+                                <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
                             </div>
                             <div class="phonetic">${w.phonetic}</div>
                             <div class="meaning">${w.meaning}</div>
@@ -2199,7 +2192,7 @@
                     <div class="word-card">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div class="word">${w.word}</div>
-                            <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
+                            <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
                         </div>
                         <div class="phonetic">${w.phonetic}</div>
                         <div class="meaning">${w.meaning}</div>
@@ -2324,7 +2317,7 @@
                 <div class="word-card" style="margin-bottom: 12px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="word">${w.word}</div>
-                        <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
+                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
                         <span style="font-size: 12px; padding: 2px 6px; background: ${getStatusColor(w.status)}; color: white; border-radius: 4px;">${getStatusLabel(w.status)}</span>
                     </div>
                     <div class="phonetic">${w.phonetic}</div>
@@ -2639,7 +2632,7 @@
                 let contentWithAudio = lesson.content;
                 lesson.keyWords.forEach(w => {
                     const regex = new RegExp(`\\b(${w.word})\\b`, 'gi');
-                    contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}', true)" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
+                    contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}')" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
                 });
 
                 resultDiv.innerHTML = `
@@ -2660,7 +2653,7 @@
                                 <div class="word-card" style="margin-bottom: 12px;">
                                     <div style="display: flex; align-items: center; gap: 8px;">
                                         <div class="word">${w.word}</div>
-                                        <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
+                                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
                                         <span style="font-size: 12px; padding: 2px 6px; background: #e0e7ff; color: #4338ca; border-radius: 4px;">${w.partOfSpeech}</span>
                                     </div>
                                     <div class="phonetic">${w.phonetic}</div>
@@ -2743,7 +2736,7 @@
             let contentWithAudio = lesson.content;
             lesson.keyWords.forEach(w => {
                 const regex = new RegExp(`\\b(${w.word})\\b`, 'gi');
-                contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}', true)" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
+                contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}')" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
             });
 
             const resultDiv = document.getElementById('ai-lesson-result');
@@ -2764,7 +2757,7 @@
                             <div class="word-card" style="margin-bottom: 12px;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <div class="word">${w.word}</div>
-                                    <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
+                                    <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
                                     <span style="font-size: 12px; padding: 2px 6px; background: #e0e7ff; color: #4338ca; border-radius: 4px;">${w.partOfSpeech}</span>
                                 </div>
                                 <div class="phonetic">${w.phonetic}</div>
