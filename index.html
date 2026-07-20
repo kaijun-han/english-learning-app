@@ -2028,6 +2028,7 @@
                 example: w.example,
                 level: currentUser.level || 1,
                 addedByAI: true,
+                topic: lastWordTopic || '',
                 addedDate: new Date().toISOString(),
                 repetitions: 0,
                 easeFactor: 2.5,
@@ -3056,16 +3057,13 @@ ${structuredWords || '暂无今日学习单词'}
             if (!currentChatTopic) {
                 if (todayContent.lessons.length > 0) {
                     currentChatTopic = todayContent.lessons[0].title;
-                } else if (todayContent.words.length > 0 && lastWordTopic && aiWordCache.length > 0) {
-                    const todayWordTexts = todayContent.words.map(w => w.word || w.text);
-                    const cacheMatches = aiWordCache.filter(w => todayWordTexts.includes(w.word || w.text));
-                    if (cacheMatches.length > 0) {
-                        currentChatTopic = lastWordTopic;
+                } else if (todayContent.words.length > 0) {
+                    const topics = [...new Set(todayContent.words.map(w => w.topic || '').filter(t => t))];
+                    if (topics.length > 0) {
+                        currentChatTopic = topics[0];
                     } else {
                         currentChatTopic = '今日学习内容';
                     }
-                } else if (todayContent.words.length > 0) {
-                    currentChatTopic = '今日学习内容';
                 } else {
                     const topics = ['日常对话', '旅行', '餐厅点餐', '购物', '工作面试', '学校生活', '天气', '爱好', '健康'];
                     currentChatTopic = topics[Math.floor(Math.random() * topics.length)];
