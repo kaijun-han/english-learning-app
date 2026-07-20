@@ -3197,7 +3197,7 @@ ${structuredWords || '暂无今日学习单词'}
         let isVoiceInputting = false;
         let voskModel = null;
         let voskRecognizer = null;
-        let audioContext = null;
+        let voiceAudioContext = null;
         let audioStream = null;
 
         async function initVoskModel() {
@@ -3249,16 +3249,16 @@ ${structuredWords || '暂无今日学习单词'}
             }
 
             try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                voiceAudioContext = new (window.AudioContext || window.webkitAudioContext)();
                 audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-                const sampleRate = audioContext.sampleRate;
+                const sampleRate = voiceAudioContext.sampleRate;
                 voskRecognizer = new window.vosk.Recognizer({ model: model, sampleRate: sampleRate });
                 voskRecognizer.setMaxAlternatives(1);
                 voskRecognizer.setWords(true);
 
-                const source = audioContext.createMediaStreamSource(audioStream);
-                const processor = audioContext.createScriptProcessor(4096, 1, 1);
+                const source = voiceAudioContext.createMediaStreamSource(audioStream);
+                const processor = voiceAudioContext.createScriptProcessor(4096, 1, 1);
 
                 processor.onaudioprocess = function (event) {
                     if (!isVoiceInputting || !voskRecognizer) return;
