@@ -933,7 +933,12 @@
             if (levelPanel) {
                 levelPanel.style.display = 'none';
             }
+            const topicSelect = document.getElementById('chat-topic');
+            if (topicSelect) {
+                topicSelect.value = '';
+            }
             currentChatTopic = '';
+            chatMessages = [];
         }
 
         function logout() {
