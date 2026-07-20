@@ -1423,7 +1423,8 @@
             document.getElementById('test-start').style.display = 'block';
             document.getElementById('test-questions').style.display = 'none';
             document.getElementById('test-submit-btn').style.display = 'none';
-            document.getElementById('test-level-select').value = currentUser.level || 1;
+            const userLevel = currentUser && currentUser.level ? currentUser.level : 1;
+            document.getElementById('test-level-select').value = userLevel;
             document.getElementById('test-modal').classList.remove('hidden');
         }
 
@@ -2979,8 +2980,9 @@ ${structuredWords || '暂无今日学习单词'}
             chatMessages = [];
             setTimeout(() => {
                 const levelDesc = LEVEL_DESCRIPTIONS[currentUser.level || 1] || LEVEL_DESCRIPTIONS[1];
-                const prompt = `请开启关于"${currentChatTopic}"的对话。你是对话的主导者，主动提问引导用户参与。难度级别：${levelDesc}。请用英语回复。`;
-                callAI(prompt, `你是一个英语对话练习伙伴，主导关于"${currentChatTopic}"的对话。用英语提问，引导用户参与对话。根据用户水平（CEFR ${levelInfo.cefr}）调整语言难度。`).then(response => {
+                const prompt = `请开启关于"${currentChatTopic}"的对话。你是对话的主导者，主动提问引导用户参与。难度级别：${levelDesc}。
+【难度要求】：使用简单词汇和短句，避免复杂句型，句子长度不超过15个单词，语速放慢，让学习者容易理解和回应。请用英语回复。`;
+                callAI(prompt, `你是一个英语对话练习伙伴，主导关于"${currentChatTopic}"的对话。用英语提问，引导用户参与对话。根据用户水平（CEFR ${levelInfo.cefr}）调整语言难度。使用简单词汇和短句，避免复杂句型，句子长度不超过15个单词。`).then(response => {
                     chatMessages.push({ role: 'assistant', content: response });
                     container.innerHTML += `
                         <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
@@ -3022,8 +3024,9 @@ ${structuredWords || '暂无今日学习单词'}
             try {
                 const levelInfo = VOCABULARY_LEVELS[currentUser.level || 1];
                 const topicPrompt = currentChatTopic ? `话题：${currentChatTopic}。` : '';
-                const prompt = `${topicPrompt}用户说：${message}\n请用英语回复，保持对话自然。你是对话的主导者，适当提问引导用户继续对话。用户当前等级：Level ${currentUser.level || 1} (CEFR ${levelInfo.cefr})。`;
-                const response = await callAI(prompt, `你是一个英语对话练习伙伴，主导对话。${currentChatTopic ? `话题是"${currentChatTopic}"。` : ''}用英语与用户进行自然对话，适当提问引导。根据用户水平（CEFR ${levelInfo.cefr}）调整语言难度。`);
+                const prompt = `${topicPrompt}用户说：${message}\n请用英语回复，保持对话自然。你是对话的主导者，适当提问引导用户继续对话。用户当前等级：Level ${currentUser.level || 1} (CEFR ${levelInfo.cefr})。
+【难度要求】：使用简单词汇和短句，避免复杂句型，句子长度不超过15个单词，语速放慢，让学习者容易理解和回应。`;
+                const response = await callAI(prompt, `你是一个英语对话练习伙伴，主导对话。${currentChatTopic ? `话题是"${currentChatTopic}"。` : ''}用英语与用户进行自然对话，适当提问引导。根据用户水平（CEFR ${levelInfo.cefr}）调整语言难度。使用简单词汇和短句，避免复杂句型，句子长度不超过15个单词。`);
 
                 chatMessages.push({ role: 'assistant', content: response });
 
