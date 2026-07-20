@@ -2979,11 +2979,26 @@ ${structuredWords || '暂无今日学习单词'}
             `;
             chatMessages = [];
             setTimeout(() => {
-                const levelDesc = LEVEL_DESCRIPTIONS[currentUser.level || 1] || LEVEL_DESCRIPTIONS[1];
-                const prompt = `请开启关于"${currentChatTopic}"的对话。你是一个友好的聊天伙伴，与用户进行自然对话。难度级别：${levelDesc}。
-【对话风格】：自然、轻松、友好。不要一直问问题，而是分享一点自己的想法或经历，再适当提问。比如先说一句陈述，再问一个问题。
-【难度要求】：使用简单词汇和短句，避免复杂句型，句子长度不超过15个单词，让学习者容易理解和回应。请用英语回复。`;
-                callAI(prompt, `你是一个友好的英语对话伙伴，与用户进行自然对话。${currentChatTopic ? `话题是"${currentChatTopic}"。` : ''}对话风格：自然、轻松、友好。不要一直问问题，而是分享一点自己的想法或经历，再适当提问。使用简单词汇和短句，避免复杂句型，句子长度不超过15个单词。根据用户水平（CEFR ${levelInfo.cefr}）调整语言难度。`).then(response => {
+                const level = currentUser.level || 1;
+                const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+
+                const levelSpecificRules = {
+                    1: '使用最基础的日常词汇（如apple, book, happy），简单句型（主谓宾结构），只用一般现在时，每个句子不超过8个单词',
+                    2: '使用基础日常词汇和常用短语，简单时态（一般现在时、一般过去时），每个句子不超过10个单词',
+                    3: '使用常用词汇和固定搭配，掌握基本时态和句型，每个句子不超过12个单词',
+                    4: '使用较复杂词汇和从句，掌握多种时态和语态，每个句子不超过15个单词',
+                    5: '使用高级词汇和复杂句型，包含复合句和非谓语动词，每个句子不超过20个单词'
+                };
+
+                const rules = levelSpecificRules[level] || levelSpecificRules[3];
+
+                const prompt = `请开启关于"${currentChatTopic}"的对话。你是一个友好的聊天伙伴，与用户进行自然对话。
+【当前等级】：Level ${level}
+【等级描述】：${levelDesc}
+【语言规则】：${rules}
+【对话风格】：自然、轻松、友好。不要一直问问题，而是分享一点自己的想法或经历，再适当提问。
+请用英语回复。`;
+                callAI(prompt, `你是一个友好的英语对话伙伴，与用户进行自然对话。${currentChatTopic ? `话题是"${currentChatTopic}"。` : ''}当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。对话风格：自然、轻松、友好。不要一直问问题，而是分享一点自己的想法或经历，再适当提问。`).then(response => {
                     chatMessages.push({ role: 'assistant', content: response });
                     container.innerHTML += `
                         <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
@@ -3023,12 +3038,26 @@ ${structuredWords || '暂无今日学习单词'}
             container.scrollTop = container.scrollHeight;
 
             try {
-                const levelInfo = VOCABULARY_LEVELS[currentUser.level || 1];
+                const level = currentUser.level || 1;
+                const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+
+                const levelSpecificRules = {
+                    1: '使用最基础的日常词汇（如apple, book, happy），简单句型（主谓宾结构），只用一般现在时，每个句子不超过8个单词',
+                    2: '使用基础日常词汇和常用短语，简单时态（一般现在时、一般过去时），每个句子不超过10个单词',
+                    3: '使用常用词汇和固定搭配，掌握基本时态和句型，每个句子不超过12个单词',
+                    4: '使用较复杂词汇和从句，掌握多种时态和语态，每个句子不超过15个单词',
+                    5: '使用高级词汇和复杂句型，包含复合句和非谓语动词，每个句子不超过20个单词'
+                };
+
+                const rules = levelSpecificRules[level] || levelSpecificRules[3];
+
                 const topicPrompt = currentChatTopic ? `话题：${currentChatTopic}。` : '';
-                const prompt = `${topicPrompt}用户说：${message}\n请用英语回复，保持对话自然。你是一个友好的聊天伙伴。用户当前等级：Level ${currentUser.level || 1} (CEFR ${levelInfo.cefr})。
-【对话风格】：自然、轻松、友好。不要一直问问题，而是分享一点自己的想法或经历，再适当提问。比如先说一句陈述，再问一个问题。
-【难度要求】：使用简单词汇和短句，避免复杂句型，句子长度不超过15个单词，让学习者容易理解和回应。`;
-                const response = await callAI(prompt, `你是一个友好的英语对话伙伴。${currentChatTopic ? `话题是"${currentChatTopic}"。` : ''}用英语与用户进行自然对话。对话风格：自然、轻松、友好。不要一直问问题，而是分享一点自己的想法或经历，再适当提问。使用简单词汇和短句，避免复杂句型，句子长度不超过15个单词。根据用户水平（CEFR ${levelInfo.cefr}）调整语言难度。`);
+                const prompt = `${topicPrompt}用户说：${message}\n请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
+【当前等级】：Level ${level}
+【等级描述】：${levelDesc}
+【语言规则】：${rules}
+【对话风格】：自然、轻松、友好。不要一直问问题，而是分享一点自己的想法或经历，再适当提问。`;
+                const response = await callAI(prompt, `你是一个友好的英语对话伙伴。${currentChatTopic ? `话题是"${currentChatTopic}"。` : ''}当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。对话风格：自然、轻松、友好。不要一直问问题，而是分享一点自己的想法或经历，再适当提问。`);
 
                 chatMessages.push({ role: 'assistant', content: response });
 
