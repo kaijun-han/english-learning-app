@@ -328,7 +328,7 @@
                 <div class="card">
                     <h2>👋 欢迎回来！</h2>
                     <p id="greeting" style="margin: 12px 0; color: #6b7280;">今天也要努力学习哦！</p>
-                    <button class="btn btn-primary" onclick="startLevelTest()">📝 英语水平测试</button>
+                    <button class="btn btn-primary" onclick="openTestModal()">📝 英语水平测试</button>
                     <button class="btn btn-success" onclick="startDailyLearning()" style="margin-left: 12px;">📚
                         开始今日学习</button>
                 </div>
@@ -1419,6 +1419,14 @@
             `;
         }
 
+        function openTestModal() {
+            document.getElementById('test-start').style.display = 'block';
+            document.getElementById('test-questions').style.display = 'none';
+            document.getElementById('test-submit-btn').style.display = 'none';
+            document.getElementById('test-level-select').value = currentUser.level || 1;
+            document.getElementById('test-modal').classList.remove('hidden');
+        }
+
         async function startLevelTest() {
             const container = document.getElementById('test-questions');
             const startDiv = document.getElementById('test-start');
@@ -1435,7 +1443,6 @@
                     <p style="font-size: 14px; color: #9ca3af;">预计12-15道题，涵盖词汇、语法、阅读理解</p>
                 </div>
             `;
-            document.getElementById('test-modal').classList.remove('hidden');
 
             try {
                 const level = parseInt(document.getElementById('test-level-select').value) || (currentUser.level || 1);
