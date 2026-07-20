@@ -294,6 +294,163 @@
             border-color: #9ca3af;
             background: #f3f4f6;
         }
+
+        #ai-assistant-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            cursor: pointer;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        #ai-assistant-fab:hover {
+            transform: scale(1.1);
+        }
+
+        #ai-assistant-panel {
+            position: fixed;
+            bottom: 100px;
+            right: 24px;
+            width: 420px;
+            max-width: calc(100vw - 48px);
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            max-height: 70vh;
+        }
+
+        #ai-assistant-panel.open {
+            display: flex;
+        }
+
+        #ai-assistant-header {
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #ai-assistant-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        #ai-assistant-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #ai-assistant-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            min-height: 200px;
+            max-height: 400px;
+        }
+
+        .ai-assistant-message {
+            margin-bottom: 12px;
+            display: flex;
+        }
+
+        .ai-assistant-message.user {
+            justify-content: flex-end;
+        }
+
+        .ai-assistant-message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-radius: 12px 12px 0 12px;
+        }
+
+        .ai-assistant-message.assistant .message-content {
+            background: #f3f4f6;
+            color: #1f2937;
+            border-radius: 12px 12px 12px 0;
+        }
+
+        .ai-assistant-message .message-content {
+            padding: 12px;
+            max-width: 80%;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .ai-assistant-message .message-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        #ai-assistant-input-area {
+            padding: 12px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 8px;
+        }
+
+        #ai-assistant-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        #ai-assistant-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #ai-assistant-upload-btn,
+        #ai-assistant-send-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        #ai-assistant-upload-btn {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        #ai-assistant-send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        #ai-assistant-file-input {
+            display: none;
+        }
     </style>
 </head>
 
@@ -619,10 +776,6 @@
                 <div style="display: flex; gap: 12px;">
                     <input type="text" id="chat-input" class="input" placeholder="输入英语句子..." style="flex: 1;"
                         onkeypress="if(event.key === 'Enter') sendChatMessage()">
-                    <button class="btn btn-secondary" onclick="document.getElementById('image-upload').click()"
-                        title="上传图片">📷</button>
-                    <input type="file" id="image-upload" accept="image/*" style="display: none;"
-                        onchange="handleImageUpload(this)">
                     <button class="btn btn-secondary" onclick="toggleVoiceInput()" id="voice-btn"
                         title="语音输入">🎤</button>
                     <button class="btn btn-primary" onclick="sendChatMessage()">发送</button>
@@ -2935,28 +3088,6 @@ ${structuredWords || '暂无今日学习单词'}
         let chatMessages = [];
         let voiceRecognition = null;
         let isVoiceInputting = false;
-        let currentImageBase64 = '';
-
-        function handleImageUpload(input) {
-            const file = input.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                currentImageBase64 = e.target.result;
-                const preview = document.createElement('div');
-                preview.style.cssText = 'margin-bottom: 8px; padding: 8px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; gap: 8px;';
-                preview.innerHTML = `
-                    <img src="${currentImageBase64}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
-                    <span style="font-size: 14px; color: #6b7280;">图片已上传，可输入问题询问图片内容</span>
-                    <button onclick="this.parentElement.remove(); currentImageBase64 = ''" style="margin-left: auto; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; font-size: 12px;">✕</button>
-                `;
-                const inputContainer = document.getElementById('chat-input').parentElement;
-                inputContainer.parentNode.insertBefore(preview, inputContainer);
-            };
-            reader.readAsDataURL(file);
-            input.value = '';
-        }
 
         function toggleVoiceInput() {
             const btn = document.getElementById('voice-btn');
@@ -3189,41 +3320,20 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
         async function sendChatMessage() {
             const input = document.getElementById('chat-input');
             const message = input.value.trim();
-
-            if (!message && !currentImageBase64) return;
+            if (!message) return;
 
             const container = document.getElementById('chat-messages');
-            const hasImage = !!currentImageBase64;
+            chatMessages.push({ role: 'user', content: message });
 
-            chatMessages.push({ role: 'user', content: message || '(图片)', image: hasImage ? '有图片' : undefined });
-
-            let userMessageHtml = '';
-            if (hasImage) {
-                userMessageHtml += `
-                    <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
-                        <div style="background: #667eea; color: white; padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%;">
-                            <img src="${currentImageBase64}" style="max-width: 200px; border-radius: 8px; margin-bottom: 8px;">
-                            ${message ? `<div>${message}</div>` : ''}
-                        </div>
+            container.innerHTML += `
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+                    <div style="background: #667eea; color: white; padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%;">
+                        ${message}
                     </div>
-                `;
-            } else {
-                userMessageHtml += `
-                    <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
-                        <div style="background: #667eea; color: white; padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%;">
-                            ${message}
-                        </div>
-                    </div>
-                `;
-            }
-            container.innerHTML += userMessageHtml;
+                </div>
+            `;
 
             input.value = '';
-            currentImageBase64 = '';
-            const preview = document.querySelector('#chat-input').parentNode.previousElementSibling;
-            if (preview && preview.querySelector('img')) {
-                preview.remove();
-            }
             container.scrollTop = container.scrollHeight;
 
             try {
@@ -3241,15 +3351,13 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
                 const rules = levelSpecificRules[level] || levelSpecificRules[3];
 
                 const aiWords = aiWordCache.length > 0 ? aiWordCache.map(w => w.word).join(', ') : '';
-                const imagePrompt = hasImage ? '【用户上传了图片】：请根据图片内容用英语描述或回答用户问题。' : '';
                 const prompt = `请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
 【当前等级】：Level ${level}
 【等级描述】：${levelDesc}
 【语言规则】：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。
 ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` : ''}
-${imagePrompt}
 【注意】：不要重复之前已经说过的话或问过的问题，根据对话历史自然推进话题。`;
-                const response = await callAI(prompt, `你是一个友好的英语对话伙伴。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。${hasImage ? '用户上传了图片，请根据图片内容用英语描述或回答。' : ''}自然延续对话，每次回复2-3句话，可以分享观点或提问。不要重复之前说过的话。`, chatMessages);
+                const response = await callAI(prompt, `你是一个友好的英语对话伙伴。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，可以分享观点或提问。不要重复之前说过的话。`, chatMessages);
 
                 chatMessages.push({ role: 'assistant', content: response });
 
@@ -3287,7 +3395,150 @@ ${imagePrompt}
                 topicSelect.value = '';
             }
         }
+
+        let aiAssistantMessages = [];
+        let aiAssistantCurrentImage = '';
+
+        function toggleAiAssistant() {
+            const panel = document.getElementById('ai-assistant-panel');
+            panel.classList.toggle('open');
+        }
+
+        function handleAiAssistantUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    aiAssistantCurrentImage = e.target.result;
+                    const messages = document.getElementById('ai-assistant-messages');
+                    messages.innerHTML += `
+                        <div class="ai-assistant-message user">
+                            <div class="message-content">
+                                <img src="${aiAssistantCurrentImage}" style="max-width: 150px; border-radius: 8px;">
+                                <div style="margin-top: 8px;">📷 图片已上传</div>
+                            </div>
+                        </div>
+                    `;
+                    messages.scrollTop = messages.scrollHeight;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const content = e.target.result;
+                    aiAssistantCurrentImage = '';
+                    const messages = document.getElementById('ai-assistant-messages');
+                    messages.innerHTML += `
+                        <div class="ai-assistant-message user">
+                            <div class="message-content">
+                                📄 文件内容：<br>
+                                <div style="margin-top: 8px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px; max-height: 100px; overflow-y: auto;">${content.substring(0, 500)}${content.length > 500 ? '...' : ''}</div>
+                            </div>
+                        </div>
+                    `;
+                    messages.scrollTop = messages.scrollHeight;
+                };
+                reader.readAsText(file);
+            }
+            input.value = '';
+        }
+
+        async function sendAiAssistantMessage() {
+            const input = document.getElementById('ai-assistant-input');
+            const message = input.value.trim();
+            if (!message && !aiAssistantCurrentImage) return;
+
+            const messages = document.getElementById('ai-assistant-messages');
+
+            aiAssistantMessages.push({ role: 'user', content: message || '(上传了文件/图片)' });
+
+            if (aiAssistantCurrentImage) {
+                messages.innerHTML += `
+                    <div class="ai-assistant-message user">
+                        <div class="message-content">
+                            <img src="${aiAssistantCurrentImage}" style="max-width: 150px; border-radius: 8px;">
+                            ${message ? `<div style="margin-top: 8px;">${message}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                messages.innerHTML += `
+                    <div class="ai-assistant-message user">
+                        <div class="message-content">${message}</div>
+                    </div>
+                `;
+            }
+
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+
+            try {
+                const level = currentUser.level || 1;
+                const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+
+                let prompt = `你是一个专业的英语学习助手。用户当前英语水平：Level ${level} (${levelDesc})。请根据用户的英语水平提供合适的帮助。\n\n`;
+
+                if (aiAssistantCurrentImage) {
+                    prompt += `【用户上传了图片】：请分析图片内容，用适合用户水平的英语描述图片，并提供相关英语学习内容。\n`;
+                }
+
+                prompt += `【用户问题】：${message || '请分析上传的文件/图片'}\n\n请用中文和英文混合回答，确保英语部分适合用户当前水平。`;
+
+                const response = await callAI(prompt, `你是一个专业的英语学习助手，擅长根据用户英语水平提供个性化帮助。用户当前水平：Level ${level} (${levelDesc})。请用中文和英文混合回答，英语部分要适合用户水平。`, aiAssistantMessages.slice(-5));
+
+                aiAssistantMessages.push({ role: 'assistant', content: response });
+
+                messages.innerHTML += `
+                    <div class="ai-assistant-message assistant">
+                        <div class="message-content">${response.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+
+                aiAssistantCurrentImage = '';
+                messages.scrollTop = messages.scrollHeight;
+            } catch (e) {
+                console.error('AI Assistant error:', e);
+                messages.innerHTML += `
+                    <div class="ai-assistant-message assistant">
+                        <div class="message-content">⚠️ 抱歉，处理请求时出错了，请重试。</div>
+                    </div>
+                `;
+                messages.scrollTop = messages.scrollHeight;
+            }
+        }
     </script>
+
+    <div id="ai-assistant-fab" onclick="toggleAiAssistant()">🤖</div>
+    <div id="ai-assistant-panel">
+        <div id="ai-assistant-header">
+            <h3>🤖 AI学习助手</h3>
+            <button id="ai-assistant-close" onclick="toggleAiAssistant()">✕</button>
+        </div>
+        <div id="ai-assistant-messages">
+            <div class="ai-assistant-message assistant">
+                <div class="message-content">
+                    👋 你好！我是你的AI学习助手。我可以帮你：<br>
+                    - 📖 解释单词或语法<br>
+                    - 📝 帮你修改英语作文<br>
+                    - 🖼️ 上传图片进行学习<br>
+                    - 📄 上传文章进行分析<br>
+                    - ⚙️ 调整生成内容的参数<br>
+                    请告诉我你需要什么帮助！
+                </div>
+            </div>
+        </div>
+        <div id="ai-assistant-input-area">
+            <input type="file" id="ai-assistant-file-input" accept="image/*,.txt,.docx"
+                onchange="handleAiAssistantUpload(this)">
+            <button id="ai-assistant-upload-btn" onclick="document.getElementById('ai-assistant-file-input').click()"
+                title="上传文件或图片">📎</button>
+            <input type="text" id="ai-assistant-input" placeholder="输入你的问题..."
+                onkeypress="if(event.key === 'Enter') sendAiAssistantMessage()">
+            <button id="ai-assistant-send-btn" onclick="sendAiAssistantMessage()">➤</button>
+        </div>
+    </div>
 </body>
 
 </html>
