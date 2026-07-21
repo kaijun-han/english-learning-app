@@ -626,7 +626,12 @@
                             onclick="flipFlashcard()">
                             <div id="flashcard-front"
                                 style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: #667eea; color: white; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
-                                <div id="flashcard-word" style="font-size: 36px; font-weight: bold;"></div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div id="flashcard-word" style="font-size: 36px; font-weight: bold;"></div>
+                                    <button class="btn btn-light btn-sm"
+                                        onclick="event.stopPropagation(); speak(document.getElementById('flashcard-word').textContent)"
+                                        title="单词发音" style="padding: 4px 8px;">🔊</button>
+                                </div>
                                 <div id="flashcard-phonetic" style="font-size: 18px; margin-top: 8px;"></div>
                                 <p style="font-size: 14px; margin-top: 20px; opacity: 0.8;">点击卡片查看释义</p>
                             </div>
@@ -634,8 +639,13 @@
                                 style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border: 2px solid #667eea; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transform: rotateY(180deg);">
                                 <div id="flashcard-meaning" style="font-size: 24px; font-weight: bold; color: #667eea;">
                                 </div>
-                                <div id="flashcard-example"
-                                    style="font-size: 16px; margin-top: 12px; color: #4b5563; text-align: center;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+                                    <div id="flashcard-example"
+                                        style="font-size: 16px; color: #4b5563; text-align: center;">
+                                    </div>
+                                    <button class="btn btn-primary btn-sm"
+                                        onclick="event.stopPropagation(); speak(document.getElementById('flashcard-example').textContent)"
+                                        title="例句发音" style="padding: 4px 8px;">🔊</button>
                                 </div>
                             </div>
                         </div>
