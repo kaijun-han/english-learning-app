@@ -765,15 +765,6 @@
                     <select id="chat-topic" class="input" style="flex: 1;" onchange="startChatWithTopic()">
                         <option value="">🎲 随机主题</option>
                         <option value="自由对话">🗣️ 自由对话</option>
-                        <option value="日常对话">💬 日常对话</option>
-                        <option value="旅行">✈️ 旅行</option>
-                        <option value="餐厅点餐">🍽️ 餐厅点餐</option>
-                        <option value="购物">🛍️ 购物</option>
-                        <option value="工作面试">💼 工作面试</option>
-                        <option value="学校生活">🏫 学校生活</option>
-                        <option value="天气">☀️ 天气</option>
-                        <option value="爱好">🎨 爱好</option>
-                        <option value="健康">🏥 健康</option>
                     </select>
                 </div>
                 <div id="chat-messages"
@@ -3428,7 +3419,7 @@ ${structuredWords || '暂无今日学习单词'}
                 if (lastWordTopic && aiWordCache.length > 0) {
                     currentChatTopic = lastWordTopic;
                 } else {
-                    const topics = ['日常对话', '旅行', '餐厅点餐', '购物', '工作面试', '学校生活', '天气', '爱好', '健康'];
+                    const topics = ['日常对话', '旅行', '餐厅点餐', '购物', '学校生活', '天气', '爱好', '健康'];
                     currentChatTopic = topics[Math.floor(Math.random() * topics.length)];
                 }
             }
