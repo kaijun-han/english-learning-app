@@ -2685,8 +2685,8 @@
             const loadingDiv = document.getElementById('ai-lesson-loading');
             const resultDiv = document.getElementById('ai-lesson-result');
 
-            if (aiWordCache.length === 0) {
-                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">暂无可用单词，请先在「✨ AI单词」中生成单词</p>`;
+            if (!userTopic && aiWordCache.length === 0) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">暂无可用单词，请先在「✨ AI单词」中生成单词，或输入课文主题</p>`;
                 return;
             }
 
@@ -2713,10 +2713,9 @@
 
 要求：
 1. 文章长度：${lengthRequirements[level] || lengthRequirements[1]}
-2. 课文中需要包含以下单词，尽量自然融入：${wordList}
-3. 文章要有完整的主题和故事情节，具有阅读性（包含开头、发展、结尾）
-4. 语言风格：根据难度级别适当控制，确保学习者能够理解并通过课文巩固单词
-5. 返回格式为JSON，包含：
+2. 文章要有完整的主题和故事情节，具有阅读性（包含开头、发展、结尾）
+3. 语言风格：根据难度级别适当控制，确保学习者能够理解
+4. 返回格式为JSON，包含：
    - title（标题）
    - content（课文内容，段落分明）
    - keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）
