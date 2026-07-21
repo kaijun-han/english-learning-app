@@ -2145,8 +2145,8 @@
                 return;
             }
 
-            if (!generatedWordsHistory[level] || generatedWordsHistory[level].length === 0) {
-                generatedWordsHistory[level] = [...VOCABULARY_BY_LEVEL[level].map(w => w.word)];
+            if (!generatedWordsHistory[level]) {
+                generatedWordsHistory[level] = [];
             }
 
             const currentHistory = generatedWordsHistory[level];
