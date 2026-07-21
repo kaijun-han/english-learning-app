@@ -2274,7 +2274,8 @@
                 }
 
                 if (!aiWordCache || aiWordCache.length === 0) {
-                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">AI生成失败，请点击"生成单词"重试</p>`;
+                    console.log('AI generated empty result, switching to fallback');
+                    generateFallbackAIWords(currentTopic);
                     return;
                 }
 
