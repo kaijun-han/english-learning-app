@@ -2245,7 +2245,15 @@
                         cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
                     }
 
-                    aiWordCache = JSON.parse(cleanResponse);
+                    let parsedData;
+                    try {
+                        parsedData = JSON.parse(cleanResponse);
+                    } catch (parseError) {
+                        retryCount++;
+                        continue;
+                    }
+
+                    aiWordCache = parsedData;
 
                     if (!Array.isArray(aiWordCache)) {
                         retryCount++;
@@ -2330,6 +2338,7 @@
                 `;
             } catch (error) {
                 console.error('AI单词生成失败:', error);
+                console.log('AI error details:', error.message, error.stack);
                 generateFallbackAIWords(currentTopic);
             } finally {
                 if (!topicProgress.allTopicsExhausted) {
@@ -2343,7 +2352,6 @@
         function generateFallbackAIWords(topic) {
             const level = currentUser.level || 1;
             const resultDiv = document.getElementById('ai-words-result');
-            const VOCABULARY_BY_LEVEL = window.VOCABULARY_BY_LEVEL || {};
 
             const builtInWords = VOCABULARY_BY_LEVEL[level] || [];
             const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level <= level);
