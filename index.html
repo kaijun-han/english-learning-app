@@ -2845,12 +2845,21 @@
 
             if (moreLessons.length > 0) {
                 html += `
-                    <div style="margin-top: 12px;">
-                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 8px; background: white;">
+                    <div style="margin-top: 12px; position: relative;">
+                        <button onclick="toggleMoreLessonsMenu()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d1d5db; background: white; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            📋 更多课文（${moreLessons.length}篇）
+                            <span id="more-lessons-arrow">▼</span>
+                        </button>
+                        <div id="more-lessons-menu" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; border: 1px solid #d1d5db; border-radius: 8px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100;">
                             ${moreLessons.map(lesson => `
-                                <div onclick="showLessonOptions(${lesson.id}, '${lesson.title}')" style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;">
-                                    <span>${lesson.title} (Level ${lesson.level})</span>
-                                    <span style="color: #6b7280; font-size: 12px;">点击操作 ▼</span>
+                                <div style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span>${lesson.title} (Level ${lesson.level})</span>
+                                        <div style="display: flex; gap: 8px;">
+                                            <button onclick="event.stopPropagation(); moveLessonToMain(${lesson.id}); toggleMoreLessonsMenu()" style="padding: 2px 6px; font-size: 12px; border-radius: 4px; border: 1px solid #667eea; color: #667eea;">移到主区域</button>
+                                            <button onclick="event.stopPropagation(); deleteSavedLesson(${lesson.id}); toggleMoreLessonsMenu()" style="padding: 2px 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ef4444; color: #ef4444;">删除</button>
+                                        </div>
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -2862,13 +2871,14 @@
             container.innerHTML = html;
         }
 
-        function showLessonOptions(lessonId, lessonTitle) {
-            const choice = prompt(`请选择对课文「${lessonTitle}」的操作：\n\n1 - 移到主区域\n2 - 删除\n3 - 取消`);
-
-            if (choice === '1') {
-                moveLessonToMain(lessonId);
-            } else if (choice === '2') {
-                deleteSavedLesson(lessonId);
+        function toggleMoreLessonsMenu() {
+            const menu = document.getElementById('more-lessons-menu');
+            const arrow = document.getElementById('more-lessons-arrow');
+            if (menu) {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+                if (arrow) {
+                    arrow.textContent = menu.style.display === 'none' ? '▼' : '▲';
+                }
             }
         }
 
