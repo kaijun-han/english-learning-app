@@ -2799,10 +2799,11 @@
             const existingIndex = savedLessons.findIndex(l => l.title === currentLesson.title && l.level === currentLesson.level);
 
             if (existingIndex >= 0) {
-                savedLessons[existingIndex] = currentLesson;
+                const [updatedLesson] = savedLessons.splice(existingIndex, 1);
+                savedLessons.unshift(updatedLesson);
             } else {
                 currentLesson.id = Date.now();
-                savedLessons.push(currentLesson);
+                savedLessons.unshift(currentLesson);
             }
 
             localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
@@ -2845,12 +2846,14 @@
             if (moreLessons.length > 0) {
                 html += `
                     <div style="margin-top: 12px;">
-                        <select id="more-lessons-select" onchange="moveLessonToMain(this.value)" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d1d5db; background: white; font-size: 14px;">
-                            <option value="">📋 更多课文（${moreLessons.length}篇）</option>
+                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 8px; background: white;">
                             ${moreLessons.map(lesson => `
-                                <option value="${lesson.id}">${lesson.title} (Level ${lesson.level})</option>
+                                <div onclick="showLessonOptions(${lesson.id}, '${lesson.title}')" style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;">
+                                    <span>${lesson.title} (Level ${lesson.level})</span>
+                                    <span style="color: #6b7280; font-size: 12px;">点击操作 ▼</span>
+                                </div>
                             `).join('')}
-                        </select>
+                        </div>
                     </div>
                 `;
             }
@@ -2859,16 +2862,24 @@
             container.innerHTML = html;
         }
 
-        function moveLessonToMain(lessonId) {
-            if (!lessonId) return;
+        function showLessonOptions(lessonId, lessonTitle) {
+            const choice = prompt(`请选择对课文「${lessonTitle}」的操作：\n\n1 - 移到主区域\n2 - 删除\n3 - 取消`);
 
+            if (choice === '1') {
+                moveLessonToMain(lessonId);
+            } else if (choice === '2') {
+                deleteSavedLesson(lessonId);
+            }
+        }
+
+        function moveLessonToMain(lessonId) {
             const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
             const lessonIndex = savedLessons.findIndex(l => l.id == lessonId);
 
             if (lessonIndex === -1) return;
 
             const [movedLesson] = savedLessons.splice(lessonIndex, 1);
-            savedLessons.unshift(movedLesson);
+            savedLessons.splice(2, 0, movedLesson);
 
             localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
             showToast('✅ 课文已移到主区域');
