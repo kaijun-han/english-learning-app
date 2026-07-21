@@ -2130,7 +2130,7 @@
             const loadingDiv = document.getElementById('ai-words-loading');
             const resultDiv = document.getElementById('ai-words-result');
 
-            const topics = getLevelTopics(level);
+            const topics = VOCABULARY_TOPICS[level] || [];
 
             const topicProgressKey = getUserKey(`english-learning-topic-progress-${level}`);
             let topicProgress = JSON.parse(localStorage.getItem(topicProgressKey) || '{"currentIndex": 0, "roundNoNewWords": false, "allTopicsExhausted": false}');
@@ -2349,11 +2349,6 @@
             const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level <= level);
             const allWords = [...builtInWords, ...aiWords];
 
-            if (allWords.length === 0) {
-                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">暂无足够词汇生成，请先学习单词</p>`;
-                return;
-            }
-
             const currentHistory = generatedWordsHistory[level] || [];
 
             let allLowerLevelWords = [];
@@ -2381,7 +2376,11 @@
             }
 
             if (availableWords.length === 0) {
-                resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">备用题库已用尽，请尝试使用AI生成新单词</p>`;
+                if (allWords.length === 0) {
+                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">正在为该等级生成新单词，请点击"生成单词"重试</p>`;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">备用题库已用尽，请尝试使用AI生成新单词</p>`;
+                }
                 return;
             }
 
