@@ -2208,7 +2208,8 @@
                 const newWords = aiWordCache.filter(w => !currentHistory.includes(w.word));
 
                 if (newWords.length === 0) {
-                    throw new Error('AI返回的单词全部重复，请重试');
+                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">本次生成的单词全部已存在，请点击"生成单词"重试</p>`;
+                    return;
                 }
 
                 aiWordCache = newWords;
