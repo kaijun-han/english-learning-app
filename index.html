@@ -2888,6 +2888,9 @@
         }
 
         function deleteSavedLesson(lessonId) {
+            if (!confirm('⚠️ 确定要删除这篇课文吗？删除后无法恢复！')) {
+                return;
+            }
             let savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
             savedLessons = savedLessons.filter(l => l.id !== lessonId);
             localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
