@@ -2819,12 +2819,16 @@
                 return;
             }
 
-            container.innerHTML = `
+            const DISPLAY_LIMIT = 3;
+            const displayedLessons = savedLessons.slice(0, DISPLAY_LIMIT);
+            const moreLessons = savedLessons.slice(DISPLAY_LIMIT);
+
+            let html = `
                 <div style="margin-bottom: 16px;">
                     <h4 style="margin-bottom: 12px;">📚 已保存课文（${savedLessons.length}篇）</h4>
-                    <div style="display: flex; flex-wrap: gap: 8px;">
-                        ${savedLessons.map(lesson => `
-                            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${displayedLessons.map(lesson => `
+                            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; min-width: 200px;">
                                 <div>
                                     <span style="font-weight: bold;">${lesson.title}</span>
                                     <span style="font-size: 12px; color: #6b7280; margin-left: 8px;">Level ${lesson.level}</span>
@@ -2836,8 +2840,39 @@
                             </div>
                         `).join('')}
                     </div>
-                </div>
             `;
+
+            if (moreLessons.length > 0) {
+                html += `
+                    <div style="margin-top: 12px;">
+                        <select id="more-lessons-select" onchange="moveLessonToMain(this.value)" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d1d5db; background: white; font-size: 14px;">
+                            <option value="">📋 更多课文（${moreLessons.length}篇）</option>
+                            ${moreLessons.map(lesson => `
+                                <option value="${lesson.id}">${lesson.title} (Level ${lesson.level})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function moveLessonToMain(lessonId) {
+            if (!lessonId) return;
+
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+            const lessonIndex = savedLessons.findIndex(l => l.id == lessonId);
+
+            if (lessonIndex === -1) return;
+
+            const [movedLesson] = savedLessons.splice(lessonIndex, 1);
+            savedLessons.unshift(movedLesson);
+
+            localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
+            showToast('✅ 课文已移到主区域');
+            loadSavedLessons();
         }
 
         function viewSavedLesson(lessonId) {
