@@ -764,6 +764,7 @@
                     <label style="font-size: 14px; color: #6b7280; white-space: nowrap;">对话主题：</label>
                     <select id="chat-topic" class="input" style="flex: 1;" onchange="startChatWithTopic()">
                         <option value="">🎲 随机主题</option>
+                        <option value="自由对话">🗣️ 自由对话</option>
                         <option value="日常对话">💬 日常对话</option>
                         <option value="旅行">✈️ 旅行</option>
                         <option value="餐厅点餐">🍽️ 餐厅点餐</option>
@@ -3419,7 +3420,9 @@ ${structuredWords || '暂无今日学习单词'}
             const topicSelect = document.getElementById('chat-topic');
             const container = document.getElementById('chat-messages');
 
-            if (topicSelect.value) {
+            if (topicSelect.value === '自由对话') {
+                currentChatTopic = '自由对话';
+            } else if (topicSelect.value) {
                 currentChatTopic = topicSelect.value;
             } else if (!currentChatTopic) {
                 if (lastWordTopic && aiWordCache.length > 0) {
@@ -3432,18 +3435,95 @@ ${structuredWords || '暂无今日学习单词'}
 
             if (!chatInitialized) {
                 const levelInfo = VOCABULARY_LEVELS[currentUser.level || 1];
-                container.innerHTML = `
-                    <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
-                        <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
-                            🎯 话题：${currentChatTopic}
-                            <br><small style="color: #6b7280;">难度：${levelInfo.cefr}</small>
-                            <br>Let's talk about ${currentChatTopic} in English! I'll start the conversation.
+
+                if (currentChatTopic === '自由对话') {
+                    container.innerHTML = `
+                        <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                            <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
+                                🗣️ 自由对话模式
+                                <br><small style="color: #6b7280;">难度：${levelInfo.cefr}</small>
+                                <br>Hi! What would you like to talk about today? I'm here to chat with you.
+                            </div>
                         </div>
+                    `;
+                    chatMessages = [];
+                    chatInitialized = true;
+                } else {
+                    container.innerHTML = `
+                        <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                            <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
+                                🎯 话题：${currentChatTopic}
+                                <br><small style="color: #6b7280;">难度：${levelInfo.cefr}</small>
+                                <br>Let's talk about ${currentChatTopic} in English! I'll start the conversation.
+                            </div>
+                        </div>
+                    `;
+                    chatMessages = [];
+                    chatInitialized = true;
+                    setTimeout(() => {
+                        const level = currentUser.level || 1;
+                        const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+
+                        const levelSpecificRules = {
+                            1: '使用最基础的日常词汇，简单句型（主谓宾结构），只用一般现在时，每个句子不超过8个单词',
+                            2: '使用基础日常词汇和常用短语，简单时态（一般现在时、一般过去时），每个句子不超过10个单词',
+                            3: '使用常用词汇和固定搭配，掌握基本时态和句型，每个句子不超过12个单词',
+                            4: '使用较复杂词汇和从句，掌握多种时态和语态，每个句子不超过15个单词',
+                            5: '使用高级词汇和复杂句型，包含复合句和非谓语动词，每个句子不超过18个单词'
+                        };
+
+                        const rules = levelSpecificRules[level] || levelSpecificRules[3];
+
+                        const aiWords = aiWordCache.length > 0 ? aiWordCache.map(w => w.word).join(', ') : '';
+
+                        const prompt = `请开启关于"${currentChatTopic}"的对话。你是一个友好的聊天伙伴，与用户进行自然对话。
+【当前等级】：Level ${level}
+【等级描述】：${levelDesc}
+【语言规则】：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。
+${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` : ''}
+【对话风格】：自然、轻松、友好。先分享一个简单想法，再适当提问，不要一直问问题。每次回复2-3句话。
+请用英语回复。`;
+                        callAI(prompt, `你是一个友好的英语对话伙伴，与用户进行自然对话。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，先分享想法再适当提问。`).then(response => {
+                            chatMessages.push({ role: 'assistant', content: response });
+                            container.innerHTML += `
+                        <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                            <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
+                                ${response}
+                            </div>
+                            <button class="speak-btn" onclick="speak('${response.replace(/'/g, "\\'")}')" title="听发音" style="margin-left: 8px;">🔊</button>
+                        </div>
+                    `;
+                            container.scrollTop = container.scrollHeight;
+                            if (document.getElementById('chat-auto-speak').checked) {
+                                speak(response);
+                            }
+                        }).catch(e => {
+                            console.error('Chat error:', e);
+                        });
+                    }, 500);
+                }
+            }
+
+            async function sendChatMessage() {
+                const input = document.getElementById('chat-input');
+                const message = input.value.trim();
+                if (!message) return;
+
+                const container = document.getElementById('chat-messages');
+                chatMessages.push({ role: 'user', content: message });
+
+                container.innerHTML += `
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+                    <div style="background: #667eea; color: white; padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%;">
+                        ${message}
                     </div>
-                `;
-                chatMessages = [];
-                chatInitialized = true;
-                setTimeout(() => {
+                </div>
+            `;
+
+                input.value = '';
+                container.scrollTop = container.scrollHeight;
+
+                try {
                     const level = currentUser.level || 1;
                     const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
 
@@ -3459,79 +3539,31 @@ ${structuredWords || '暂无今日学习单词'}
 
                     const aiWords = aiWordCache.length > 0 ? aiWordCache.map(w => w.word).join(', ') : '';
 
-                    const prompt = `请开启关于"${currentChatTopic}"的对话。你是一个友好的聊天伙伴，与用户进行自然对话。
+                    let prompt = '';
+                    let systemPrompt = '';
+
+                    if (currentChatTopic === '自由对话') {
+                        prompt = `请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
 【当前等级】：Level ${level}
 【等级描述】：${levelDesc}
-【语言规则】：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。
-${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` : ''}
-【对话风格】：自然、轻松、友好。先分享一个简单想法，再适当提问，不要一直问问题。每次回复2-3句话。
-请用英语回复。`;
-                    callAI(prompt, `你是一个友好的英语对话伙伴，与用户进行自然对话。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，先分享想法再适当提问。`).then(response => {
-                        chatMessages.push({ role: 'assistant', content: response });
-                        container.innerHTML += `
-                        <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
-                            <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
-                                ${response}
-                            </div>
-                            <button class="speak-btn" onclick="speak('${response.replace(/'/g, "\\'")}')" title="听发音" style="margin-left: 8px;">🔊</button>
-                        </div>
-                    `;
-                        container.scrollTop = container.scrollHeight;
-                        if (document.getElementById('chat-auto-speak').checked) {
-                            speak(response);
-                        }
-                    }).catch(e => {
-                        console.error('Chat error:', e);
-                    });
-                }, 500);
-            }
-        }
-
-        async function sendChatMessage() {
-            const input = document.getElementById('chat-input');
-            const message = input.value.trim();
-            if (!message) return;
-
-            const container = document.getElementById('chat-messages');
-            chatMessages.push({ role: 'user', content: message });
-
-            container.innerHTML += `
-                <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
-                    <div style="background: #667eea; color: white; padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%;">
-                        ${message}
-                    </div>
-                </div>
-            `;
-
-            input.value = '';
-            container.scrollTop = container.scrollHeight;
-
-            try {
-                const level = currentUser.level || 1;
-                const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
-
-                const levelSpecificRules = {
-                    1: '使用最基础的日常词汇，简单句型（主谓宾结构），只用一般现在时，每个句子不超过8个单词',
-                    2: '使用基础日常词汇和常用短语，简单时态（一般现在时、一般过去时），每个句子不超过10个单词',
-                    3: '使用常用词汇和固定搭配，掌握基本时态和句型，每个句子不超过12个单词',
-                    4: '使用较复杂词汇和从句，掌握多种时态和语态，每个句子不超过15个单词',
-                    5: '使用高级词汇和复杂句型，包含复合句和非谓语动词，每个句子不超过18个单词'
-                };
-
-                const rules = levelSpecificRules[level] || levelSpecificRules[3];
-
-                const aiWords = aiWordCache.length > 0 ? aiWordCache.map(w => w.word).join(', ') : '';
-                const prompt = `请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
+【语言规则】：${rules}。难度要低于当前等级。
+【注意】：不要主导对话，不要主动改变话题，跟随用户的话题进行回应。每次回复1-2句话，简短自然。`;
+                        systemPrompt = `你是一个友好的英语对话伙伴。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级。不要主导对话，跟随用户的话题进行回应，简短自然，每次回复1-2句话。`;
+                    } else {
+                        prompt = `请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
 【当前等级】：Level ${level}
 【等级描述】：${levelDesc}
 【语言规则】：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。
 ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` : ''}
 【注意】：不要重复之前已经说过的话或问过的问题，根据对话历史自然推进话题。`;
-                const response = await callAI(prompt, `你是一个友好的英语对话伙伴。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，可以分享观点或提问。不要重复之前说过的话。`, chatMessages);
+                        systemPrompt = `你是一个友好的英语对话伙伴。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，可以分享观点或提问。不要重复之前说过的话。`;
+                    }
 
-                chatMessages.push({ role: 'assistant', content: response });
+                    const response = await callAI(prompt, systemPrompt, chatMessages);
 
-                container.innerHTML += `
+                    chatMessages.push({ role: 'assistant', content: response });
+
+                    container.innerHTML += `
                     <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
                         <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
                             ${response}
@@ -3540,50 +3572,50 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
                     </div>
                 `;
 
-                container.scrollTop = container.scrollHeight;
+                    container.scrollTop = container.scrollHeight;
 
-                if (document.getElementById('chat-auto-speak').checked) {
-                    speak(response);
-                }
-            } catch (error) {
-                container.innerHTML += `
+                    if (document.getElementById('chat-auto-speak').checked) {
+                        speak(response);
+                    }
+                } catch (error) {
+                    container.innerHTML += `
                     <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
                         <div style="background: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 16px 16px 16px 0;">
                             对话失败，请重试
                         </div>
                     </div>
                 `;
+                }
             }
-        }
 
-        function clearChat() {
-            chatMessages = [];
-            currentChatTopic = '';
-            document.getElementById('chat-messages').innerHTML = '';
-            const topicSelect = document.getElementById('chat-topic');
-            if (topicSelect) {
-                topicSelect.value = '';
+            function clearChat() {
+                chatMessages = [];
+                currentChatTopic = '';
+                document.getElementById('chat-messages').innerHTML = '';
+                const topicSelect = document.getElementById('chat-topic');
+                if (topicSelect) {
+                    topicSelect.value = '';
+                }
             }
-        }
 
-        let aiAssistantMessages = [];
-        let aiAssistantCurrentImage = '';
+            let aiAssistantMessages = [];
+            let aiAssistantCurrentImage = '';
 
-        function toggleAiAssistant() {
-            const panel = document.getElementById('ai-assistant-panel');
-            panel.classList.toggle('open');
-        }
+            function toggleAiAssistant() {
+                const panel = document.getElementById('ai-assistant-panel');
+                panel.classList.toggle('open');
+            }
 
-        function handleAiAssistantUpload(input) {
-            const file = input.files[0];
-            if (!file) return;
+            function handleAiAssistantUpload(input) {
+                const file = input.files[0];
+                if (!file) return;
 
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    aiAssistantCurrentImage = e.target.result;
-                    const messages = document.getElementById('ai-assistant-messages');
-                    messages.innerHTML += `
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        aiAssistantCurrentImage = e.target.result;
+                        const messages = document.getElementById('ai-assistant-messages');
+                        messages.innerHTML += `
                         <div class="ai-assistant-message user">
                             <div class="message-content">
                                 <img src="${aiAssistantCurrentImage}" style="max-width: 150px; border-radius: 8px;">
@@ -3591,16 +3623,16 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
                             </div>
                         </div>
                     `;
-                    messages.scrollTop = messages.scrollHeight;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const content = e.target.result;
-                    aiAssistantCurrentImage = '';
-                    const messages = document.getElementById('ai-assistant-messages');
-                    messages.innerHTML += `
+                        messages.scrollTop = messages.scrollHeight;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const content = e.target.result;
+                        aiAssistantCurrentImage = '';
+                        const messages = document.getElementById('ai-assistant-messages');
+                        messages.innerHTML += `
                         <div class="ai-assistant-message user">
                             <div class="message-content">
                                 📄 文件内容：<br>
@@ -3608,24 +3640,24 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
                             </div>
                         </div>
                     `;
-                    messages.scrollTop = messages.scrollHeight;
-                };
-                reader.readAsText(file);
+                        messages.scrollTop = messages.scrollHeight;
+                    };
+                    reader.readAsText(file);
+                }
+                input.value = '';
             }
-            input.value = '';
-        }
 
-        async function sendAiAssistantMessage() {
-            const input = document.getElementById('ai-assistant-input');
-            const message = input.value.trim();
-            if (!message && !aiAssistantCurrentImage) return;
+            async function sendAiAssistantMessage() {
+                const input = document.getElementById('ai-assistant-input');
+                const message = input.value.trim();
+                if (!message && !aiAssistantCurrentImage) return;
 
-            const messages = document.getElementById('ai-assistant-messages');
+                const messages = document.getElementById('ai-assistant-messages');
 
-            aiAssistantMessages.push({ role: 'user', content: message || '(上传了文件/图片)' });
+                aiAssistantMessages.push({ role: 'user', content: message || '(上传了文件/图片)' });
 
-            if (aiAssistantCurrentImage) {
-                messages.innerHTML += `
+                if (aiAssistantCurrentImage) {
+                    messages.innerHTML += `
                     <div class="ai-assistant-message user">
                         <div class="message-content">
                             <img src="${aiAssistantCurrentImage}" style="max-width: 150px; border-radius: 8px;">
@@ -3633,51 +3665,51 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
                         </div>
                     </div>
                 `;
-            } else {
-                messages.innerHTML += `
+                } else {
+                    messages.innerHTML += `
                     <div class="ai-assistant-message user">
                         <div class="message-content">${message}</div>
                     </div>
                 `;
-            }
-
-            input.value = '';
-            messages.scrollTop = messages.scrollHeight;
-
-            try {
-                const level = currentUser.level || 1;
-                const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
-
-                let prompt = `你是一个专业的英语学习助手。用户当前英语水平：Level ${level} (${levelDesc})。请根据用户的英语水平提供合适的帮助。\n\n`;
-
-                if (aiAssistantCurrentImage) {
-                    prompt += `【用户上传了图片】：请分析图片内容，用适合用户水平的英语描述图片，并提供相关英语学习内容。\n`;
                 }
 
-                prompt += `【用户问题】：${message || '请分析上传的文件/图片'}\n\n请用中文和英文混合回答，确保英语部分适合用户当前水平。`;
+                input.value = '';
+                messages.scrollTop = messages.scrollHeight;
 
-                const response = await callAI(prompt, `你是一个专业的英语学习助手，擅长根据用户英语水平提供个性化帮助。用户当前水平：Level ${level} (${levelDesc})。请用中文和英文混合回答，英语部分要适合用户水平。`, aiAssistantMessages.slice(-5));
+                try {
+                    const level = currentUser.level || 1;
+                    const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
 
-                aiAssistantMessages.push({ role: 'assistant', content: response });
+                    let prompt = `你是一个专业的英语学习助手。用户当前英语水平：Level ${level} (${levelDesc})。请根据用户的英语水平提供合适的帮助。\n\n`;
 
-                messages.innerHTML += `
+                    if (aiAssistantCurrentImage) {
+                        prompt += `【用户上传了图片】：请分析图片内容，用适合用户水平的英语描述图片，并提供相关英语学习内容。\n`;
+                    }
+
+                    prompt += `【用户问题】：${message || '请分析上传的文件/图片'}\n\n请用中文和英文混合回答，确保英语部分适合用户当前水平。`;
+
+                    const response = await callAI(prompt, `你是一个专业的英语学习助手，擅长根据用户英语水平提供个性化帮助。用户当前水平：Level ${level} (${levelDesc})。请用中文和英文混合回答，英语部分要适合用户水平。`, aiAssistantMessages.slice(-5));
+
+                    aiAssistantMessages.push({ role: 'assistant', content: response });
+
+                    messages.innerHTML += `
                     <div class="ai-assistant-message assistant">
                         <div class="message-content">${response.replace(/\n/g, '<br>')}</div>
                     </div>
                 `;
 
-                aiAssistantCurrentImage = '';
-                messages.scrollTop = messages.scrollHeight;
-            } catch (e) {
-                console.error('AI Assistant error:', e);
-                messages.innerHTML += `
+                    aiAssistantCurrentImage = '';
+                    messages.scrollTop = messages.scrollHeight;
+                } catch (e) {
+                    console.error('AI Assistant error:', e);
+                    messages.innerHTML += `
                     <div class="ai-assistant-message assistant">
                         <div class="message-content">⚠️ 抱歉，处理请求时出错了，请重试。</div>
                     </div>
                 `;
-                messages.scrollTop = messages.scrollHeight;
+                    messages.scrollTop = messages.scrollHeight;
+                }
             }
-        }
     </script>
 
     <div id="ai-assistant-fab" onclick="toggleAiAssistant()">🤖</div>
