@@ -2206,7 +2206,22 @@
                     `（最近20个，共${combinedHistory.length}个已生成单词，必须全部避开）` :
                     '';
                 const targetCount = 12;
-                const generateCount = currentTopic ? targetCount : 20;
+                let generateCount;
+                if (!currentTopic) {
+                    generateCount = 50;
+                } else if (combinedHistory.length > 700) {
+                    generateCount = 60;
+                } else if (combinedHistory.length > 500) {
+                    generateCount = 50;
+                } else if (combinedHistory.length > 400) {
+                    generateCount = 40;
+                } else if (combinedHistory.length > 300) {
+                    generateCount = 30;
+                } else if (combinedHistory.length > 200) {
+                    generateCount = 20;
+                } else {
+                    generateCount = targetCount;
+                }
                 const topicPrompt = currentTopic ? `主题为"${currentTopic}"。要求：1. 这些单词必须是该水平特有的词汇，不能是更低水平已经学过的词汇；2. 这些单词要围绕同一个主题，相互之间有逻辑关联，能够自然地组合成一篇课文；` : `这些单词必须是该水平特有的词汇，不能是更低水平已经学过的词汇；`;
                 const prompt = `请为英语水平为"${levelDesc}"的学习者生成${generateCount}个适合该水平的英语单词，${topicPrompt}3. 包含名词、动词、形容词等不同词性的单词；4. 严格避免使用以下已生成的单词${excludeNote}：${excludeWords || '无'}，确保生成的单词与已生成单词完全不重复；5. 确保生成的单词难度符合该水平，不要使用太简单的基础词汇，也不要使用太难的高级词汇；6. 返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、exampleTranslation（例句中文翻译）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。
 
