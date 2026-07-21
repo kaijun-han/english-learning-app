@@ -2135,6 +2135,21 @@
             const topicProgressKey = getUserKey(`english-learning-topic-progress-${level}`);
             let topicProgress = JSON.parse(localStorage.getItem(topicProgressKey) || '{"currentIndex": 0, "roundNoNewWords": false, "allTopicsExhausted": false}');
 
+            if (!VOCABULARY_BY_LEVEL || !VOCABULARY_BY_LEVEL[level]) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">词汇数据加载失败，请刷新页面</p>`;
+                return;
+            }
+
+            if (!levelInfo) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">等级信息加载失败，请刷新页面</p>`;
+                return;
+            }
+
+            if (!generatedWordsHistory[level]) {
+                generatedWordsHistory[level] = [...VOCABULARY_BY_LEVEL[level].map(w => w.word)];
+            }
+
+            const currentHistory = generatedWordsHistory[level];
             const completionRate = currentHistory.length / levelInfo.wordCount;
             const isHighCompletion = completionRate >= 0.8;
 
@@ -2156,22 +2171,6 @@
                     currentTopic = topics[topicProgress.currentIndex];
                 }
             }
-
-            if (!VOCABULARY_BY_LEVEL || !VOCABULARY_BY_LEVEL[level]) {
-                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">词汇数据加载失败，请刷新页面</p>`;
-                return;
-            }
-
-            if (!levelInfo) {
-                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">等级信息加载失败，请刷新页面</p>`;
-                return;
-            }
-
-            if (!generatedWordsHistory[level]) {
-                generatedWordsHistory[level] = [...VOCABULARY_BY_LEVEL[level].map(w => w.word)];
-            }
-
-            const currentHistory = generatedWordsHistory[level];
 
             let allLowerLevelWords = [];
             for (let l = 1; l < level; l++) {
