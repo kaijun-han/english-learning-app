@@ -2133,17 +2133,25 @@
             const topics = getLevelTopics(level);
 
             const topicProgressKey = getUserKey(`english-learning-topic-progress-${level}`);
-            let topicProgress = JSON.parse(localStorage.getItem(topicProgressKey) || '{"currentIndex": 0, "allTopicsCompleted": false}');
+            let topicProgress = JSON.parse(localStorage.getItem(topicProgressKey) || '{"currentIndex": 0, "roundNoNewWords": false, "allTopicsExhausted": false}');
 
             let currentTopic;
-            if (topicProgress.allTopicsCompleted) {
-                currentTopic = '';
-            } else if (topicProgress.currentIndex >= topics.length) {
-                topicProgress.allTopicsCompleted = true;
-                topicProgress.currentIndex = 0;
+            if (topicProgress.allTopicsExhausted) {
                 currentTopic = '';
             } else {
-                currentTopic = topics[topicProgress.currentIndex];
+                if (topicProgress.currentIndex >= topics.length) {
+                    if (topicProgress.roundNoNewWords) {
+                        topicProgress.allTopicsExhausted = true;
+                        topicProgress.currentIndex = 0;
+                        currentTopic = '';
+                    } else {
+                        topicProgress.roundNoNewWords = true;
+                        topicProgress.currentIndex = 0;
+                        currentTopic = topics[0];
+                    }
+                } else {
+                    currentTopic = topics[topicProgress.currentIndex];
+                }
             }
 
             if (!VOCABULARY_BY_LEVEL || !VOCABULARY_BY_LEVEL[level]) {
@@ -2251,6 +2259,10 @@
                 lastWordTopic = currentTopic;
                 saveAIWordCache(currentTopic);
 
+                if (aiWordCache.length > 0) {
+                    topicProgress.roundNoNewWords = false;
+                }
+
                 chatMessages = [];
                 chatInitialized = false;
                 const chatContainer = document.getElementById('chat-messages');
@@ -2299,12 +2311,8 @@
                 console.error('AI单词生成失败:', error);
                 generateFallbackAIWords(currentTopic);
             } finally {
-                if (!topicProgress.allTopicsCompleted) {
+                if (!topicProgress.allTopicsExhausted) {
                     topicProgress.currentIndex++;
-                    if (topicProgress.currentIndex >= topics.length) {
-                        topicProgress.allTopicsCompleted = true;
-                        topicProgress.currentIndex = 0;
-                    }
                 }
                 localStorage.setItem(topicProgressKey, JSON.stringify(topicProgress));
                 loadingDiv.style.display = 'none';
