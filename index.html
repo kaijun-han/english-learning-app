@@ -2199,15 +2199,16 @@
             resultDiv.innerHTML = '';
 
             try {
-                const excludeWords = combinedHistory.length > 30 ?
-                    combinedHistory.slice(-30).join(', ') :
+                const excludeWords = combinedHistory.length > 20 ?
+                    combinedHistory.slice(-20).join(', ') :
                     combinedHistory.join(', ');
-                const excludeNote = combinedHistory.length > 30 ?
-                    `（最近30个，共${combinedHistory.length}个已生成单词，必须全部避开）` :
+                const excludeNote = combinedHistory.length > 20 ?
+                    `（最近20个，共${combinedHistory.length}个已生成单词，必须全部避开）` :
                     '';
                 const targetCount = 12;
+                const generateCount = currentTopic ? targetCount : 20;
                 const topicPrompt = currentTopic ? `主题为"${currentTopic}"。要求：1. 这些单词必须是该水平特有的词汇，不能是更低水平已经学过的词汇；2. 这些单词要围绕同一个主题，相互之间有逻辑关联，能够自然地组合成一篇课文；` : `这些单词必须是该水平特有的词汇，不能是更低水平已经学过的词汇；`;
-                const prompt = `请为英语水平为"${levelDesc}"的学习者生成${targetCount}个适合该水平的英语单词，${topicPrompt}3. 包含名词、动词、形容词等不同词性的单词；4. 严格避免使用以下已生成的单词${excludeNote}：${excludeWords || '无'}，确保生成的单词与已生成单词完全不重复；5. 确保生成的单词难度符合该水平，不要使用太简单的基础词汇，也不要使用太难的高级词汇；6. 返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、exampleTranslation（例句中文翻译）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。
+                const prompt = `请为英语水平为"${levelDesc}"的学习者生成${generateCount}个适合该水平的英语单词，${topicPrompt}3. 包含名词、动词、形容词等不同词性的单词；4. 严格避免使用以下已生成的单词${excludeNote}：${excludeWords || '无'}，确保生成的单词与已生成单词完全不重复；5. 确保生成的单词难度符合该水平，不要使用太简单的基础词汇，也不要使用太难的高级词汇；6. 返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、exampleTranslation（例句中文翻译）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。
 
 示例JSON格式：
 [
@@ -2217,7 +2218,7 @@
 
                 let aiWordCache = [];
                 let retryCount = 0;
-                const maxRetries = 3;
+                const maxRetries = 5;
 
                 while (retryCount < maxRetries) {
                     const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字，不要包含markdown代码块标记。');
@@ -2238,7 +2239,10 @@
 
                     const newWords = aiWordCache.filter(w => !combinedHistory.includes(w.word));
 
-                    if (newWords.length > 0) {
+                    if (newWords.length >= targetCount) {
+                        aiWordCache = newWords.slice(0, targetCount);
+                        break;
+                    } else if (newWords.length > 0) {
                         aiWordCache = newWords;
                         break;
                     }
