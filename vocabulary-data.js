@@ -5,7 +5,8 @@ const VOCABULARY_LEVELS = {
     4: { name: '高级', description: '初中3-高中1年级 / CEFR B1-B2', wordCount: 400, cefr: 'B2', schoolLevel: '初中3-高中1年级' },
     5: { name: '精通', description: '高中及以上 / CEFR B2-C1', wordCount: 500, cefr: 'C1', schoolLevel: '高中及以上' },
     6: { name: '专家', description: '大学英语四级 / CEFR C1-C2', wordCount: 500, cefr: 'C2', schoolLevel: '大学英语四级' },
-    7: { name: '大师', description: '大学英语六级及以上 / CEFR C2+', wordCount: 600, cefr: 'C2+', schoolLevel: '大学英语六级及以上' }
+    7: { name: '大师', description: '大学英语六级及以上 / CEFR C2+', wordCount: 600, cefr: 'C2+', schoolLevel: '大学英语六级及以上' },
+    8: { name: '至尊', description: '专业八级/雅思7.5+ / CEFR C2++', wordCount: 500, cefr: 'C2++', schoolLevel: '专业八级/雅思7.5+' }
 };
 
 const VOCABULARY_BY_LEVEL = {
@@ -144,6 +145,28 @@ const VOCABULARY_BY_LEVEL = {
     7: [
         { word: 'antediluvian', phonetic: '/ˌæntɪdɪˈluːviən/', meaning: '古老的', example: 'His ideas are antediluvian.' },
         { word: 'calumny', phonetic: '/ˈkæləmi/', meaning: '诽谤', example: 'He sued for calumny.' },
+        { word: 'dichotomy', phonetic: '/daɪˈkɒtəmi/', meaning: '二分法', example: 'There is a dichotomy between theory and practice.' },
+        { word: 'ephemeral', phonetic: '/ɪˈfemərəl/', meaning: '短暂的', example: 'Fame is ephemeral.' },
+        { word: 'flagitious', phonetic: '/fləˈdʒɪʃəs/', meaning: '罪恶的', example: 'He committed flagitious crimes.' },
+        { word: 'gregarious', phonetic: '/ɡrɪˈɡeəriəs/', meaning: '爱交际的', example: 'She is a gregarious person.' },
+        { word: 'harangue', phonetic: '/həˈræŋ/', meaning: '长篇大论', example: 'He gave a harangue about politics.' },
+        { word: 'impecunious', phonetic: '/ˌɪmpɪˈkjuːniəs/', meaning: '贫穷的', example: 'He lived an impecunious life.' },
+        { word: 'judicature', phonetic: '/ˈdʒuːdɪkətʃər/', meaning: '司法', example: 'The judicature system is fair.' },
+        { word: 'kudos', phonetic: '/ˈkjuːdɒs/', meaning: '荣誉', example: 'He received kudos for his work.' },
+        { word: 'loquacious', phonetic: '/ləˈkweɪʃəs/', meaning: '话多的', example: 'She is a loquacious speaker.' },
+        { word: 'magnanimous', phonetic: '/mæɡˈnænɪməs/', meaning: '宽宏大量的', example: 'He showed magnanimous forgiveness.' },
+        { word: 'nihilism', phonetic: '/ˈnaɪɪlɪzəm/', meaning: '虚无主义', example: 'His philosophy bordered on nihilism.' },
+        { word: 'obstreperous', phonetic: '/əbˈstrepərəs/', meaning: '喧闹的', example: 'The obstreperous crowd caused chaos.' },
+        { word: 'perspicacious', phonetic: '/ˌpɜːspɪˈkeɪʃəs/', meaning: '敏锐的', example: 'She made a perspicacious observation.' },
+        { word: 'quintessence', phonetic: '/kwɪnˈtesns/', meaning: '精髓', example: 'This is the quintessence of beauty.' },
+        { word: 'recondite', phonetic: '/ˈrekəndaɪt/', meaning: '深奥的', example: 'The theory is recondite.' },
+        { word: 'sycophant', phonetic: '/ˈsaɪkəfænt/', meaning: '谄媚者', example: 'He is a sycophant to the boss.' },
+        { word: 'ubiquitous', phonetic: '/juːˈbɪkwɪtəs/', meaning: '无处不在的', example: 'Social media is ubiquitous.' },
+        { word: 'verisimilitude', phonetic: '/ˌverɪsɪˈmɪlɪtjuːd/', meaning: '逼真', example: 'The movie has great verisimilitude.' }
+    ],
+    8: [
+        { word: 'abstruse', phonetic: '/əbˈstruːs/', meaning: '深奥的', example: 'The abstruse theory confounded everyone.' },
+        { word: 'calumny', phonetic: '/ˈkæləmi/', meaning: '诽谤', example: 'He endured calumny from his enemies.' },
         { word: 'dichotomy', phonetic: '/daɪˈkɒtəmi/', meaning: '二分法', example: 'There is a dichotomy between theory and practice.' },
         { word: 'ephemeral', phonetic: '/ɪˈfemərəl/', meaning: '短暂的', example: 'Fame is ephemeral.' },
         { word: 'flagitious', phonetic: '/fləˈdʒɪʃəs/', meaning: '罪恶的', example: 'He committed flagitious crimes.' },
