@@ -2274,14 +2274,22 @@
             const currentHistory = generatedWordsHistory[level] || [];
             const availableWords = allWords.filter(w => !currentHistory.includes(w.word));
 
-            if (availableWords.length === 0) {
+            const levelInfo = VOCABULARY_LEVELS[level];
+            const totalCount = levelInfo.wordCount;
+
+            if (currentHistory.length >= totalCount) {
                 resultDiv.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: #6b7280;">
                         <div style="font-size: 64px;">🎉</div>
                         <h3 style="margin-top: 16px;">恭喜！该等级词汇已全部覆盖</h3>
-                        <p style="margin-top: 8px;">已生成 ${currentHistory.length} 个单词</p>
+                        <p style="margin-top: 8px;">已生成 ${currentHistory.length} / ${totalCount} 个单词</p>
                     </div>
                 `;
+                return;
+            }
+
+            if (availableWords.length === 0) {
+                resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">备用题库已用尽，请尝试使用AI生成新单词</p>`;
                 return;
             }
 
