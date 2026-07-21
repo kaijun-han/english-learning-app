@@ -1,9 +1,11 @@
 const VOCABULARY_LEVELS = {
-    1: { name: '入门', description: '小学3-4年级 / CEFR A1', wordCount: 500, cefr: 'A1', schoolLevel: '小学3-4年级' },
-    2: { name: '基础', description: '小学5-6年级 / CEFR A1-A2', wordCount: 500, cefr: 'A2', schoolLevel: '小学5-6年级' },
-    3: { name: '进阶', description: '初中1-2年级 / CEFR A2-B1', wordCount: 1000, cefr: 'B1', schoolLevel: '初中1-2年级' },
-    4: { name: '高级', description: '初中3-高中1年级 / CEFR B1-B2', wordCount: 700, cefr: 'B2', schoolLevel: '初中3-高中1年级' },
-    5: { name: '精通', description: '高中及以上 / CEFR B2-C1', wordCount: 800, cefr: 'C1', schoolLevel: '高中及以上' }
+    1: { name: '入门', description: '小学3-4年级 / CEFR A1', wordCount: 300, cefr: 'A1', schoolLevel: '小学3-4年级' },
+    2: { name: '基础', description: '小学5-6年级 / CEFR A1-A2', wordCount: 300, cefr: 'A2', schoolLevel: '小学5-6年级' },
+    3: { name: '进阶', description: '初中1-2年级 / CEFR A2-B1', wordCount: 400, cefr: 'B1', schoolLevel: '初中1-2年级' },
+    4: { name: '高级', description: '初中3-高中1年级 / CEFR B1-B2', wordCount: 400, cefr: 'B2', schoolLevel: '初中3-高中1年级' },
+    5: { name: '精通', description: '高中及以上 / CEFR B2-C1', wordCount: 500, cefr: 'C1', schoolLevel: '高中及以上' },
+    6: { name: '专家', description: '大学英语四级 / CEFR C1-C2', wordCount: 500, cefr: 'C2', schoolLevel: '大学英语四级' },
+    7: { name: '大师', description: '大学英语六级及以上 / CEFR C2+', wordCount: 600, cefr: 'C2+', schoolLevel: '大学英语六级及以上' }
 };
 
 const VOCABULARY_BY_LEVEL = {
@@ -116,6 +118,50 @@ const VOCABULARY_BY_LEVEL = {
         { word: 'dogmatic', phonetic: '/dɒɡˈmætɪk/', meaning: '教条的', example: 'He has a dogmatic approach.' },
         { word: 'equivocal', phonetic: '/ɪˈkwɪvəkl/', meaning: '模棱两可的', example: 'His response was equivocal.' },
         { word: 'fastidious', phonetic: '/fæˈstɪdiəs/', meaning: '挑剔的', example: 'She is fastidious about cleanliness.' }
+    ],
+    6: [
+        { word: 'acquiesce', phonetic: '/ˌækwiˈes/', meaning: '默许', example: 'He acquiesced to their demands.' },
+        { word: 'bellicose', phonetic: '/ˈbelɪkəʊs/', meaning: '好战的', example: 'His bellicose attitude caused trouble.' },
+        { word: 'cacophonous', phonetic: '/kəˈkɒfənəs/', meaning: '刺耳的', example: 'The cacophonous noise was unbearable.' },
+        { word: 'deleterious', phonetic: '/ˌdelɪˈtɪəriəs/', meaning: '有害的', example: 'Smoking has deleterious effects.' },
+        { word: 'ebullient', phonetic: '/ɪˈbʌliənt/', meaning: '热情洋溢的', example: 'She gave an ebullient speech.' },
+        { word: 'fastidious', phonetic: '/fæˈstɪdiəs/', meaning: '挑剔的', example: 'He is fastidious about details.' },
+        { word: 'garrulous', phonetic: '/ˈɡærjʊləs/', meaning: '唠叨的', example: 'She is a garrulous old woman.' },
+        { word: 'hedonistic', phonetic: '/ˌhiːdəˈnɪstɪk/', meaning: '享乐主义的', example: 'His hedonistic lifestyle was criticized.' },
+        { word: 'iconoclast', phonetic: '/aɪˈkɒnəklæst/', meaning: '打破旧习的人', example: 'He was an iconoclast in the art world.' },
+        { word: 'juxtapose', phonetic: '/ˈdʒʌkstəpəʊz/', meaning: '并列', example: 'The artist juxtaposed contrasting colors.' },
+        { word: 'kaleidoscope', phonetic: '/kəˈlaɪdəskəʊp/', meaning: '万花筒', example: 'Life is a kaleidoscope of experiences.' },
+        { word: 'loquacious', phonetic: '/ləˈkweɪʃəs/', meaning: '话多的', example: 'She is a loquacious storyteller.' },
+        { word: 'meticulous', phonetic: '/məˈtɪkjʊləs/', meaning: '一丝不苟的', example: 'He is meticulous about his work.' },
+        { word: 'nonchalant', phonetic: '/ˈnɒnʃələnt/', meaning: '漠不关心的', example: 'She gave a nonchalant response.' },
+        { word: 'obfuscate', phonetic: '/ˈɒbfʌskeɪt/', meaning: '使模糊', example: 'The lawyer tried to obfuscate the facts.' },
+        { word: 'perspicacious', phonetic: '/ˌpɜːspɪˈkeɪʃəs/', meaning: '敏锐的', example: 'He is a perspicacious observer.' },
+        { word: 'quintessential', phonetic: '/ˌkwɪntɪˈsenʃl/', meaning: '典型的', example: 'She is the quintessential professional.' },
+        { word: 'recalcitrant', phonetic: '/rɪˈkælsɪtrənt/', meaning: '顽抗的', example: 'The recalcitrant student refused to cooperate.' },
+        { word: 'serendipitous', phonetic: '/ˌserənˈdɪpɪtəs/', meaning: '偶然的', example: 'It was a serendipitous discovery.' },
+        { word: 'ubiquitous', phonetic: '/juːˈbɪkwɪtəs/', meaning: '无处不在的', example: 'Technology is ubiquitous.' }
+    ],
+    7: [
+        { word: 'antediluvian', phonetic: '/ˌæntɪdɪˈluːviən/', meaning: '古老的', example: 'His ideas are antediluvian.' },
+        { word: 'calumny', phonetic: '/ˈkæləmi/', meaning: '诽谤', example: 'He sued for calumny.' },
+        { word: 'dichotomy', phonetic: '/daɪˈkɒtəmi/', meaning: '二分法', example: 'There is a dichotomy between theory and practice.' },
+        { word: 'ephemeral', phonetic: '/ɪˈfemərəl/', meaning: '短暂的', example: 'Fame is ephemeral.' },
+        { word: 'flagitious', phonetic: '/fləˈdʒɪʃəs/', meaning: '罪恶的', example: 'He committed flagitious crimes.' },
+        { word: 'gregarious', phonetic: '/ɡrɪˈɡeəriəs/', meaning: '爱交际的', example: 'She is a gregarious person.' },
+        { word: 'harangue', phonetic: '/həˈræŋ/', meaning: '长篇大论', example: 'He gave a harangue about politics.' },
+        { word: 'impecunious', phonetic: '/ˌɪmpɪˈkjuːniəs/', meaning: '贫穷的', example: 'He lived an impecunious life.' },
+        { word: 'judicature', phonetic: '/ˈdʒuːdɪkətʃər/', meaning: '司法', example: 'The judicature system is fair.' },
+        { word: 'kudos', phonetic: '/ˈkjuːdɒs/', meaning: '荣誉', example: 'He received kudos for his work.' },
+        { word: 'loquacious', phonetic: '/ləˈkweɪʃəs/', meaning: '话多的', example: 'She is a loquacious speaker.' },
+        { word: 'magnanimous', phonetic: '/mæɡˈnænɪməs/', meaning: '宽宏大量的', example: 'He showed magnanimous forgiveness.' },
+        { word: 'nihilism', phonetic: '/ˈnaɪɪlɪzəm/', meaning: '虚无主义', example: 'His philosophy bordered on nihilism.' },
+        { word: 'obstreperous', phonetic: '/əbˈstrepərəs/', meaning: '喧闹的', example: 'The obstreperous crowd caused chaos.' },
+        { word: 'perspicacious', phonetic: '/ˌpɜːspɪˈkeɪʃəs/', meaning: '敏锐的', example: 'She made a perspicacious observation.' },
+        { word: 'quintessence', phonetic: '/kwɪnˈtesns/', meaning: '精髓', example: 'This is the quintessence of beauty.' },
+        { word: 'recondite', phonetic: '/ˈrekəndaɪt/', meaning: '深奥的', example: 'The theory is recondite.' },
+        { word: 'sycophant', phonetic: '/ˈsaɪkəfænt/', meaning: '谄媚者', example: 'He is a sycophant to the boss.' },
+        { word: 'ubiquitous', phonetic: '/juːˈbɪkwɪtəs/', meaning: '无处不在的', example: 'Social media is ubiquitous.' },
+        { word: 'verisimilitude', phonetic: '/ˌverɪsɪˈmɪlɪtjuːd/', meaning: '逼真', example: 'The movie has great verisimilitude.' }
     ]
 };
 
