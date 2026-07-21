@@ -2350,93 +2350,107 @@
         }
 
         function generateFallbackAIWords(topic) {
-            const level = currentUser.level || 1;
-            const resultDiv = document.getElementById('ai-words-result');
+            try {
+                const level = currentUser.level || 1;
+                const resultDiv = document.getElementById('ai-words-result');
 
-            const builtInWords = VOCABULARY_BY_LEVEL[level] || [];
-            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level <= level);
-            const allWords = [...builtInWords, ...aiWords];
+                const builtInWords = VOCABULARY_BY_LEVEL[level] || [];
+                const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level <= level);
+                const allWords = [...builtInWords, ...aiWords];
 
-            const currentHistory = generatedWordsHistory[level] || [];
+                console.log('Fallback - level:', level);
+                console.log('Fallback - builtInWords count:', builtInWords.length);
+                console.log('Fallback - aiWords count:', aiWords.length);
+                console.log('Fallback - allWords count:', allWords.length);
 
-            let allLowerLevelWords = [];
-            for (let l = 1; l < level; l++) {
-                if (generatedWordsHistory[l]) {
-                    allLowerLevelWords = [...allLowerLevelWords, ...generatedWordsHistory[l]];
+                const currentHistory = generatedWordsHistory[level] || [];
+
+                let allLowerLevelWords = [];
+                for (let l = 1; l < level; l++) {
+                    if (generatedWordsHistory[l]) {
+                        allLowerLevelWords = [...allLowerLevelWords, ...generatedWordsHistory[l]];
+                    }
                 }
-            }
 
-            const combinedHistory = [...allLowerLevelWords, ...currentHistory];
-            const availableWords = allWords.filter(w => !combinedHistory.includes(w.word));
+                const combinedHistory = [...allLowerLevelWords, ...currentHistory];
+                const availableWords = allWords.filter(w => !combinedHistory.includes(w.word));
 
-            const levelInfo = VOCABULARY_LEVELS[level];
-            const totalCount = levelInfo.wordCount;
+                console.log('Fallback - availableWords count:', availableWords.length);
 
-            if (currentHistory.length >= totalCount) {
+                const levelInfo = VOCABULARY_LEVELS[level];
+                const totalCount = levelInfo.wordCount;
+
+                if (currentHistory.length >= totalCount) {
+                    resultDiv.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #6b7280;">
+                            <div style="font-size: 64px;">🎉</div>
+                            <h3 style="margin-top: 16px;">恭喜！该等级词汇已全部覆盖</h3>
+                            <p style="margin-top: 8px;">已生成 ${currentHistory.length} / ${totalCount} 个单词</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (availableWords.length === 0) {
+                    if (allWords.length === 0) {
+                        resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">正在为该等级生成新单词，请点击"生成单词"重试</p>`;
+                    } else {
+                        resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">备用题库已用尽，请尝试使用AI生成新单词</p>`;
+                    }
+                    return;
+                }
+
+                const shuffled = [...availableWords].sort(() => Math.random() - 0.5);
+                const selected = shuffled.slice(0, Math.min(12, availableWords.length));
+
+                aiWordCache = selected.map((w, idx) => ({
+                    id: idx + 1,
+                    word: w.word,
+                    phonetic: w.phonetic || '',
+                    meaning: w.meaning,
+                    example: w.example || '暂无例句',
+                    tips: w.tips || '暂无记忆技巧'
+                }));
+
+                aiWordCache.forEach(w => {
+                    if (!currentHistory.includes(w.word)) {
+                        currentHistory.push(w.word);
+                    }
+                });
+
+                saveGeneratedWordsHistory();
+                lastWordTopic = topic;
+                saveAIWordCache(topic);
+
                 resultDiv.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #6b7280;">
-                        <div style="font-size: 64px;">🎉</div>
-                        <h3 style="margin-top: 16px;">恭喜！该等级词汇已全部覆盖</h3>
-                        <p style="margin-top: 8px;">已生成 ${currentHistory.length} / ${totalCount} 个单词</p>
+                    <div style="margin-bottom: 16px; padding: 12px; background: #fef3c7; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span>⚠️ AI生成失败，使用备用题库 · 主题：${topic}</span>
+                            <span style="font-weight: bold; color: #f59e0b;">共 ${aiWordCache.length} 个单词</span>
+                        </div>
                     </div>
+                    ${aiWordCache.map((w, idx) => `
+                        <div class="word-card">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="word">${w.word}</div>
+                                <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
+                            </div>
+                            <div class="phonetic">${w.phonetic}</div>
+                            <div class="meaning">${w.meaning}</div>
+                            <div class="example">${w.example}</div>
+                            <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
+                                💡 记忆技巧：${w.tips}
+                            </div>
+                            <button class="btn btn-success" onclick="addAIWord(${idx})" style="margin-top: 12px;">添加到生词本</button>
+                        </div>
+                    `).join('')}
                 `;
-                return;
+            } catch (fallbackError) {
+                console.error('Fallback function error:', fallbackError);
+                console.log('Fallback error details:', fallbackError.message, fallbackError.stack);
+                const resultDiv = document.getElementById('ai-words-result');
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">AI生成失败，备用题库也无法使用，请刷新页面重试</p>`;
             }
-
-            if (availableWords.length === 0) {
-                if (allWords.length === 0) {
-                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">正在为该等级生成新单词，请点击"生成单词"重试</p>`;
-                } else {
-                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">备用题库已用尽，请尝试使用AI生成新单词</p>`;
-                }
-                return;
-            }
-
-            const shuffled = [...availableWords].sort(() => Math.random() - 0.5);
-            const selected = shuffled.slice(0, Math.min(12, availableWords.length));
-
-            aiWordCache = selected.map((w, idx) => ({
-                id: idx + 1,
-                word: w.word,
-                phonetic: w.phonetic || '',
-                meaning: w.meaning,
-                example: w.example || '暂无例句',
-                tips: w.tips || '暂无记忆技巧'
-            }));
-
-            aiWordCache.forEach(w => {
-                if (!currentHistory.includes(w.word)) {
-                    currentHistory.push(w.word);
-                }
-            });
-
-            saveGeneratedWordsHistory();
-            lastWordTopic = topic;
-            saveAIWordCache(topic);
-
-            resultDiv.innerHTML = `
-                <div style="margin-bottom: 16px; padding: 12px; background: #fef3c7; border-radius: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span>⚠️ AI生成失败，使用备用题库 · 主题：${topic}</span>
-                        <span style="font-weight: bold; color: #f59e0b;">共 ${aiWordCache.length} 个单词</span>
-                    </div>
-                </div>
-                ${aiWordCache.map((w, idx) => `
-                    <div class="word-card">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="word">${w.word}</div>
-                            <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
-                        </div>
-                        <div class="phonetic">${w.phonetic}</div>
-                        <div class="meaning">${w.meaning}</div>
-                        <div class="example">${w.example}</div>
-                        <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
-                            💡 记忆技巧：${w.tips}
-                        </div>
-                        <button class="btn btn-success" onclick="addAIWord(${idx})" style="margin-top: 12px;">添加到生词本</button>
-                    </div>
-                `).join('')}
-            `;
         }
 
         function addAIWord(index) {
