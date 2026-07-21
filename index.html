@@ -2130,10 +2130,14 @@
             const loadingDiv = document.getElementById('ai-words-loading');
             const resultDiv = document.getElementById('ai-words-result');
 
-            const topics = getAllTopics();
+            const topics = getLevelTopics(level);
 
             const topicProgressKey = getUserKey(`english-learning-topic-progress-${level}`);
-            let topicProgress = JSON.parse(localStorage.getItem(topicProgressKey) || '{"currentIndex": 0, "completedTopics": []}');
+            let topicProgress = JSON.parse(localStorage.getItem(topicProgressKey) || '{"currentIndex": 0}');
+
+            if (topicProgress.currentIndex >= topics.length) {
+                topicProgress.currentIndex = 0;
+            }
 
             let currentTopic = topics[topicProgress.currentIndex];
 
@@ -2298,7 +2302,6 @@
                 console.error('AI单词生成失败:', error);
                 generateFallbackAIWords(currentTopic);
             } finally {
-                topicProgress.completedTopics.push(currentTopic);
                 topicProgress.currentIndex++;
                 if (topicProgress.currentIndex >= topics.length) {
                     topicProgress.currentIndex = 0;
