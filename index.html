@@ -2166,8 +2166,13 @@
             resultDiv.innerHTML = '';
 
             try {
-                const excludeWords = currentHistory.join(', ') || '无';
-                const prompt = `请为英语水平为"${levelDesc}"的学习者生成12个适合的英语单词，主题为"${randomTopic}"。要求：1. 这些单词要围绕同一个主题，相互之间有逻辑关联，能够自然地组合成一篇课文；2. 包含名词、动词、形容词等不同词性的单词；3. 避免重复以下已生成的单词：${excludeWords}；4. 确保生成的单词都是该水平的常用词汇；5. 返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、exampleTranslation（例句中文翻译）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。
+                const excludeWords = currentHistory.length > 50 ?
+                    currentHistory.slice(-50).join(', ') :
+                    currentHistory.join(', ');
+                const excludeNote = currentHistory.length > 50 ?
+                    `（最近50个，共${currentHistory.length}个已生成单词）` :
+                    '';
+                const prompt = `请为英语水平为"${levelDesc}"的学习者生成12个适合的英语单词，主题为"${randomTopic}"。要求：1. 这些单词要围绕同一个主题，相互之间有逻辑关联，能够自然地组合成一篇课文；2. 包含名词、动词、形容词等不同词性的单词；3. 必须避免使用以下已生成的单词${excludeNote}：${excludeWords || '无'}；4. 确保生成的单词都是该水平的常用词汇，尽量使用该水平不常见但实用的词汇；5. 返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、exampleTranslation（例句中文翻译）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。
 
 示例JSON格式：
 [
@@ -2266,8 +2271,22 @@
                 return;
             }
 
-            const shuffled = [...allWords].sort(() => Math.random() - 0.5);
-            const selected = shuffled.slice(0, Math.min(12, allWords.length));
+            const currentHistory = generatedWordsHistory[level] || [];
+            const availableWords = allWords.filter(w => !currentHistory.includes(w.word));
+
+            if (availableWords.length === 0) {
+                resultDiv.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6b7280;">
+                        <div style="font-size: 64px;">🎉</div>
+                        <h3 style="margin-top: 16px;">恭喜！该等级词汇已全部覆盖</h3>
+                        <p style="margin-top: 8px;">已生成 ${currentHistory.length} 个单词</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const shuffled = [...availableWords].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, Math.min(12, availableWords.length));
 
             aiWordCache = selected.map((w, idx) => ({
                 id: idx + 1,
