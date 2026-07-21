@@ -2147,6 +2147,15 @@
             }
 
             const currentHistory = generatedWordsHistory[level];
+
+            let allLowerLevelWords = [];
+            for (let l = 1; l < level; l++) {
+                if (generatedWordsHistory[l]) {
+                    allLowerLevelWords = [...allLowerLevelWords, ...generatedWordsHistory[l]];
+                }
+            }
+
+            const combinedHistory = [...allLowerLevelWords, ...currentHistory];
             const coveredCount = currentHistory.length;
             const totalCount = levelInfo.wordCount;
             const progress = Math.round((coveredCount / totalCount) * 100);
@@ -2166,11 +2175,11 @@
             resultDiv.innerHTML = '';
 
             try {
-                const excludeWords = currentHistory.length > 30 ?
-                    currentHistory.slice(-30).join(', ') :
-                    currentHistory.join(', ');
-                const excludeNote = currentHistory.length > 30 ?
-                    `（最近30个，共${currentHistory.length}个已生成单词，必须全部避开）` :
+                const excludeWords = combinedHistory.length > 30 ?
+                    combinedHistory.slice(-30).join(', ') :
+                    combinedHistory.join(', ');
+                const excludeNote = combinedHistory.length > 30 ?
+                    `（最近30个，共${combinedHistory.length}个已生成单词，必须全部避开）` :
                     '';
                 let targetCount = 12;
                 if (currentHistory.length > 400) {
@@ -2205,7 +2214,7 @@
                     throw new Error('AI返回的数据格式不正确');
                 }
 
-                const newWords = aiWordCache.filter(w => !currentHistory.includes(w.word));
+                const newWords = aiWordCache.filter(w => !combinedHistory.includes(w.word));
 
                 if (newWords.length === 0) {
                     resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">本次生成的单词全部已存在，请点击"生成单词"重试</p>`;
@@ -2291,7 +2300,16 @@
             }
 
             const currentHistory = generatedWordsHistory[level] || [];
-            const availableWords = allWords.filter(w => !currentHistory.includes(w.word));
+
+            let allLowerLevelWords = [];
+            for (let l = 1; l < level; l++) {
+                if (generatedWordsHistory[l]) {
+                    allLowerLevelWords = [...allLowerLevelWords, ...generatedWordsHistory[l]];
+                }
+            }
+
+            const combinedHistory = [...allLowerLevelWords, ...currentHistory];
+            const availableWords = allWords.filter(w => !combinedHistory.includes(w.word));
 
             const levelInfo = VOCABULARY_LEVELS[level];
             const totalCount = levelInfo.wordCount;
