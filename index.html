@@ -3411,11 +3411,19 @@ ${structuredWords || '暂无今日学习单词'}
             const topicSelect = document.getElementById('chat-topic');
             const container = document.getElementById('chat-messages');
 
-            if (topicSelect.value === '自由对话') {
+            const newTopic = topicSelect.value;
+            const shouldSwitch = (newTopic === '自由对话' && currentChatTopic !== '自由对话') ||
+                (newTopic !== '自由对话' && currentChatTopic === '自由对话');
+
+            if (shouldSwitch && chatInitialized) {
+                chatMessages = [];
+                container.innerHTML = '';
+                chatInitialized = false;
+            }
+
+            if (newTopic === '自由对话') {
                 currentChatTopic = '自由对话';
-            } else if (topicSelect.value) {
-                currentChatTopic = topicSelect.value;
-            } else if (!currentChatTopic) {
+            } else if (!newTopic) {
                 if (lastWordTopic && aiWordCache.length > 0) {
                     currentChatTopic = lastWordTopic;
                 } else {
@@ -3583,12 +3591,16 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
 
         function clearChat() {
             chatMessages = [];
-            currentChatTopic = '';
-            document.getElementById('chat-messages').innerHTML = '';
             const topicSelect = document.getElementById('chat-topic');
             if (topicSelect) {
-                topicSelect.value = '';
+                if (currentChatTopic === '自由对话') {
+                    topicSelect.value = '自由对话';
+                } else {
+                    topicSelect.value = '';
+                }
             }
+            currentChatTopic = topicSelect ? topicSelect.value : '';
+            document.getElementById('chat-messages').innerHTML = '';
         }
 
         let aiAssistantMessages = [];
