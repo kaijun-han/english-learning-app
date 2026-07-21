@@ -2135,8 +2135,11 @@
             const topicProgressKey = getUserKey(`english-learning-topic-progress-${level}`);
             let topicProgress = JSON.parse(localStorage.getItem(topicProgressKey) || '{"currentIndex": 0, "roundNoNewWords": false, "allTopicsExhausted": false}');
 
+            const completionRate = currentHistory.length / levelInfo.wordCount;
+            const isHighCompletion = completionRate >= 0.8;
+
             let currentTopic;
-            if (topicProgress.allTopicsExhausted) {
+            if (topicProgress.allTopicsExhausted || isHighCompletion) {
                 currentTopic = '';
             } else {
                 if (topicProgress.currentIndex >= topics.length) {
