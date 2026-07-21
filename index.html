@@ -799,10 +799,7 @@
             2: '简单，小学5-6年级水平，使用基础日常词汇和常用短语（如friend, school, teacher, family, beautiful），简单时态（一般现在时、一般过去时），每篇课文不超过80词',
             3: '中等，初中1-2年级水平，使用常用词汇和固定搭配（如important, different, practice, improve），掌握基本时态和句型，每篇课文不超过120词',
             4: '较难，初中3年级-高中1年级水平，使用较复杂词汇和从句（如perspective, phenomenon, consequence），掌握多种时态和语态，每篇课文不超过180词',
-            5: '困难，高中及以上水平，使用高级词汇和复杂句型（如ubiquitous, paradigm, ephemeral），包含复合句和非谓语动词，每篇课文不超过250词',
-            6: '专家，大学英语四级水平，使用学术词汇和专业词汇（如acquiesce, bellicose, deleterious），复杂句型和抽象概念，每篇课文不超过300词',
-            7: '大师，大学英语六级水平，使用高级学术词汇和抽象词汇（如antediluvian, calumny, dichotomy），复杂从句和修辞，每篇课文不超过350词',
-            8: '至尊，专业八级/雅思7.5+水平，使用极难词汇和专业术语（如abstruse, recalcitrant, verisimilitude），复杂句式和深度表达，每篇课文不超过400词'
+            5: '困难，高中及以上水平，使用高级词汇和复杂句型（如ubiquitous, paradigm, ephemeral），包含复合句和非谓语动词，每篇课文不超过250词'
         };
 
         function getUserKey(key) {
@@ -2132,7 +2129,16 @@
             const levelInfo = VOCABULARY_LEVELS[level];
             const loadingDiv = document.getElementById('ai-words-loading');
             const resultDiv = document.getElementById('ai-words-result');
-            const topics = ['日常用品', '食物', '动物', '天气', '学校', '家庭', '运动', '旅行', '时间', '颜色', '自然', '科技', '文化', '节日', '健康'];
+
+            const LEVEL_TOPICS = {
+                1: ['日常用品', '食物', '动物', '天气', '家庭', '颜色', '数字', '身体部位'],
+                2: ['学校生活', '旅行', '运动', '节日', '职业', '爱好', '衣服', '季节'],
+                3: ['科技', '文化', '历史', '地理', '环境', '健康', '娱乐', '社交'],
+                4: ['商业', '教育', '政治', '经济', '科学', '艺术', '媒体', '国际关系'],
+                5: ['哲学', '心理学', '社会学', '法律', '医学', '工程', '文学', '学术研究']
+            };
+
+            const topics = LEVEL_TOPICS[level] || LEVEL_TOPICS[1];
             const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
             if (!VOCABULARY_BY_LEVEL || !VOCABULARY_BY_LEVEL[level]) {
@@ -2202,29 +2208,41 @@
     {"id": 2, "word": "book", "phonetic": "/bʊk/", "meaning": "书", "example": "This is a good book.", "exampleTranslation": "这是一本好书。", "tips": "b+ook，书看起来像打开的ook"}
 ]`;
 
-                const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字，不要包含markdown代码块标记。');
+                let aiWordCache = [];
+                let retryCount = 0;
+                const maxRetries = 3;
 
-                let cleanResponse = response.trim();
-                if (cleanResponse.startsWith('```json')) {
-                    cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-                } else if (cleanResponse.startsWith('```')) {
-                    cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                while (retryCount < maxRetries) {
+                    const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字，不要包含markdown代码块标记。');
+
+                    let cleanResponse = response.trim();
+                    if (cleanResponse.startsWith('```json')) {
+                        cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+                    } else if (cleanResponse.startsWith('```')) {
+                        cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                    }
+
+                    aiWordCache = JSON.parse(cleanResponse);
+
+                    if (!Array.isArray(aiWordCache)) {
+                        retryCount++;
+                        continue;
+                    }
+
+                    const newWords = aiWordCache.filter(w => !combinedHistory.includes(w.word));
+
+                    if (newWords.length > 0) {
+                        aiWordCache = newWords;
+                        break;
+                    }
+
+                    retryCount++;
                 }
 
-                aiWordCache = JSON.parse(cleanResponse);
-
-                if (!Array.isArray(aiWordCache)) {
-                    throw new Error('AI返回的数据格式不正确');
-                }
-
-                const newWords = aiWordCache.filter(w => !combinedHistory.includes(w.word));
-
-                if (newWords.length === 0) {
-                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">本次生成的单词全部已存在，请点击"生成单词"重试</p>`;
+                if (!aiWordCache || aiWordCache.length === 0) {
+                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">AI生成失败，请点击"生成单词"重试</p>`;
                     return;
                 }
-
-                aiWordCache = newWords;
 
                 aiWordCache.forEach(w => {
                     if (!currentHistory.includes(w.word)) {
