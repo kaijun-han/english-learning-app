@@ -2297,7 +2297,6 @@
                 tips: w.tips || '暂无记忆技巧'
             }));
 
-            const currentHistory = generatedWordsHistory[level] || [];
             aiWordCache.forEach(w => {
                 if (!currentHistory.includes(w.word)) {
                     currentHistory.push(w.word);
