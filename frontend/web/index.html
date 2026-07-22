@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>AI英语学习智能体 v2.1</title>
+    <title>AI英语学习智能体 v2.2</title>
     <style>
         * {
             margin: 0;
@@ -294,6 +294,163 @@
             border-color: #9ca3af;
             background: #f3f4f6;
         }
+
+        #ai-assistant-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            cursor: pointer;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        #ai-assistant-fab:hover {
+            transform: scale(1.1);
+        }
+
+        #ai-assistant-panel {
+            position: fixed;
+            bottom: 100px;
+            right: 24px;
+            width: 420px;
+            max-width: calc(100vw - 48px);
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            max-height: 70vh;
+        }
+
+        #ai-assistant-panel.open {
+            display: flex;
+        }
+
+        #ai-assistant-header {
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #ai-assistant-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        #ai-assistant-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #ai-assistant-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            min-height: 200px;
+            max-height: 400px;
+        }
+
+        .ai-assistant-message {
+            margin-bottom: 12px;
+            display: flex;
+        }
+
+        .ai-assistant-message.user {
+            justify-content: flex-end;
+        }
+
+        .ai-assistant-message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-radius: 12px 12px 0 12px;
+        }
+
+        .ai-assistant-message.assistant .message-content {
+            background: #f3f4f6;
+            color: #1f2937;
+            border-radius: 12px 12px 12px 0;
+        }
+
+        .ai-assistant-message .message-content {
+            padding: 12px;
+            max-width: 80%;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .ai-assistant-message .message-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        #ai-assistant-input-area {
+            padding: 12px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 8px;
+        }
+
+        #ai-assistant-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        #ai-assistant-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #ai-assistant-upload-btn,
+        #ai-assistant-send-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        #ai-assistant-upload-btn {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        #ai-assistant-send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        #ai-assistant-file-input {
+            display: none;
+        }
     </style>
 </head>
 
@@ -301,7 +458,9 @@
     <div class="container">
         <div id="login-page">
             <div class="card">
-                <h1 style="text-align: center; color: #667eea; margin-bottom: 24px;">AI英语学习智能体</h1>
+                <h1 style="text-align: center; color: #667eea; margin-bottom: 8px;">AI英语学习智能体</h1>
+                <p style="text-align: center; color: #667eea; font-size: 16px; font-weight: bold; margin-bottom: 24px;">
+                    v2.2</p>
                 <input type="text" id="username" class="input" placeholder="用户名" />
                 <input type="password" id="password" class="input" placeholder="密码" />
                 <button class="btn btn-primary" onclick="login()">登录</button>
@@ -328,7 +487,14 @@
                 <div class="card">
                     <h2>👋 欢迎回来！</h2>
                     <p id="greeting" style="margin: 12px 0; color: #6b7280;">今天也要努力学习哦！</p>
-                    <button class="btn btn-primary" onclick="startLevelTest()">📝 英语水平测试</button>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <span style="font-size: 16px; color: #6b7280;">当前等级：</span>
+                        <span id="current-level-display"
+                            style="font-size: 20px; font-weight: bold; color: #8b5cf6;">Level 1</span>
+                        <button class="btn btn-outline" onclick="changeLevel()"
+                            style="padding: 4px 12px; font-size: 12px;">修改</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="openTestModal()">📝 英语水平测试</button>
                     <button class="btn btn-success" onclick="startDailyLearning()" style="margin-left: 12px;">📚
                         开始今日学习</button>
                 </div>
@@ -460,7 +626,12 @@
                             onclick="flipFlashcard()">
                             <div id="flashcard-front"
                                 style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: #667eea; color: white; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
-                                <div id="flashcard-word" style="font-size: 36px; font-weight: bold;"></div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div id="flashcard-word" style="font-size: 36px; font-weight: bold;"></div>
+                                    <button class="btn btn-light btn-sm"
+                                        onclick="event.stopPropagation(); speak(document.getElementById('flashcard-word').textContent)"
+                                        title="单词发音" style="padding: 4px 8px;">🔊</button>
+                                </div>
                                 <div id="flashcard-phonetic" style="font-size: 18px; margin-top: 8px;"></div>
                                 <p style="font-size: 14px; margin-top: 20px; opacity: 0.8;">点击卡片查看释义</p>
                             </div>
@@ -468,8 +639,13 @@
                                 style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border: 2px solid #667eea; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transform: rotateY(180deg);">
                                 <div id="flashcard-meaning" style="font-size: 24px; font-weight: bold; color: #667eea;">
                                 </div>
-                                <div id="flashcard-example"
-                                    style="font-size: 16px; margin-top: 12px; color: #4b5563; text-align: center;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+                                    <div id="flashcard-example"
+                                        style="font-size: 16px; color: #4b5563; text-align: center;">
+                                    </div>
+                                    <button class="btn btn-primary btn-sm"
+                                        onclick="event.stopPropagation(); speak(document.getElementById('flashcard-example').textContent)"
+                                        title="例句发音" style="padding: 4px 8px;">🔊</button>
                                 </div>
                             </div>
                         </div>
@@ -514,9 +690,22 @@
             <div class="card" style="max-width: 600px; width: 90%;">
                 <button class="btn btn-danger" onclick="closeTestModal()" style="float: right;">✕</button>
                 <h2>📝 英语水平测试</h2>
-                <div id="test-questions"></div>
-                <button class="btn btn-primary" onclick="submitTest()"
-                    style="margin-top: 16px; width: 100%;">提交测试</button>
+                <div id="test-start" style="margin-bottom: 16px;">
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; margin-bottom: 6px; font-weight: bold;">选择测试等级：</label>
+                        <select id="test-level-select" class="input" style="margin-bottom: 0;">
+                            <option value="1">Level 1 - 小学3-4年级水平</option>
+                            <option value="2">Level 2 - 小学5-6年级水平</option>
+                            <option value="3">Level 3 - 初中1-2年级水平</option>
+                            <option value="4">Level 4 - 初中3年级-高中1年级水平</option>
+                            <option value="5">Level 5 - 高中及以上水平</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="startLevelTest()" style="width: 100%;">开始测试</button>
+                </div>
+                <div id="test-questions" style="display: none;"></div>
+                <button id="test-submit-btn" class="btn btn-primary" onclick="submitTest()"
+                    style="margin-top: 16px; width: 100%; display: none;">提交测试</button>
             </div>
         </div>
 
@@ -575,15 +764,7 @@
                     <label style="font-size: 14px; color: #6b7280; white-space: nowrap;">对话主题：</label>
                     <select id="chat-topic" class="input" style="flex: 1;" onchange="startChatWithTopic()">
                         <option value="">🎲 随机主题</option>
-                        <option value="日常对话">💬 日常对话</option>
-                        <option value="旅行">✈️ 旅行</option>
-                        <option value="餐厅点餐">🍽️ 餐厅点餐</option>
-                        <option value="购物">🛍️ 购物</option>
-                        <option value="工作面试">💼 工作面试</option>
-                        <option value="学校生活">🏫 学校生活</option>
-                        <option value="天气">☀️ 天气</option>
-                        <option value="爱好">🎨 爱好</option>
-                        <option value="健康">🏥 健康</option>
+                        <option value="自由对话">🗣️ 自由对话</option>
                     </select>
                 </div>
                 <div id="chat-messages"
@@ -615,10 +796,10 @@
 
         const LEVEL_DESCRIPTIONS = {
             1: '非常简单，小学3-4年级水平，使用最基础的日常词汇（如apple, book, happy），简单句型（主谓宾结构），每篇课文不超过50词',
-            2: '简单，小学5-6年级水平，使用基础日常词汇和常用短语，简单时态（一般现在时、一般过去时），每篇课文不超过80词',
-            3: '中等，初中1-2年级水平，使用常用词汇和固定搭配，掌握基本时态和句型，每篇课文不超过120词',
-            4: '较难，初中3年级-高中1年级水平，使用较复杂词汇和从句，掌握多种时态和语态，每篇课文不超过180词',
-            5: '困难，高中及以上水平，使用高级词汇和复杂句型，包含复合句和非谓语动词，每篇课文不超过250词'
+            2: '简单，小学5-6年级水平，使用基础日常词汇和常用短语（如friend, school, teacher, family, beautiful），简单时态（一般现在时、一般过去时），每篇课文不超过80词',
+            3: '中等，初中1-2年级水平，使用常用词汇和固定搭配（如important, different, practice, improve），掌握基本时态和句型，每篇课文不超过120词',
+            4: '较难，初中3年级-高中1年级水平，使用较复杂词汇和从句（如perspective, phenomenon, consequence），掌握多种时态和语态，每篇课文不超过180词',
+            5: '困难，高中及以上水平，使用高级词汇和复杂句型（如ubiquitous, paradigm, ephemeral），包含复合句和非谓语动词，每篇课文不超过250词'
         };
 
         function getUserKey(key) {
@@ -643,8 +824,18 @@
             localStorage.setItem(getUserKey('english-learning-generated-history'), JSON.stringify(generatedWordsHistory));
         }
 
-        async function callAI(prompt, systemMessage = '你是一个专业的英语学习助手，帮助用户学习英语词汇、语法和对话。请用中文回复，内容清晰易懂。') {
+        async function callAI(prompt, systemMessage = '你是一个专业的英语学习助手，帮助用户学习英语词汇、语法和对话。请用中文回复，内容清晰易懂。', history = []) {
             try {
+                const messages = [
+                    { role: 'system', content: systemMessage }
+                ];
+
+                if (history.length > 0) {
+                    messages.push(...history);
+                }
+
+                messages.push({ role: 'user', content: prompt });
+
                 const response = await fetch(AI_CONFIG.apiUrl, {
                     method: 'POST',
                     headers: {
@@ -653,10 +844,7 @@
                     },
                     body: JSON.stringify({
                         model: AI_CONFIG.model,
-                        messages: [
-                            { role: 'system', content: systemMessage },
-                            { role: 'user', content: prompt }
-                        ],
+                        messages: messages,
                         max_tokens: 2000,
                         temperature: 0.7
                     })
@@ -803,7 +991,7 @@
         let lastWordTopic = '';
         let currentLesson = null;
 
-        function init() {
+        async function init() {
             const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
             if (users.length === 0) {
                 const defaultUser = {
@@ -822,11 +1010,12 @@
                 localStorage.setItem('english-learning-users', JSON.stringify(users));
             }
 
-            loadGeneratedWordsHistory();
             loadAIWordCache();
+            await loadVocabularyData();
             const savedUser = localStorage.getItem('english-learning-user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
+                loadGeneratedWordsHistory();
                 showMainPage();
                 const wordLevelSelect = document.getElementById('word-level');
                 const lessonLevelSelect = document.getElementById('lesson-level');
@@ -843,7 +1032,7 @@
 
         init();
 
-        function login() {
+        async function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
@@ -853,6 +1042,8 @@
                 localStorage.setItem('english-learning-user', JSON.stringify(user));
                 loadGeneratedWordsHistory();
                 loadAIWordCache();
+                chatMessages = [];
+                currentChatTopic = '';
                 clearUIData();
                 showMainPage();
                 const wordLevelSelect = document.getElementById('word-level');
@@ -863,6 +1054,7 @@
                 if (lessonLevelSelect) {
                     lessonLevelSelect.value = currentUser.level || 1;
                 }
+                await loadVocabularyData();
                 loadWords();
                 loadLessons();
             } else {
@@ -911,7 +1103,12 @@
             if (levelPanel) {
                 levelPanel.style.display = 'none';
             }
+            const topicSelect = document.getElementById('chat-topic');
+            if (topicSelect) {
+                topicSelect.value = '';
+            }
             currentChatTopic = '';
+            chatMessages = [];
         }
 
         function logout() {
@@ -920,6 +1117,8 @@
             generatedWordsHistory = {};
             lastWordTopic = '';
             currentLesson = null;
+            chatMessages = [];
+            currentChatTopic = '';
             clearUIData();
             localStorage.removeItem('english-learning-user');
             document.getElementById('login-page').classList.remove('hidden');
@@ -934,12 +1133,56 @@
             if (currentUser) {
                 const wordLevelSelect = document.getElementById('word-level');
                 const lessonLevelSelect = document.getElementById('lesson-level');
+                const levelDisplay = document.getElementById('current-level-display');
                 if (wordLevelSelect) {
                     wordLevelSelect.value = currentUser.level || 1;
                 }
                 if (lessonLevelSelect) {
                     lessonLevelSelect.value = currentUser.level || 1;
                 }
+                if (levelDisplay) {
+                    levelDisplay.textContent = `Level ${currentUser.level || 1}`;
+                }
+            }
+        }
+
+        function changeLevel() {
+            const levels = ['1', '2', '3', '4', '5'];
+            const levelNames = ['Level 1 - 小学3-4年级', 'Level 2 - 小学5-6年级', 'Level 3 - 初中1-2年级', 'Level 4 - 初中3年级-高中1年级', 'Level 5 - 高中及以上'];
+            const currentLevel = currentUser.level || 1;
+            const currentIndex = levels.indexOf(currentLevel.toString());
+
+            let selected = prompt(`请选择英语水平等级：\n${levelNames.join('\n')}\n\n当前等级：${levelNames[currentIndex]}\n\n输入 1-5 选择等级：`);
+            selected = parseInt(selected);
+
+            if (selected >= 1 && selected <= 5) {
+                currentUser.level = selected;
+                localStorage.setItem('english-learning-user', JSON.stringify(currentUser));
+
+                const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
+                const userIndex = users.findIndex(u => u.username === currentUser.username);
+                if (userIndex !== -1) {
+                    users[userIndex].level = selected;
+                    localStorage.setItem('english-learning-users', JSON.stringify(users));
+                }
+
+                const levelDisplay = document.getElementById('current-level-display');
+                if (levelDisplay) {
+                    levelDisplay.textContent = `Level ${selected}`;
+                }
+
+                const wordLevelSelect = document.getElementById('word-level');
+                const lessonLevelSelect = document.getElementById('lesson-level');
+                if (wordLevelSelect) {
+                    wordLevelSelect.value = selected;
+                }
+                if (lessonLevelSelect) {
+                    lessonLevelSelect.value = selected;
+                }
+
+                alert(`等级已修改为 Level ${selected}`);
+            } else if (selected !== null) {
+                alert('请输入 1-5 之间的数字');
             }
         }
 
@@ -957,6 +1200,7 @@
             if (tab === 'vocab') loadVocab();
             if (tab === 'ai-lessons') loadSavedLessons();
             if (tab === 'wrong-answers') loadWrongAnswers();
+            if (tab === 'ai-chat') startChatWithTopic();
         }
 
         function loadOverview() {
@@ -967,12 +1211,139 @@
             document.getElementById('stat-level').textContent = currentUser.level || 1;
         }
 
-        function speak(text) {
+        let audioContext = null;
+        let audioSource = null;
+        let gainNode = null;
+        let filterNode = null;
+        let lowShelfFilter = null;
+
+        function speak(text, isWord = false) {
+            if (audioSource) {
+                try { audioSource.stop(); } catch (e) { }
+                audioSource = null;
+            }
+
+            const level = currentUser.level || 1;
+            let rate = "0%";
+            if (level === 1) {
+                rate = "-40%";
+            } else if (level === 2) {
+                rate = "-30%";
+            } else if (level === 3) {
+                rate = "-20%";
+            } else {
+                rate = "-10%";
+            }
+
+            const voice = "en-US-AriaNeural";
+
+            let spokenText = text;
+            if (isWord) {
+                spokenText = `${text}<break time="150ms"/>`;
+            }
+
+            const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US"><voice name="${voice}"><prosody rate="${rate}" pitch="0%">${spokenText}</prosody></voice></speak>`;
+
+            const endsWithM = isWord && /[mM]$/.test(text.trim());
+
+            fetch("https://edge.microsoft.com/tts/v1/cognitiveservices/speak", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/ssml+xml",
+                    "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                },
+                body: ssml
+            })
+                .then(response => response.arrayBuffer())
+                .then(buffer => {
+                    if (!audioContext) {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    return audioContext.decodeAudioData(buffer);
+                })
+                .then(audioBuffer => {
+                    audioSource = audioContext.createBufferSource();
+                    audioSource.buffer = audioBuffer;
+
+                    filterNode = audioContext.createBiquadFilter();
+                    filterNode.type = 'highshelf';
+                    filterNode.frequency.value = 3000;
+                    filterNode.gain.value = isWord ? 5 : 0;
+
+                    if (endsWithM) {
+                        lowShelfFilter = audioContext.createBiquadFilter();
+                        lowShelfFilter.type = 'lowshelf';
+                        lowShelfFilter.frequency.value = 800;
+                        lowShelfFilter.gain.value = 8;
+                    }
+
+                    gainNode = audioContext.createGain();
+                    gainNode.gain.value = 1;
+
+                    audioSource.connect(filterNode);
+                    if (endsWithM) {
+                        filterNode.connect(lowShelfFilter);
+                        lowShelfFilter.connect(gainNode);
+                    } else {
+                        filterNode.connect(gainNode);
+                    }
+                    gainNode.connect(audioContext.destination);
+
+                    if (isWord) {
+                        const totalDuration = audioBuffer.duration;
+                        const tailStartTime = totalDuration * 0.5;
+                        const tailEndTime = totalDuration;
+
+                        const maxGain = endsWithM ? 1.5 : 1.35;
+
+                        gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+                        gainNode.gain.linearRampToValueAtTime(endsWithM ? 1.3 : 1.25, audioContext.currentTime + (tailStartTime));
+                        gainNode.gain.linearRampToValueAtTime(maxGain, audioContext.currentTime + (tailEndTime - 0.05));
+                        gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + tailEndTime);
+
+                        const startRate = 1;
+                        const endRate = endsWithM ? 0.5 : 0.55;
+                        audioSource.playbackRate.setValueAtTime(startRate, audioContext.currentTime);
+                        audioSource.playbackRate.linearRampToValueAtTime(endRate, audioContext.currentTime + tailStartTime);
+                        audioSource.playbackRate.linearRampToValueAtTime(endRate, audioContext.currentTime + tailEndTime);
+                    }
+
+                    audioSource.start(0);
+                })
+                .catch(error => {
+                    console.error("Edge TTS error:", error);
+                    fallbackSpeak(text, isWord);
+                });
+        }
+
+        function fallbackSpeak(text, isWord = false) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'en-US';
-                utterance.rate = 0.8;
+
+                const level = currentUser.level || 1;
+                if (level === 1) {
+                    utterance.rate = 0.6;
+                    utterance.pitch = 1.2;
+                } else if (level === 2) {
+                    utterance.rate = 0.7;
+                    utterance.pitch = 1.1;
+                } else if (level === 3) {
+                    utterance.rate = 0.8;
+                    utterance.pitch = 1.0;
+                } else {
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1.0;
+                }
+
+                const voices = window.speechSynthesis.getVoices();
+                const femaleVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English') || v.name.includes('Samantha'));
+                if (femaleVoice) {
+                    utterance.voice = femaleVoice;
+                }
+
                 window.speechSynthesis.speak(utterance);
             } else {
                 alert('您的浏览器不支持语音功能');
@@ -1054,7 +1425,7 @@
                 <div class="word-card">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="word">${w.word}</div>
-                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                        <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                         ${w.addedByAI ? '<span style="padding: 2px 6px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px;">AI</span>' : ''}
                     </div>
                     <div class="phonetic">${w.phonetic}</div>
@@ -1075,7 +1446,7 @@
                     <p style="margin: 12px 0; line-height: 1.6;">${l.content}</p>
                     <h4>关键词汇：</h4>
                     <div style="margin: 8px 0;">
-                        ${l.words?.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; margin-right: 8px; cursor: pointer;" onclick="speak('${w.word}')" title="点击发音">${w.word} - ${w.meaning} 🔊</span>`).join('') || ''}
+                        ${l.words?.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; margin-right: 8px; cursor: pointer;" onclick="speak('${w.word}', true)" title="点击发音">${w.word} - ${w.meaning} 🔊</span>`).join('') || ''}
                     </div>
                 </div>
             `).join('');
@@ -1406,29 +1777,62 @@
             `;
         }
 
+        function openTestModal() {
+            document.getElementById('test-start').style.display = 'block';
+            document.getElementById('test-questions').style.display = 'none';
+            document.getElementById('test-submit-btn').style.display = 'none';
+            const userLevel = currentUser && currentUser.level ? currentUser.level : 1;
+            document.getElementById('test-level-select').value = userLevel;
+            document.getElementById('test-modal').classList.remove('hidden');
+        }
+
         async function startLevelTest() {
             const container = document.getElementById('test-questions');
+            const startDiv = document.getElementById('test-start');
+            const submitBtn = document.getElementById('test-submit-btn');
+
+            startDiv.style.display = 'none';
+            container.style.display = 'block';
+            submitBtn.style.display = 'none';
+
             container.innerHTML = `
                 <div style="text-align: center; padding: 40px;">
                     <div style="font-size: 48px;">🤖</div>
                     <p style="margin-top: 16px; color: #667eea;">AI正在生成综合测试题...</p>
-                    <p style="font-size: 14px; color: #9ca3af;">预计15-20道题，涵盖词汇、语法、阅读理解</p>
+                    <p style="font-size: 14px; color: #9ca3af;">预计12-15道题，涵盖词汇、语法、阅读理解</p>
                 </div>
             `;
-            document.getElementById('test-modal').classList.remove('hidden');
 
             try {
-                const prompt = `请为英语学习者生成15道综合水平测试题，涵盖以下题型和难度：
-- 词汇题（5题）：考察核心词汇的理解和使用，难度从基础到高级
-- 语法题（5题）：考察时态、语态、从句等语法知识
-- 完形填空（3题）：给出上下文，选择最合适的词填空
-- 阅读理解（2题）：给出短文，回答相关问题
+                const level = parseInt(document.getElementById('test-level-select').value) || (currentUser.level || 1);
+                const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+
+                const questionDistribution = {
+                    1: { vocabulary: 4, grammar: 4, cloze: 3, reading: 1 },
+                    2: { vocabulary: 4, grammar: 4, cloze: 3, reading: 1 },
+                    3: { vocabulary: 5, grammar: 5, cloze: 3, reading: 2 },
+                    4: { vocabulary: 5, grammar: 5, cloze: 3, reading: 2 },
+                    5: { vocabulary: 5, grammar: 5, cloze: 3, reading: 2 }
+                };
+
+                const dist = questionDistribution[level] || questionDistribution[3];
+
+                const prompt = `请为英语水平为"${levelDesc}"的学习者生成综合水平测试题。
+
+当前等级：Level ${level}
+难度要求：根据上述等级描述出题，确保题目难度与等级匹配
+
+题目分配：
+- 词汇题（${dist.vocabulary}题）：考察该等级对应的词汇理解和使用
+- 语法题（${dist.grammar}题）：考察该等级应掌握的语法知识
+- 完形填空（${dist.cloze}题）：给出上下文，选择最合适的词填空
+- 阅读理解（${dist.reading}题）：给出短文，回答相关问题
 
 每个题目包含：
 - question（题目描述）
 - options（4个选项数组）
 - answer（正确答案的索引，0-3）
-- difficulty（难度等级1-5）
+- difficulty（难度等级1-5，必须与当前等级${level}匹配或接近）
 - type（题型：vocabulary/grammar/cloze/reading）
 
 请返回纯JSON格式，包含questions数组，不要添加任何额外文字。`;
@@ -1687,6 +2091,9 @@
         function closeTestModal() {
             document.getElementById('test-modal').classList.add('hidden');
             currentTestAnswers = [];
+            document.getElementById('test-start').style.display = 'block';
+            document.getElementById('test-questions').style.display = 'none';
+            document.getElementById('test-submit-btn').style.display = 'none';
         }
 
         function startDailyLearning() {
@@ -1724,7 +2131,16 @@
             const levelInfo = VOCABULARY_LEVELS[level];
             const loadingDiv = document.getElementById('ai-words-loading');
             const resultDiv = document.getElementById('ai-words-result');
-            const topics = ['日常用品', '食物', '动物', '天气', '学校', '家庭', '运动', '旅行', '时间', '颜色', '自然', '科技', '文化', '节日', '健康'];
+
+            const LEVEL_TOPICS = {
+                1: ['日常用品', '食物', '动物', '天气', '家庭', '颜色', '数字', '身体部位'],
+                2: ['学校生活', '旅行', '运动', '节日', '职业', '爱好', '衣服', '季节'],
+                3: ['科技', '文化', '历史', '地理', '环境', '健康', '娱乐', '社交'],
+                4: ['商业', '教育', '政治', '经济', '科学', '艺术', '媒体', '国际关系'],
+                5: ['哲学', '心理学', '社会学', '法律', '医学', '工程', '文学', '学术研究']
+            };
+
+            const topics = LEVEL_TOPICS[level] || LEVEL_TOPICS[1];
             const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
             if (!VOCABULARY_BY_LEVEL || !VOCABULARY_BY_LEVEL[level]) {
@@ -1742,6 +2158,15 @@
             }
 
             const currentHistory = generatedWordsHistory[level];
+
+            let allLowerLevelWords = [];
+            for (let l = 1; l < level; l++) {
+                if (generatedWordsHistory[l]) {
+                    allLowerLevelWords = [...allLowerLevelWords, ...generatedWordsHistory[l]];
+                }
+            }
+
+            const combinedHistory = [...allLowerLevelWords, ...currentHistory];
             const coveredCount = currentHistory.length;
             const totalCount = levelInfo.wordCount;
             const progress = Math.round((coveredCount / totalCount) * 100);
@@ -1761,28 +2186,64 @@
             resultDiv.innerHTML = '';
 
             try {
-                const excludeWords = currentHistory.join(', ') || '无';
-                const prompt = `请为英语水平为"${levelDesc}"的学习者生成12个适合的英语单词，主题为"${randomTopic}"。要求：1. 这些单词要围绕同一个主题，相互之间有逻辑关联，能够自然地组合成一篇课文；2. 包含名词、动词、形容词等不同词性的单词；3. 避免重复以下已生成的单词：${excludeWords}；4. 确保生成的单词都是该水平的常用词汇；5. 返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。
+                const excludeWords = combinedHistory.length > 30 ?
+                    combinedHistory.slice(-30).join(', ') :
+                    combinedHistory.join(', ');
+                const excludeNote = combinedHistory.length > 30 ?
+                    `（最近30个，共${combinedHistory.length}个已生成单词，必须全部避开）` :
+                    '';
+                let targetCount = 12;
+                if (currentHistory.length > 400) {
+                    targetCount = 50;
+                } else if (currentHistory.length > 300) {
+                    targetCount = 40;
+                } else if (currentHistory.length > 200) {
+                    targetCount = 30;
+                } else if (currentHistory.length > 100) {
+                    targetCount = 20;
+                }
+                const prompt = `请为英语水平为"${levelDesc}"的学习者生成${targetCount}个适合该水平的英语单词，主题为"${randomTopic}"。要求：1. 这些单词必须是该水平特有的词汇，不能是更低水平已经学过的词汇；2. 这些单词要围绕同一个主题，相互之间有逻辑关联，能够自然地组合成一篇课文；3. 包含名词、动词、形容词等不同词性的单词；4. 严格避免使用以下已生成的单词${excludeNote}：${excludeWords || '无'}，确保生成的单词与已生成单词完全不重复；5. 确保生成的单词难度符合该水平，不要使用太简单的基础词汇，也不要使用太难的高级词汇；6. 返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、exampleTranslation（例句中文翻译）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。
 
 示例JSON格式：
 [
-    {"id": 1, "word": "apple", "phonetic": "/ˈæpl/", "meaning": "苹果", "example": "I eat an apple every day.", "tips": "a+pple，想象苹果砸在头上"},
-    {"id": 2, "word": "book", "phonetic": "/bʊk/", "meaning": "书", "example": "This is a good book.", "tips": "b+ook，书看起来像打开的ook"}
+    {"id": 1, "word": "apple", "phonetic": "/ˈæpl/", "meaning": "苹果", "example": "I eat an apple every day.", "exampleTranslation": "我每天吃一个苹果。", "tips": "a+pple，想象苹果砸在头上"},
+    {"id": 2, "word": "book", "phonetic": "/bʊk/", "meaning": "书", "example": "This is a good book.", "exampleTranslation": "这是一本好书。", "tips": "b+ook，书看起来像打开的ook"}
 ]`;
 
-                const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字，不要包含markdown代码块标记。');
+                let aiWordCache = [];
+                let retryCount = 0;
+                const maxRetries = 3;
 
-                let cleanResponse = response.trim();
-                if (cleanResponse.startsWith('```json')) {
-                    cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-                } else if (cleanResponse.startsWith('```')) {
-                    cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                while (retryCount < maxRetries) {
+                    const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字，不要包含markdown代码块标记。');
+
+                    let cleanResponse = response.trim();
+                    if (cleanResponse.startsWith('```json')) {
+                        cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+                    } else if (cleanResponse.startsWith('```')) {
+                        cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                    }
+
+                    aiWordCache = JSON.parse(cleanResponse);
+
+                    if (!Array.isArray(aiWordCache)) {
+                        retryCount++;
+                        continue;
+                    }
+
+                    const newWords = aiWordCache.filter(w => !combinedHistory.includes(w.word));
+
+                    if (newWords.length > 0) {
+                        aiWordCache = newWords;
+                        break;
+                    }
+
+                    retryCount++;
                 }
 
-                aiWordCache = JSON.parse(cleanResponse);
-
-                if (!Array.isArray(aiWordCache)) {
-                    throw new Error('AI返回的数据格式不正确');
+                if (!aiWordCache || aiWordCache.length === 0) {
+                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">AI生成失败，请点击"生成单词"重试</p>`;
+                    return;
                 }
 
                 aiWordCache.forEach(w => {
@@ -1792,7 +2253,19 @@
                 });
 
                 saveGeneratedWordsHistory();
+                lastWordTopic = randomTopic;
                 saveAIWordCache(randomTopic);
+
+                chatMessages = [];
+                chatInitialized = false;
+                const chatContainer = document.getElementById('chat-messages');
+                if (chatContainer) {
+                    chatContainer.innerHTML = '';
+                }
+                const topicSelect = document.getElementById('chat-topic');
+                if (topicSelect) {
+                    topicSelect.value = '';
+                }
 
                 const newCoveredCount = currentHistory.length;
                 const newProgress = Math.round((newCoveredCount / totalCount) * 100);
@@ -1811,11 +2284,15 @@
                         <div class="word-card">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div class="word">${w.word}</div>
-                                <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                                <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                             </div>
                             <div class="phonetic">${w.phonetic}</div>
                             <div class="meaning">${w.meaning}</div>
-                            <div class="example">${w.example}</div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="example">${w.example}</div>
+                                <button class="speak-btn" onclick="speak('${w.example.replace(/'/g, "\\'")}')" title="例句发音" style="padding: 2px 6px;">🔊</button>
+                            </div>
+                            <div class="example" style="color: #6b7280; font-size: 14px;">${w.exampleTranslation || ''}</div>
                             <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
                                 💡 记忆技巧：${w.tips}
                             </div>
@@ -1845,8 +2322,39 @@
                 return;
             }
 
-            const shuffled = [...allWords].sort(() => Math.random() - 0.5);
-            const selected = shuffled.slice(0, Math.min(12, allWords.length));
+            const currentHistory = generatedWordsHistory[level] || [];
+
+            let allLowerLevelWords = [];
+            for (let l = 1; l < level; l++) {
+                if (generatedWordsHistory[l]) {
+                    allLowerLevelWords = [...allLowerLevelWords, ...generatedWordsHistory[l]];
+                }
+            }
+
+            const combinedHistory = [...allLowerLevelWords, ...currentHistory];
+            const availableWords = allWords.filter(w => !combinedHistory.includes(w.word));
+
+            const levelInfo = VOCABULARY_LEVELS[level];
+            const totalCount = levelInfo.wordCount;
+
+            if (currentHistory.length >= totalCount) {
+                resultDiv.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6b7280;">
+                        <div style="font-size: 64px;">🎉</div>
+                        <h3 style="margin-top: 16px;">恭喜！该等级词汇已全部覆盖</h3>
+                        <p style="margin-top: 8px;">已生成 ${currentHistory.length} / ${totalCount} 个单词</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (availableWords.length === 0) {
+                resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">备用题库已用尽，请尝试使用AI生成新单词</p>`;
+                return;
+            }
+
+            const shuffled = [...availableWords].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, Math.min(12, availableWords.length));
 
             aiWordCache = selected.map((w, idx) => ({
                 id: idx + 1,
@@ -1857,7 +2365,6 @@
                 tips: w.tips || '暂无记忆技巧'
             }));
 
-            const currentHistory = generatedWordsHistory[level] || [];
             aiWordCache.forEach(w => {
                 if (!currentHistory.includes(w.word)) {
                     currentHistory.push(w.word);
@@ -1865,6 +2372,7 @@
             });
 
             saveGeneratedWordsHistory();
+            lastWordTopic = topic;
             saveAIWordCache(topic);
 
             resultDiv.innerHTML = `
@@ -1878,7 +2386,7 @@
                     <div class="word-card">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div class="word">${w.word}</div>
-                            <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                            <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                         </div>
                         <div class="phonetic">${w.phonetic}</div>
                         <div class="meaning">${w.meaning}</div>
@@ -1910,6 +2418,7 @@
                 example: w.example,
                 level: currentUser.level || 1,
                 addedByAI: true,
+                topic: lastWordTopic || '',
                 addedDate: new Date().toISOString(),
                 repetitions: 0,
                 easeFactor: 2.5,
@@ -2002,7 +2511,7 @@
                 <div class="word-card" style="margin-bottom: 12px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="word">${w.word}</div>
-                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                        <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                         <span style="font-size: 12px; padding: 2px 6px; background: ${getStatusColor(w.status)}; color: white; border-radius: 4px;">${getStatusLabel(w.status)}</span>
                     </div>
                     <div class="phonetic">${w.phonetic}</div>
@@ -2254,8 +2763,8 @@
             const loadingDiv = document.getElementById('ai-lesson-loading');
             const resultDiv = document.getElementById('ai-lesson-result');
 
-            if (aiWordCache.length === 0) {
-                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">暂无可用单词，请先在「✨ AI单词」中生成单词</p>`;
+            if (!userTopic && aiWordCache.length === 0) {
+                resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">暂无可用单词，请先在「✨ AI单词」中生成单词，或输入课文主题</p>`;
                 return;
             }
 
@@ -2269,10 +2778,42 @@
             try {
                 let prompt = '';
 
+                const lengthRequirements = {
+                    1: "约100-150词，简单句为主，结构清晰，适合入门学习者",
+                    2: "约120-180词，简单句和少量并列句，词汇简单",
+                    3: "约200-280词，包含复合句和状语从句，词汇略有难度",
+                    4: "约300-400词，包含定语从句和复杂句型，词汇较丰富",
+                    5: "约400-500词，复杂句式和高级词汇，接近真实文章"
+                };
+
                 if (userTopic) {
-                    prompt = `请为英语水平为"${levelDesc}"的学习者写一篇关于"${userTopic}"的课文。要求：1. 根据难度描述控制课文长度和难度；2. 课文中需要包含以下单词，尽量自然融入：${wordList}；3. 语言简单易懂，让学习者能够通过课文巩固单词；4. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）。确保返回纯JSON，不要包含其他文字。`;
+                    prompt = `请为英语水平为"${levelDesc}"的学习者写一篇关于"${userTopic}"的课文。
+
+要求：
+1. 文章长度：${lengthRequirements[level] || lengthRequirements[1]}
+2. 文章要有完整的主题和故事情节，具有阅读性（包含开头、发展、结尾）
+3. 语言风格：根据难度级别适当控制，确保学习者能够理解
+4. 返回格式为JSON，包含：
+   - title（标题）
+   - content（课文内容，段落分明）
+   - keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）
+
+确保返回纯JSON，不要包含其他文字。`;
                 } else {
-                    prompt = `请为英语水平为"${levelDesc}"的学习者写一篇课文。要求：1. 根据以下单词确定一个合适的主题，主题要适合这些单词：${wordList}；2. 根据难度描述控制课文长度和难度；3. 课文中必须包含上述所有单词；4. 语言简单易懂，让学习者能够通过课文巩固单词；5. 返回格式为JSON，包含title（标题）、content（课文内容）、keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）。确保返回纯JSON，不要包含其他文字。`;
+                    prompt = `请为英语水平为"${levelDesc}"的学习者写一篇课文。
+
+要求：
+1. 根据以下单词确定一个合适的主题，主题要适合这些单词：${wordList}
+2. 文章长度：${lengthRequirements[level] || lengthRequirements[1]}
+3. 课文中必须包含上述所有单词，自然融入
+4. 文章要有完整的主题和故事情节，具有阅读性（包含开头、发展、结尾）
+5. 语言风格：根据难度级别适当控制，确保学习者能够理解并通过课文巩固单词
+6. 返回格式为JSON，包含：
+   - title（标题）
+   - content（课文内容，段落分明）
+   - keyWords（重点单词数组，每个单词包含：word、phonetic、partOfSpeech、chineseMeaning、example）
+
+确保返回纯JSON，不要包含其他文字。`;
                 }
 
                 const response = await callAI(prompt, '你是一个专业的英语课文生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字。');
@@ -2284,7 +2825,7 @@
                 let contentWithAudio = lesson.content;
                 lesson.keyWords.forEach(w => {
                     const regex = new RegExp(`\\b(${w.word})\\b`, 'gi');
-                    contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}')" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
+                    contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}', true)" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
                 });
 
                 resultDiv.innerHTML = `
@@ -2305,7 +2846,7 @@
                                 <div class="word-card" style="margin-bottom: 12px;">
                                     <div style="display: flex; align-items: center; gap: 8px;">
                                         <div class="word">${w.word}</div>
-                                        <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                                        <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                                         <span style="font-size: 12px; padding: 2px 6px; background: #e0e7ff; color: #4338ca; border-radius: 4px;">${w.partOfSpeech}</span>
                                     </div>
                                     <div class="phonetic">${w.phonetic}</div>
@@ -2336,10 +2877,11 @@
             const existingIndex = savedLessons.findIndex(l => l.title === currentLesson.title && l.level === currentLesson.level);
 
             if (existingIndex >= 0) {
-                savedLessons[existingIndex] = currentLesson;
+                const [updatedLesson] = savedLessons.splice(existingIndex, 1);
+                savedLessons.unshift(updatedLesson);
             } else {
                 currentLesson.id = Date.now();
-                savedLessons.push(currentLesson);
+                savedLessons.unshift(currentLesson);
             }
 
             localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
@@ -2356,12 +2898,16 @@
                 return;
             }
 
-            container.innerHTML = `
+            const DISPLAY_LIMIT = 3;
+            const displayedLessons = savedLessons.slice(0, DISPLAY_LIMIT);
+            const moreLessons = savedLessons.slice(DISPLAY_LIMIT);
+
+            let html = `
                 <div style="margin-bottom: 16px;">
                     <h4 style="margin-bottom: 12px;">📚 已保存课文（${savedLessons.length}篇）</h4>
-                    <div style="display: flex; flex-wrap: gap: 8px;">
-                        ${savedLessons.map(lesson => `
-                            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${displayedLessons.map(lesson => `
+                            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; min-width: 200px;">
                                 <div>
                                     <span style="font-weight: bold;">${lesson.title}</span>
                                     <span style="font-size: 12px; color: #6b7280; margin-left: 8px;">Level ${lesson.level}</span>
@@ -2373,8 +2919,59 @@
                             </div>
                         `).join('')}
                     </div>
-                </div>
             `;
+
+            if (moreLessons.length > 0) {
+                html += `
+                    <div style="margin-top: 12px; position: relative;">
+                        <button onclick="toggleMoreLessonsMenu()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d1d5db; background: white; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            📋 更多课文（${moreLessons.length}篇）
+                            <span id="more-lessons-arrow">▼</span>
+                        </button>
+                        <div id="more-lessons-menu" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; border: 1px solid #d1d5db; border-radius: 8px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100;">
+                            ${moreLessons.map(lesson => `
+                                <div style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span>${lesson.title} (Level ${lesson.level})</span>
+                                        <div style="display: flex; gap: 8px;">
+                                            <button onclick="event.stopPropagation(); moveLessonToMain(${lesson.id}); toggleMoreLessonsMenu()" style="padding: 2px 6px; font-size: 12px; border-radius: 4px; border: 1px solid #667eea; color: #667eea;">移到主区域</button>
+                                            <button onclick="event.stopPropagation(); deleteSavedLesson(${lesson.id}); toggleMoreLessonsMenu()" style="padding: 2px 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ef4444; color: #ef4444;">删除</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function toggleMoreLessonsMenu() {
+            const menu = document.getElementById('more-lessons-menu');
+            const arrow = document.getElementById('more-lessons-arrow');
+            if (menu) {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+                if (arrow) {
+                    arrow.textContent = menu.style.display === 'none' ? '▼' : '▲';
+                }
+            }
+        }
+
+        function moveLessonToMain(lessonId) {
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+            const lessonIndex = savedLessons.findIndex(l => l.id == lessonId);
+
+            if (lessonIndex === -1) return;
+
+            const [movedLesson] = savedLessons.splice(lessonIndex, 1);
+            savedLessons.splice(2, 0, movedLesson);
+
+            localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
+            showToast('✅ 课文已移到主区域');
+            loadSavedLessons();
         }
 
         function viewSavedLesson(lessonId) {
@@ -2388,7 +2985,7 @@
             let contentWithAudio = lesson.content;
             lesson.keyWords.forEach(w => {
                 const regex = new RegExp(`\\b(${w.word})\\b`, 'gi');
-                contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}')" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
+                contentWithAudio = contentWithAudio.replace(regex, `<span class="clickable-word" onclick="speak('${w.word}', true)" title="点击听发音" style="color: #667eea; text-decoration: underline; cursor: pointer; font-weight: bold;">$1</span>`);
             });
 
             const resultDiv = document.getElementById('ai-lesson-result');
@@ -2409,7 +3006,7 @@
                             <div class="word-card" style="margin-bottom: 12px;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <div class="word">${w.word}</div>
-                                    <button class="speak-btn" onclick="speak('${w.word}')" title="发音">🔊</button>
+                                    <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                                     <span style="font-size: 12px; padding: 2px 6px; background: #e0e7ff; color: #4338ca; border-radius: 4px;">${w.partOfSpeech}</span>
                                 </div>
                                 <div class="phonetic">${w.phonetic}</div>
@@ -2425,6 +3022,9 @@
         }
 
         function deleteSavedLesson(lessonId) {
+            if (!confirm('⚠️ 确定要删除这篇课文吗？删除后无法恢复！')) {
+                return;
+            }
             let savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
             savedLessons = savedLessons.filter(l => l.id !== lessonId);
             localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
@@ -2756,12 +3356,12 @@ ${structuredWords || '暂无今日学习单词'}
                 return;
             }
 
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
                 showVoiceInputNotice();
                 return;
             }
 
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             voiceRecognition = new SpeechRecognition();
             voiceRecognition.lang = 'en-US';
             voiceRecognition.interimResults = true;
@@ -2773,7 +3373,7 @@ ${structuredWords || '暂无今日学习单词'}
                 btn.classList.remove('btn-secondary');
                 btn.classList.add('btn-danger');
                 document.getElementById('chat-input').placeholder = '正在听您说话...';
-                updateVoiceStatus('✅ 麦克风已开启，请开始说话（说英语）');
+                updateVoiceStatus('✅ 麦克风已开启，请开始说英语');
             };
 
             voiceRecognition.onresult = function (event) {
@@ -2793,7 +3393,7 @@ ${structuredWords || '暂无今日学习单词'}
                 document.getElementById('chat-input').placeholder = '输入英语句子...';
                 const finalText = document.getElementById('chat-input').value;
                 if (!finalText) {
-                    showVoiceInputNotice();
+                    updateVoiceStatus('⚠️ 未识别到语音，请检查网络连接');
                 } else {
                     updateVoiceStatus('✅ 识别完成');
                 }
@@ -2807,24 +3407,20 @@ ${structuredWords || '暂无今日学习单词'}
                 btn.classList.add('btn-secondary');
                 document.getElementById('chat-input').placeholder = '输入英语句子...';
 
-                if (event.error === 'network' || event.error === 'service-not-allowed') {
+                if (event.error === 'network') {
+                    updateVoiceStatus('❌ 网络错误：语音识别服务暂时不可用');
                     showVoiceInputNotice();
+                } else if (event.error === 'service-not-allowed') {
+                    updateVoiceStatus('❌ 语音服务不可用：当前网络环境不支持');
+                    showVoiceInputNotice();
+                } else if (event.error === 'not-allowed') {
+                    updateVoiceStatus('❌ 麦克风权限被拒绝：请点击浏览器地址栏左侧的锁图标 → 允许麦克风');
+                } else if (event.error === 'no-speech') {
+                    updateVoiceStatus('❌ 未检测到语音，请尝试大声说话');
+                } else if (event.error === 'audio-capture') {
+                    updateVoiceStatus('❌ 无法访问麦克风，请检查设备是否有麦克风');
                 } else {
-                    let errorMsg = '语音识别出错';
-                    switch (event.error) {
-                        case 'not-allowed':
-                            errorMsg = '❌ 请允许麦克风权限：点击浏览器地址栏左侧的锁图标 → 允许麦克风';
-                            break;
-                        case 'no-speech':
-                            errorMsg = '❌ 未检测到语音，请尝试大声说话';
-                            break;
-                        case 'audio-capture':
-                            errorMsg = '❌ 无法访问麦克风，请检查设备是否有麦克风';
-                            break;
-                        default:
-                            errorMsg = '❌ 错误：' + event.error;
-                    }
-                    updateVoiceStatus(errorMsg);
+                    updateVoiceStatus('❌ 语音识别出错：' + event.error);
                 }
             };
 
@@ -2838,17 +3434,17 @@ ${structuredWords || '暂无今日学习单词'}
         }
 
         function showVoiceInputNotice() {
-            updateVoiceStatus('⚠️ 语音输入在当前网络环境下不可用');
             const notice = document.createElement('div');
             notice.style.cssText = 'margin-top: 12px; padding: 16px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; font-size: 14px; line-height: 1.6;';
             notice.innerHTML = `
                 <p style="font-weight: bold; color: #92400e; margin-bottom: 8px;">📱 语音输入提示</p>
-                <p>由于网络环境限制，Chrome浏览器的语音识别服务暂时不可用。</p>
+                <p>由于网络环境或浏览器限制，语音输入功能暂时不可用。</p>
                 <p style="margin-top: 8px;"><strong>解决方案：</strong></p>
                 <ul style="margin: 8px 0 0 20px; padding: 0;">
-                    <li>📲 <strong>iOS用户</strong>：请使用 Safari 浏览器打开本应用（使用Apple语音服务）</li>
-                    <li>🤖 <strong>Android用户</strong>：请使用文本输入方式，或使用VPN</li>
+                    <li>📲 <strong>iOS用户</strong>：请使用 Safari 浏览器（使用Apple语音服务）</li>
+                    <li>🌐 <strong>Android用户</strong>：请使用Chrome浏览器并确保网络畅通</li>
                     <li>🔤 暂时可以直接在输入框中输入英语句子</li>
+                    <li>💡 建议在WiFi环境下使用语音功能</li>
                 </ul>
             `;
 
@@ -2876,32 +3472,105 @@ ${structuredWords || '暂无今日学习单词'}
         }
 
         let currentChatTopic = '';
+        let chatInitialized = false;
+
+        function getTodayLearningContent() {
+            const today = new Date().toLocaleDateString('zh-CN');
+            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
+            const todayWords = aiWords.filter(w => {
+                const created = new Date(w.createdAt || w.timestamp || Date.now()).toLocaleDateString('zh-CN');
+                return created === today;
+            });
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+            const todayLessons = savedLessons.filter(l => {
+                const saved = new Date(l.savedAt || Date.now()).toLocaleDateString('zh-CN');
+                return saved === today;
+            });
+            return {
+                words: todayWords,
+                lessons: todayLessons,
+                cachedWords: aiWordCache
+            };
+        }
 
         function startChatWithTopic() {
             const topicSelect = document.getElementById('chat-topic');
-            currentChatTopic = topicSelect.value;
-            if (!currentChatTopic) {
-                const topics = ['日常对话', '旅行', '餐厅点餐', '购物', '工作面试', '学校生活', '天气', '爱好', '健康'];
-                currentChatTopic = topics[Math.floor(Math.random() * topics.length)];
-            }
             const container = document.getElementById('chat-messages');
-            const levelInfo = VOCABULARY_LEVELS[currentUser.level || 1];
-            container.innerHTML = `
-                <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
-                    <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
-                        🎯 话题：${currentChatTopic}
-                        <br><small style="color: #6b7280;">难度：${levelInfo.cefr}</small>
-                        <br>Let's talk about ${currentChatTopic} in English! I'll start the conversation.
-                    </div>
-                </div>
-            `;
-            chatMessages = [];
-            setTimeout(() => {
-                const levelDesc = LEVEL_DESCRIPTIONS[currentUser.level || 1] || LEVEL_DESCRIPTIONS[1];
-                const prompt = `请开启关于"${currentChatTopic}"的对话。你是对话的主导者，主动提问引导用户参与。难度级别：${levelDesc}。请用英语回复。`;
-                callAI(prompt, `你是一个英语对话练习伙伴，主导关于"${currentChatTopic}"的对话。用英语提问，引导用户参与对话。根据用户水平（CEFR ${levelInfo.cefr}）调整语言难度。`).then(response => {
-                    chatMessages.push({ role: 'assistant', content: response });
-                    container.innerHTML += `
+
+            const newTopic = topicSelect.value;
+            const shouldSwitch = (newTopic === '自由对话' && currentChatTopic !== '自由对话') ||
+                (newTopic !== '自由对话' && currentChatTopic === '自由对话');
+
+            if (shouldSwitch && chatInitialized) {
+                chatMessages = [];
+                container.innerHTML = '';
+                chatInitialized = false;
+            }
+
+            if (newTopic === '自由对话') {
+                currentChatTopic = '自由对话';
+            } else if (!newTopic) {
+                if (lastWordTopic && aiWordCache.length > 0) {
+                    currentChatTopic = lastWordTopic;
+                } else {
+                    const topics = ['日常对话', '旅行', '餐厅点餐', '购物', '学校生活', '天气', '爱好', '健康'];
+                    currentChatTopic = topics[Math.floor(Math.random() * topics.length)];
+                }
+            }
+
+            if (!chatInitialized) {
+                const levelInfo = VOCABULARY_LEVELS[currentUser.level || 1];
+
+                if (currentChatTopic === '自由对话') {
+                    container.innerHTML = `
+                        <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                            <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
+                                🗣️ 自由对话模式
+                                <br><small style="color: #6b7280;">难度：${levelInfo.cefr}</small>
+                                <br>Hi! What would you like to talk about today? I'm here to chat with you.
+                            </div>
+                        </div>
+                    `;
+                    chatMessages = [];
+                    chatInitialized = true;
+                } else {
+                    container.innerHTML = `
+                        <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                            <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
+                                🎯 话题：${currentChatTopic}
+                                <br><small style="color: #6b7280;">难度：${levelInfo.cefr}</small>
+                                <br>Let's talk about ${currentChatTopic} in English! I'll start the conversation.
+                            </div>
+                        </div>
+                    `;
+                    chatMessages = [];
+                    chatInitialized = true;
+                    setTimeout(() => {
+                        const level = currentUser.level || 1;
+                        const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+
+                        const levelSpecificRules = {
+                            1: '使用最基础的日常词汇，简单句型（主谓宾结构），只用一般现在时，每个句子不超过8个单词',
+                            2: '使用基础日常词汇和常用短语，简单时态（一般现在时、一般过去时），每个句子不超过10个单词',
+                            3: '使用常用词汇和固定搭配，掌握基本时态和句型，每个句子不超过12个单词',
+                            4: '使用较复杂词汇和从句，掌握多种时态和语态，每个句子不超过15个单词',
+                            5: '使用高级词汇和复杂句型，包含复合句和非谓语动词，每个句子不超过18个单词'
+                        };
+
+                        const rules = levelSpecificRules[level] || levelSpecificRules[3];
+
+                        const aiWords = aiWordCache.length > 0 ? aiWordCache.map(w => w.word).join(', ') : '';
+
+                        const prompt = `请开启关于"${currentChatTopic}"的对话。你是一个友好的聊天伙伴，与用户进行自然对话。
+【当前等级】：Level ${level}
+【等级描述】：${levelDesc}
+【语言规则】：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。
+${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` : ''}
+【对话风格】：自然、轻松、友好。先分享一个简单想法，再适当提问，不要一直问问题。每次回复2-3句话。
+请用英语回复。`;
+                        callAI(prompt, `你是一个友好的英语对话伙伴，与用户进行自然对话。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，先分享想法再适当提问。`).then(response => {
+                            chatMessages.push({ role: 'assistant', content: response });
+                            container.innerHTML += `
                         <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
                             <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
                                 ${response}
@@ -2909,14 +3578,17 @@ ${structuredWords || '暂无今日学习单词'}
                             <button class="speak-btn" onclick="speak('${response.replace(/'/g, "\\'")}')" title="听发音" style="margin-left: 8px;">🔊</button>
                         </div>
                     `;
-                    container.scrollTop = container.scrollHeight;
-                    if (document.getElementById('chat-auto-speak').checked) {
-                        speak(response);
-                    }
-                }).catch(e => {
-                    console.error('Chat error:', e);
-                });
-            }, 500);
+                            container.scrollTop = container.scrollHeight;
+                            if (document.getElementById('chat-auto-speak').checked) {
+                                speak(response);
+                            }
+                        }).catch(e => {
+                            console.error('Chat error:', e);
+                        });
+                    }, 500);
+                }
+            }
+
         }
 
         async function sendChatMessage() {
@@ -2939,10 +3611,42 @@ ${structuredWords || '暂无今日学习单词'}
             container.scrollTop = container.scrollHeight;
 
             try {
-                const levelInfo = VOCABULARY_LEVELS[currentUser.level || 1];
-                const topicPrompt = currentChatTopic ? `话题：${currentChatTopic}。` : '';
-                const prompt = `${topicPrompt}用户说：${message}\n请用英语回复，保持对话自然。你是对话的主导者，适当提问引导用户继续对话。用户当前等级：Level ${currentUser.level || 1} (CEFR ${levelInfo.cefr})。`;
-                const response = await callAI(prompt, `你是一个英语对话练习伙伴，主导对话。${currentChatTopic ? `话题是"${currentChatTopic}"。` : ''}用英语与用户进行自然对话，适当提问引导。根据用户水平（CEFR ${levelInfo.cefr}）调整语言难度。`);
+                const level = currentUser.level || 1;
+                const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+
+                const levelSpecificRules = {
+                    1: '使用最基础的日常词汇，简单句型（主谓宾结构），只用一般现在时，每个句子不超过8个单词',
+                    2: '使用基础日常词汇和常用短语，简单时态（一般现在时、一般过去时），每个句子不超过10个单词',
+                    3: '使用常用词汇和固定搭配，掌握基本时态和句型，每个句子不超过12个单词',
+                    4: '使用较复杂词汇和从句，掌握多种时态和语态，每个句子不超过15个单词',
+                    5: '使用高级词汇和复杂句型，包含复合句和非谓语动词，每个句子不超过18个单词'
+                };
+
+                const rules = levelSpecificRules[level] || levelSpecificRules[3];
+
+                const aiWords = aiWordCache.length > 0 ? aiWordCache.map(w => w.word).join(', ') : '';
+
+                let prompt = '';
+                let systemPrompt = '';
+
+                if (currentChatTopic === '自由对话') {
+                    prompt = `请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
+【当前等级】：Level ${level}
+【等级描述】：${levelDesc}
+【语言规则】：${rules}。难度要低于当前等级。
+【注意】：不要主导对话，不要主动改变话题，跟随用户的话题进行回应。每次回复1-2句话，简短自然。`;
+                    systemPrompt = `你是一个友好的英语对话伙伴。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级。不要主导对话，跟随用户的话题进行回应，简短自然，每次回复1-2句话。`;
+                } else {
+                    prompt = `请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
+【当前等级】：Level ${level}
+【等级描述】：${levelDesc}
+【语言规则】：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。
+${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` : ''}
+【注意】：不要重复之前已经说过的话或问过的问题，根据对话历史自然推进话题。`;
+                    systemPrompt = `你是一个友好的英语对话伙伴。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，可以分享观点或提问。不要重复之前说过的话。`;
+                }
+
+                const response = await callAI(prompt, systemPrompt, chatMessages);
 
                 chatMessages.push({ role: 'assistant', content: response });
 
@@ -2973,14 +3677,161 @@ ${structuredWords || '暂无今日学习单词'}
 
         function clearChat() {
             chatMessages = [];
-            currentChatTopic = '';
-            document.getElementById('chat-messages').innerHTML = '';
             const topicSelect = document.getElementById('chat-topic');
             if (topicSelect) {
-                topicSelect.value = '';
+                if (currentChatTopic === '自由对话') {
+                    topicSelect.value = '自由对话';
+                } else {
+                    topicSelect.value = '';
+                }
+            }
+            currentChatTopic = topicSelect ? topicSelect.value : '';
+            document.getElementById('chat-messages').innerHTML = '';
+        }
+
+        let aiAssistantMessages = [];
+        let aiAssistantCurrentImage = '';
+
+        function toggleAiAssistant() {
+            const panel = document.getElementById('ai-assistant-panel');
+            panel.classList.toggle('open');
+        }
+
+        function handleAiAssistantUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    aiAssistantCurrentImage = e.target.result;
+                    const messages = document.getElementById('ai-assistant-messages');
+                    messages.innerHTML += `
+                        <div class="ai-assistant-message user">
+                            <div class="message-content">
+                                <img src="${aiAssistantCurrentImage}" style="max-width: 150px; border-radius: 8px;">
+                                <div style="margin-top: 8px;">📷 图片已上传</div>
+                            </div>
+                        </div>
+                    `;
+                    messages.scrollTop = messages.scrollHeight;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const content = e.target.result;
+                    aiAssistantCurrentImage = '';
+                    const messages = document.getElementById('ai-assistant-messages');
+                    messages.innerHTML += `
+                        <div class="ai-assistant-message user">
+                            <div class="message-content">
+                                📄 文件内容：<br>
+                                <div style="margin-top: 8px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px; max-height: 100px; overflow-y: auto;">${content.substring(0, 500)}${content.length > 500 ? '...' : ''}</div>
+                            </div>
+                        </div>
+                    `;
+                    messages.scrollTop = messages.scrollHeight;
+                };
+                reader.readAsText(file);
+            }
+            input.value = '';
+        }
+
+        async function sendAiAssistantMessage() {
+            const input = document.getElementById('ai-assistant-input');
+            const message = input.value.trim();
+            if (!message && !aiAssistantCurrentImage) return;
+
+            const messages = document.getElementById('ai-assistant-messages');
+
+            aiAssistantMessages.push({ role: 'user', content: message || '(上传了文件/图片)' });
+
+            if (aiAssistantCurrentImage) {
+                messages.innerHTML += `
+                    <div class="ai-assistant-message user">
+                        <div class="message-content">
+                            <img src="${aiAssistantCurrentImage}" style="max-width: 150px; border-radius: 8px;">
+                            ${message ? `<div style="margin-top: 8px;">${message}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                messages.innerHTML += `
+                    <div class="ai-assistant-message user">
+                        <div class="message-content">${message}</div>
+                    </div>
+                `;
+            }
+
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+
+            try {
+                const level = currentUser.level || 1;
+                const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
+
+                let prompt = `你是一个专业的英语学习助手。用户当前英语水平：Level ${level} (${levelDesc})。请根据用户的英语水平提供合适的帮助。\n\n`;
+
+                if (aiAssistantCurrentImage) {
+                    prompt += `【用户上传了图片】：请分析图片内容，用适合用户水平的英语描述图片，并提供相关英语学习内容。\n`;
+                }
+
+                prompt += `【用户问题】：${message || '请分析上传的文件/图片'}\n\n请用中文和英文混合回答，确保英语部分适合用户当前水平。`;
+
+                const response = await callAI(prompt, `你是一个专业的英语学习助手，擅长根据用户英语水平提供个性化帮助。用户当前水平：Level ${level} (${levelDesc})。请用中文和英文混合回答，英语部分要适合用户水平。`, aiAssistantMessages.slice(-5));
+
+                aiAssistantMessages.push({ role: 'assistant', content: response });
+
+                messages.innerHTML += `
+                    <div class="ai-assistant-message assistant">
+                        <div class="message-content">${response.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+
+                aiAssistantCurrentImage = '';
+                messages.scrollTop = messages.scrollHeight;
+            } catch (e) {
+                console.error('AI Assistant error:', e);
+                messages.innerHTML += `
+                    <div class="ai-assistant-message assistant">
+                        <div class="message-content">⚠️ 抱歉，处理请求时出错了，请重试。</div>
+                    </div>
+                `;
+                messages.scrollTop = messages.scrollHeight;
             }
         }
     </script>
+
+    <div id="ai-assistant-fab" onclick="toggleAiAssistant()">🤖</div>
+    <div id="ai-assistant-panel">
+        <div id="ai-assistant-header">
+            <h3>🤖 AI学习助手</h3>
+            <button id="ai-assistant-close" onclick="toggleAiAssistant()">✕</button>
+        </div>
+        <div id="ai-assistant-messages">
+            <div class="ai-assistant-message assistant">
+                <div class="message-content">
+                    👋 你好！我是你的AI学习助手。我可以帮你：<br>
+                    - 📖 解释单词或语法<br>
+                    - 📝 帮你修改英语作文<br>
+                    - 🖼️ 上传图片进行学习<br>
+                    - 📄 上传文章进行分析<br>
+                    - ⚙️ 调整生成内容的参数<br>
+                    请告诉我你需要什么帮助！
+                </div>
+            </div>
+        </div>
+        <div id="ai-assistant-input-area">
+            <input type="file" id="ai-assistant-file-input" accept="image/*,.txt,.docx"
+                onchange="handleAiAssistantUpload(this)">
+            <button id="ai-assistant-upload-btn" onclick="document.getElementById('ai-assistant-file-input').click()"
+                title="上传文件或图片">📎</button>
+            <input type="text" id="ai-assistant-input" placeholder="输入你的问题..."
+                onkeypress="if(event.key === 'Enter') sendAiAssistantMessage()">
+            <button id="ai-assistant-send-btn" onclick="sendAiAssistantMessage()">➤</button>
+        </div>
+    </div>
 </body>
 
 </html>
