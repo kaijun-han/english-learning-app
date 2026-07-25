@@ -2497,6 +2497,7 @@
             const newCount = 5;
             alert(`今日学习任务：\n- 复习单词：${reviewCount} 个\n- 新学单词：${newCount} 个`);
             document.getElementById('word-level').value = level;
+            updateWordTopicDropdown();
             switchTab('words');
             loadWords();
         }
