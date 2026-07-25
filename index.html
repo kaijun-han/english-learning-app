@@ -1248,8 +1248,11 @@
         }
 
         function updateWordTopicDropdown() {
+            console.log('updateWordTopicDropdown called');
             const levelSelect = document.getElementById('word-level');
+            console.log('levelSelect:', levelSelect);
             const level = parseInt(levelSelect.value) || 1;
+            console.log('current level:', level);
             const LEVEL_TOPICS = {
                 1: ['日常用品', '食物', '动物', '天气', '家庭', '颜色', '数字', '身体部位'],
                 2: ['学校生活', '旅行', '运动', '节日', '职业', '爱好', '衣服', '季节'],
