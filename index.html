@@ -1579,6 +1579,7 @@
 
                 window.currentLoadedWords = loadedWords;
                 window.currentLoadedLevel = level;
+                window.currentLoadedTopic = topicName;
 
                 loadedWords.forEach(w => loadedSet.add(w.word));
 
@@ -1727,6 +1728,7 @@
 
             const wordLevel = window.currentLoadedLevel || level;
             const targetLevel = wordLevel;
+            const topic = window.currentLoadedTopic || '未指定主题';
 
             const levelLengths = {
                 1: { min: 50, max: 70, desc: '非常简单，小学3-4年级水平' },
@@ -1739,22 +1741,25 @@
             const levelConfig = levelLengths[targetLevel] || levelLengths[3];
             const wordsList = window.currentLoadedWords.map(w => w.word).join(', ');
 
-            list.innerHTML = '<div style="text-align: center; padding: 20px;">⏳ 正在根据单词生成课文...</div>';
+            list.innerHTML = '<div style="text-align: center; padding: 20px;">⏳ 正在根据主题「' + topic + '」和单词生成课文...</div>';
 
             try {
                 const messages = [
                     {
                         role: 'system',
-                        content: '你是一位专业的英语老师，请根据用户提供的单词生成一篇符合指定难度的课文。'
+                        content: '你是一位专业的英语老师，请根据用户提供的主题和单词生成一篇符合指定难度的课文。'
                     },
                     {
                         role: 'user',
-                        content: `请使用以下单词生成一篇英语课文：${wordsList}
+                        content: `请根据以下主题和单词生成一篇英语课文：
+
+主题：${topic}
+单词：${wordsList}
 
 要求：
 1. 课文难度：${levelConfig.desc}
 2. 课文长度：${levelConfig.min}-${levelConfig.max}词
-3. 必须自然地使用提供的单词，不要生硬堆砌
+3. 必须自然地使用提供的单词，尽量包含所有单词
 4. 主题要连贯，内容积极向上
 5. 请直接输出课文内容，不要包含其他解释文字`
                     }
@@ -1796,6 +1801,9 @@
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <h3>📖 课文 - Level ${targetLevel}</h3>
                             <button onclick="speak('${passage.replace(/'/g, "\\'")}', false)" style="font-size: 18px; background: none; border: none; cursor: pointer;" title="朗读课文">🔊</button>
+                        </div>
+                        <div style="background: #fef3c7; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 14px; color: #92400e;">
+                            🎯 主题：${topic}
                         </div>
                         <p style="margin: 12px 0; line-height: 1.8; font-size: 16px;">${highlightedPassage}</p>
                         <h4>关键词汇：</h4>
