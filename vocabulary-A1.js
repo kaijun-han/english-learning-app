@@ -1,5 +1,4 @@
-export default 
-[
+const VOCABULARY_A1 = [
   {"word":"a","level":"A1"},
   {"word":"about","level":"A1"},
   {"word":"above","level":"A1"},
@@ -1131,4 +1130,4 @@ export default
   {"word":"yourself","level":"A1"},
   {"word":"youth","level":"A1"},
   {"word":"zero","level":"A1"}
-]；
+];
