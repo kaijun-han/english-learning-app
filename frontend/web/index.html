@@ -1692,7 +1692,10 @@
 
         async function startLearningFromAPI(index) {
             const word = window.currentLoadedWords && window.currentLoadedWords[index];
-            if (!word) return;
+            if (!word) {
+                alert('❌ 错误：无法获取单词数据！\nwindow.currentLoadedWords: ' + JSON.stringify(window.currentLoadedWords));
+                return;
+            }
 
             const modal = document.getElementById('learning-modal');
             const title = document.getElementById('learning-word-title');
@@ -1702,7 +1705,8 @@
             content.innerHTML = `
                 <div style="text-align: center;">
                     <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 12px;">${word.word}</div>
-                    <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;">⏳ 正在获取单词信息...</div>
+                    <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;">⏳ 正在调用AI获取单词信息...</div>
+                    <div style="font-size: 12px; color: #9ca3af;">索引: ${index}, API: ${AI_CONFIG.apiUrl}</div>
                 </div>
             `;
 
@@ -1723,12 +1727,20 @@ Format your response as:
 - Translation: Chinese translation`;
 
                 const aiResponse = await callAI(prompt, 'You are a professional English dictionary assistant, providing accurate word definitions and example sentences.');
+                
+                content.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 14px; color: #22c55e; margin-bottom: 8px;">✅ AI调用成功!</div>
+                        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 12px; text-align: left; padding: 8px; background: #f3f4f6; border-radius: 4px;">AI响应: ${aiResponse.substring(0, 100)}...</div>
+                    </div>
+                `;
+
                 let wordInfo = { phonetic: '', meaning: '', example: '' };
 
                 try {
                     wordInfo = parseWordInfo(aiResponse);
                 } catch (e) {
-                    console.warn('Failed to parse AI response:', aiResponse);
+                    content.innerHTML += `<div style="font-size: 12px; color: #f59e0b;">⚠️ 解析失败: ${e.message}</div>`;
                 }
 
                 if (!wordInfo.meaning) {
@@ -1751,14 +1763,15 @@ Format your response as:
 
                 currentLearningWord = { ...word, ...wordInfo, id: Date.now() };
             } catch (error) {
-                console.error('Failed to get word info:', error);
                 content.innerHTML = `
                     <div style="text-align: center;">
                         <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 12px;">${word.word} <button onclick="speak('${word.word}', true)" style="font-size: 24px; background: none; border: none; cursor: pointer; margin-left: 8px;" title="单词发音">🔊</button></div>
                         <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;">${word.phonetic || ''}</div>
                         <div style="font-size: 24px; color: #1f2937; margin-bottom: 12px;">${word.meaning || '暂无释义'}</div>
                         <div style="font-size: 16px; color: #9ca3af; font-style: italic;">${word.example || '暂无例句'} ${word.example ? `<button onclick="speak('${word.example.replace(/'/g, "\\'").split(' - ')[0]}', false)" style="font-size: 14px; background: none; border: none; cursor: pointer; margin-left: 4px;" title="例句发音">🔊</button>` : ''}</div>
-                        <div style="font-size: 12px; color: #ef4444; margin-top: 12px;">⚠️ 获取详细信息失败: ${error.message || '未知错误'}</div>
+                        <div style="font-size: 12px; color: #ef4444; margin-top: 12px; padding: 8px; background: #fef2f2; border-radius: 4px;">❌ 获取详细信息失败: ${error.message || '未知错误'}</div>
+                        <div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">API: ${AI_CONFIG.apiUrl}</div>
+                        <div style="font-size: 11px; color: #9ca3af;">模型: ${AI_CONFIG.model}</div>
                     </div>
                 `;
                 currentLearningWord = { ...word, id: Date.now() };
