@@ -812,7 +812,12 @@
         </div>
     </div>
 
-    <script src="vocabulary-topics.js"></script>
+    <script src="vocabulary-topics-A1.js"></script>
+    <script src="vocabulary-topics-A2.js"></script>
+    <script src="vocabulary-topics-B1.js"></script>
+    <script src="vocabulary-topics-B2.js"></script>
+    <script src="vocabulary-topics-C1.js"></script>
+    <script src="level-topics-index.js"></script>
     <script src="vocabulary-A1.js"></script>
     <script src="vocabulary-A2.js"></script>
     <script src="vocabulary-B1.js"></script>
@@ -822,8 +827,20 @@
         const AI_CONFIG = {
             apiKey: 'sk-a3a7d3678f8148b2b487c879a034a2d4',
             apiUrl: 'https://api.deepseek.com/v1/chat/completions',
-            model: 'deepseek-chat'
+            model: 'deepseek-v4-flash'
         };
+
+        const LEVEL_TOPICS_MAP = {
+            1: VOCABULARY_TOPICS_A1 || {},
+            2: VOCABULARY_TOPICS_A2 || {},
+            3: VOCABULARY_TOPICS_B1 || {},
+            4: VOCABULARY_TOPICS_B2 || {},
+            5: VOCABULARY_TOPICS_C1 || {}
+        };
+
+        function getLevelTopics(level) {
+            return LEVEL_TOPICS_MAP[level] || VOCABULARY_TOPICS_A1 || {};
+        }
 
         const LEVEL_DESCRIPTIONS = {
             1: '非常简单，小学3-4年级水平，使用最基础的日常词汇（如apple, book, happy），简单句型（主谓宾结构），每篇课文不超过50词',
@@ -1514,12 +1531,13 @@
                 }
 
                 let filteredWords = availableWords;
+                const levelTopics = getLevelTopics(level);
 
                 if (!topic || topic === '') {
-                    const topicNames = Object.keys(VOCABULARY_TOPICS);
+                    const topicNames = Object.keys(levelTopics);
                     const randomTopic = topicNames[Math.floor(Math.random() * topicNames.length)];
                     topicName = '🎲 ' + randomTopic;
-                    const topicWords = VOCABULARY_TOPICS[randomTopic] || [];
+                    const topicWords = levelTopics[randomTopic] || [];
                     const topicSet = new Set(topicWords);
                     filteredWords = availableWords.filter(w => topicSet.has(w.word));
 
@@ -1530,7 +1548,7 @@
                     }
                 } else if (topic !== '剩余单词') {
                     topicName = topic;
-                    const topicWords = VOCABULARY_TOPICS[topic] || [];
+                    const topicWords = levelTopics[topic] || [];
                     const topicSet = new Set(topicWords);
                     filteredWords = availableWords.filter(w => topicSet.has(w.word));
 
@@ -1542,7 +1560,7 @@
                 } else {
                     topicName = '📋 剩余单词';
                     const allTopicWords = new Set();
-                    Object.values(VOCABULARY_TOPICS).forEach(words => words.forEach(w => allTopicWords.add(w)));
+                    Object.values(levelTopics).forEach(words => words.forEach(w => allTopicWords.add(w)));
                     filteredWords = availableWords.filter(w => !allTopicWords.has(w.word));
                 }
 
