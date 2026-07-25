@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>AI英语学习智能体 v2.2</title>
+    <title>AI英语学习智能体 v2.3</title>
     <style>
         * {
             margin: 0;
@@ -527,13 +527,32 @@
                     <h2>📚 单词学习</h2>
                     <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
                         <select id="word-level" class="input" style="width: auto;">
-                            <option value="1">Level 1 - 入门 (小学3-4年级/CEFR A1/约500词)</option>
-                            <option value="2">Level 2 - 基础 (小学5-6年级/CEFR A2/约500词)</option>
-                            <option value="3">Level 3 - 进阶 (初中1-2年级/CEFR B1/约1000词)</option>
-                            <option value="4">Level 4 - 高级 (初中3-高中1年级/CEFR B2/约700词)</option>
-                            <option value="5">Level 5 - 精通 (高中及以上/CEFR C1/约800词)</option>
+                            <option value="1">Level 1 - 入门 (小学3-4年级/CEFR A1)</option>
+                            <option value="2">Level 2 - 基础 (小学5-6年级/CEFR A2)</option>
+                            <option value="3">Level 3 - 进阶 (初中1-2年级/CEFR B1)</option>
+                            <option value="4">Level 4 - 高级 (初中3-高中1年级/CEFR B2)</option>
+                            <option value="5">Level 5 - 精通 (高中及以上/CEFR C1)</option>
                         </select>
+                        <select id="word-topic" class="input" style="width: auto;">
+                            <option value="">🎲 随机主题</option>
+                            <option value="日常交流">🗣️ 日常交流</option>
+                            <option value="时间日期">📅 时间日期</option>
+                            <option value="地点方位">📍 地点方位</option>
+                            <option value="人物关系">👥 人物关系</option>
+                            <option value="情感表达">😊 情感表达</option>
+                            <option value="饮食健康">🍎 饮食健康</option>
+                            <option value="学习教育">📚 学习教育</option>
+                            <option value="工作职场">💼 工作职场</option>
+                            <option value="剩余单词">📋 剩余单词</option>
+                        </select>
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <span style="font-size: 14px;">每次加载:</span>
+                            <input type="number" id="word-count" min="1" max="100" value="12"
+                                style="width: 60px; padding: 4px; border: 1px solid #ddd; border-radius: 4px;">
+                            <span style="font-size: 14px;">个</span>
+                        </div>
                         <button class="btn btn-primary" onclick="loadWords()">加载单词</button>
+                        <button class="btn btn-secondary" onclick="resetLoadedWords()">重置</button>
                     </div>
                     <div id="level-info-panel"
                         style="background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none;">
@@ -680,8 +699,10 @@
                     <span class="star" onclick="selectRating(4)">★</span>
                     <span class="star" onclick="selectRating(5)">★</span>
                 </div>
+                <button class="btn btn-outline" onclick="addToVocab()" style="margin-top: 16px; width: 100%;">📖
+                    添加到生词本</button>
                 <button class="btn btn-primary" onclick="submitRating()"
-                    style="margin-top: 16px; width: 100%;">提交评分</button>
+                    style="margin-top: 8px; width: 100%;">提交评分</button>
             </div>
         </div>
 
@@ -713,7 +734,12 @@
             <div class="card">
                 <h2>✨ AI智能单词生成</h2>
                 <p style="color: #6b7280; margin-bottom: 16px;">根据您的英语水平，AI自动生成适合的单词和记忆技巧</p>
-                <button class="btn btn-primary" onclick="generateAIWords()">🎲 生成单词</button>
+                <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <select id="ai-words-topic" class="input" style="flex: 1;">
+                        <option value="random">🎲 随机主题</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="generateAIWords()">🎲 生成单词</button>
+                </div>
                 <div id="ai-words-loading" style="display: none; text-align: center; margin-top: 20px;">
                     <div style="font-size: 32px;">⏳</div>
                     <p>AI正在生成单词...</p>
@@ -786,7 +812,12 @@
         </div>
     </div>
 
-    <script src="vocabulary-data.js"></script>
+    <script src="vocabulary-topics.js"></script>
+    <script src="vocabulary-A1.js"></script>
+    <script src="vocabulary-A2.js"></script>
+    <script src="vocabulary-B1.js"></script>
+    <script src="vocabulary-B2.js"></script>
+    <script src="vocabulary-C1.js"></script>
     <script>
         const AI_CONFIG = {
             apiKey: 'sk-a3a7d3678f8148b2b487c879a034a2d4',
@@ -991,7 +1022,7 @@
         let lastWordTopic = '';
         let currentLesson = null;
 
-        async function init() {
+        function init() {
             const users = JSON.parse(localStorage.getItem('english-learning-users') || '[]');
             if (users.length === 0) {
                 const defaultUser = {
@@ -1011,7 +1042,6 @@
             }
 
             loadAIWordCache();
-            await loadVocabularyData();
             const savedUser = localStorage.getItem('english-learning-user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
@@ -1054,7 +1084,6 @@
                 if (lessonLevelSelect) {
                     lessonLevelSelect.value = currentUser.level || 1;
                 }
-                await loadVocabularyData();
                 loadWords();
                 loadLessons();
             } else {
@@ -1201,6 +1230,29 @@
             if (tab === 'ai-lessons') loadSavedLessons();
             if (tab === 'wrong-answers') loadWrongAnswers();
             if (tab === 'ai-chat') startChatWithTopic();
+            if (tab === 'ai-words') updateAIWordsTopicDropdown();
+        }
+
+        function updateAIWordsTopicDropdown() {
+            const level = currentUser.level || 1;
+            const LEVEL_TOPICS = {
+                1: ['日常用品', '食物', '动物', '天气', '家庭', '颜色', '数字', '身体部位'],
+                2: ['学校生活', '旅行', '运动', '节日', '职业', '爱好', '衣服', '季节'],
+                3: ['科技', '文化', '历史', '地理', '环境', '健康', '娱乐', '社交'],
+                4: ['商业', '教育', '政治', '经济', '科学', '艺术', '媒体', '国际关系'],
+                5: ['哲学', '心理学', '社会学', '法律', '医学', '工程', '文学', '学术研究']
+            };
+            const topics = LEVEL_TOPICS[level] || LEVEL_TOPICS[1];
+            const topicSelect = document.getElementById('ai-words-topic');
+            if (topicSelect) {
+                topicSelect.innerHTML = '<option value="random">🎲 随机主题</option>';
+                topics.forEach(t => {
+                    const option = document.createElement('option');
+                    option.value = t;
+                    option.textContent = t;
+                    topicSelect.appendChild(option);
+                });
+            }
         }
 
         function loadOverview() {
@@ -1393,63 +1445,342 @@
             }
         }
 
+        function resetLoadedWords() {
+            window.loadedWordsSets = {};
+            window.loadCount = 0;
+            window.lastLoadCount = 0;
+            alert('已重置加载记录，可以重新开始学习！');
+            const panel = document.getElementById('level-info-panel');
+            if (panel) {
+                panel.style.display = 'none';
+            }
+            const list = document.getElementById('words-list');
+            if (list) {
+                list.innerHTML = '';
+            }
+        }
+
         function loadWords() {
+            const LEVEL_INFO = {
+                1: { schoolLevel: '小学3-4年级', cefr: 'A1', name: '入门级', vocab: VOCABULARY_A1 },
+                2: { schoolLevel: '小学5-6年级', cefr: 'A2', name: '基础级', vocab: VOCABULARY_A2 },
+                3: { schoolLevel: '初中1-2年级', cefr: 'B1', name: '进阶级', vocab: VOCABULARY_B1 },
+                4: { schoolLevel: '初中3-高中1年级', cefr: 'B2', name: '高级', vocab: VOCABULARY_B2 },
+                5: { schoolLevel: '高中+', cefr: 'C1', name: '精通级', vocab: VOCABULARY_C1 }
+            };
+
+            function shuffleArray(array) {
+                const result = [...array];
+                for (let i = result.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [result[i], result[j]] = [result[j], result[i]];
+                }
+                return result;
+            }
+
             const level = parseInt(document.getElementById('word-level').value);
-            const levelInfo = VOCABULARY_LEVELS[level];
+            const levelInfo = LEVEL_INFO[level];
+            const topic = document.getElementById('word-topic').value;
+            const count = parseInt(document.getElementById('word-count').value) || 12;
+
+            window.loadedWordsSets = window.loadedWordsSets || {};
+            if (!window.loadedWordsSets[level]) {
+                window.loadedWordsSets[level] = new Set();
+            }
+            const loadedSet = window.loadedWordsSets[level];
 
             const panel = document.getElementById('level-info-panel');
             const content = document.getElementById('level-info-content');
             panel.style.display = 'block';
-            content.innerHTML = `
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
-                    <div><strong>年级对应：</strong>${levelInfo.schoolLevel}</div>
-                    <div><strong>CEFR等级：</strong>CEFR ${levelInfo.cefr}</div>
-                    <div><strong>词汇总量：</strong>约${levelInfo.wordCount}词</div>
-                    <div><strong>内置词汇：</strong>${VOCABULARY_BY_LEVEL[level].length}个</div>
-                </div>
-                <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
-                    💡 提示：内置词汇学习完后，可通过「✨ AI单词」功能生成更多该等级词汇
-                </div>
-            `;
-
-            const builtInWords = VOCABULARY_BY_LEVEL[level].map(w => ({ ...w, id: Date.now() + Math.random(), level, addedByAI: false }));
-            const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]').filter(w => w.level === level);
-            const allWords = [...builtInWords, ...aiWords];
 
             const list = document.getElementById('words-list');
-            if (allWords.length === 0) {
+            list.innerHTML = '<div style="text-align: center; padding: 20px;">⏳ 正在加载单词...</div>';
+
+            let loadedWords = [];
+            let topicName = '🎲 随机主题';
+
+            try {
+                const allWords = levelInfo.vocab || [];
+
+                if (allWords.length === 0) {
+                    throw new Error('该级别词汇数据为空');
+                }
+
+                let availableWords = allWords.filter(w => !loadedSet.has(w.word));
+
+                if (availableWords.length === 0) {
+                    list.innerHTML = '<div style="text-align: center; padding: 20px; color: #f59e0b;">⚠️ 本级别单词已全部加载完毕，请点击「重置」按钮重新开始</div>';
+                    return;
+                }
+
+                let filteredWords = availableWords;
+
+                if (!topic || topic === '') {
+                    const topicNames = Object.keys(VOCABULARY_TOPICS);
+                    const randomTopic = topicNames[Math.floor(Math.random() * topicNames.length)];
+                    topicName = '🎲 ' + randomTopic;
+                    const topicWords = VOCABULARY_TOPICS[randomTopic] || [];
+                    const topicSet = new Set(topicWords);
+                    filteredWords = availableWords.filter(w => topicSet.has(w.word));
+
+                    if (filteredWords.length === 0) {
+                        list.innerHTML = '<div style="text-align: center; padding: 20px; color: #f59e0b;">⚠️ 随机选择的主题单词已全部加载完毕，将自动加载剩余单词</div>';
+                        filteredWords = availableWords;
+                        topicName = randomTopic + ' (已完成，自动切换至剩余单词)';
+                    }
+                } else if (topic !== '剩余单词') {
+                    topicName = topic;
+                    const topicWords = VOCABULARY_TOPICS[topic] || [];
+                    const topicSet = new Set(topicWords);
+                    filteredWords = availableWords.filter(w => topicSet.has(w.word));
+
+                    if (filteredWords.length === 0) {
+                        list.innerHTML = '<div style="text-align: center; padding: 20px; color: #f59e0b;">⚠️ 当前主题单词已全部加载完毕，将自动加载剩余单词</div>';
+                        filteredWords = availableWords;
+                        topicName = topic + ' (已完成，自动切换至剩余单词)';
+                    }
+                } else {
+                    topicName = '📋 剩余单词';
+                    const allTopicWords = new Set();
+                    Object.values(VOCABULARY_TOPICS).forEach(words => words.forEach(w => allTopicWords.add(w)));
+                    filteredWords = availableWords.filter(w => !allTopicWords.has(w.word));
+                }
+
+                const shuffled = shuffleArray(filteredWords);
+                loadedWords = shuffled.slice(0, count);
+
+                window.currentLoadedWords = loadedWords;
+                window.currentLoadedLevel = level;
+
+                loadedWords.forEach(w => loadedSet.add(w.word));
+
+                window.loadCount = (window.loadCount || 0) + 1;
+                const totalLoadedInSession = loadedSet.size;
+
+                const levelWordIds = allWords.map(w => w.word);
+                const levelLearnedCount = currentUser?.wordProgress
+                    ? levelWordIds.filter(wordId => currentUser.wordProgress[wordId]).length
+                    : 0;
+
+                content.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                        <div><strong>年级对应：</strong>${levelInfo.schoolLevel}</div>
+                        <div><strong>CEFR等级：</strong>CEFR ${levelInfo.cefr}</div>
+                        <div><strong>当前主题：</strong>${topicName}</div>
+                        <div><strong>本次加载：</strong>${loadedWords.length}个 / 总计 ${allWords.length}个</div>
+                        <div><strong>已加载次数：</strong>第${window.loadCount}次</div>
+                        <div><strong>本会话已加载：</strong>${totalLoadedInSession}个 (去重)</div>
+                        <div><strong>本级别已学：</strong>${levelLearnedCount}个 / ${allWords.length}个</div>
+                        <div><strong>本级别掌握：</strong>${currentUser?.wordProgress
+                        ? levelWordIds.filter(wordId => currentUser.wordProgress[wordId]?.status === 'mastered').length
+                        : 0}个</div>
+                        <div><strong>累计已学：</strong>${currentUser?.totalWordsLearned || 0}个</div>
+                        <div><strong>累计掌握：</strong>${currentUser?.progress?.mastered || 0}个</div>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
+                        💡 提示：点击🔊按钮听发音，点击「开始学习」获取单词详细释义
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load vocabulary:', error);
+                list.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">❌ 加载单词失败: ' + error.message + '</div>';
+
+                content.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                        <div><strong>年级对应：</strong>${levelInfo.schoolLevel}</div>
+                        <div><strong>CEFR等级：</strong>CEFR ${levelInfo.cefr}</div>
+                        <div><strong>当前主题：</strong>📚 默认主题</div>
+                        <div><strong>加载单词：</strong>0个</div>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 12px; color: #ef4444;">
+                        ❌ 错误: ${error.message}
+                    </div>
+                `;
+                return;
+            }
+
+            if (loadedWords.length === 0) {
                 list.innerHTML = '<p style="color: #9ca3af; text-align: center;">该级别暂无单词，请选择其他级别</p>';
                 return;
             }
-            list.innerHTML = allWords.map(w => `
+
+            list.innerHTML = loadedWords.map((w, index) => `
                 <div class="word-card">
                     <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="background: #667eea; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">${index + 1}</div>
                         <div class="word">${w.word}</div>
                         <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
-                        ${w.addedByAI ? '<span style="padding: 2px 6px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px;">AI</span>' : ''}
                     </div>
-                    <div class="phonetic">${w.phonetic}</div>
-                    <div class="meaning">${w.meaning}</div>
-                    <div class="example">${w.example}</div>
-                    <button class="btn btn-success" onclick="startLearning(${w.id})" style="margin-top: 12px;">开始学习</button>
+                    <div class="phonetic"></div>
+                    <div class="meaning"></div>
+                    <div class="example"></div>
+                    <button class="btn btn-success" onclick="startLearningFromAPI(${index})" style="margin-top: 12px;">开始学习</button>
                 </div>
             `).join('');
+
+            window.currentLoadedWords = loadedWords;
         }
 
-        function loadLessons() {
-            const level = parseInt(document.getElementById('lesson-level').value);
-            const filtered = lessons.filter(l => l.level <= level);
-            const list = document.getElementById('lessons-list');
-            list.innerHTML = filtered.map(l => `
-                <div class="word-card">
-                    <h3>${l.title}</h3>
-                    <p style="margin: 12px 0; line-height: 1.6;">${l.content}</p>
-                    <h4>关键词汇：</h4>
-                    <div style="margin: 8px 0;">
-                        ${l.words?.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; margin-right: 8px; cursor: pointer;" onclick="speak('${w.word}', true)" title="点击发音">${w.word} - ${w.meaning} 🔊</span>`).join('') || ''}
-                    </div>
+        async function startLearningFromAPI(index) {
+            const word = window.currentLoadedWords && window.currentLoadedWords[index];
+            if (!word) return;
+
+            const modal = document.getElementById('learning-modal');
+            const title = document.getElementById('learning-word-title');
+            const content = document.getElementById('learning-word-content');
+
+            title.textContent = `单词学习 - ${word.word}`;
+            content.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 12px;">${word.word}</div>
+                    <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;">⏳ 正在获取单词信息...</div>
                 </div>
-            `).join('');
+            `;
+
+            currentRating = 0;
+            document.querySelectorAll('.star').forEach(s => s.classList.remove('selected'));
+            modal.classList.remove('hidden');
+
+            try {
+                const prompt = `请提供单词 "${word.word}" 的详细信息，包括：
+1. 音标（英式和美式）
+2. 中文释义（常用含义）
+3. 一个简单的例句（带中文翻译）
+
+请用JSON格式返回，格式如下：
+{"phonetic": "/音标/", "meaning": "中文释义", "example": "例句 - 中文翻译"}`;
+
+                const aiResponse = await callAI(prompt, '你是一个专业的英语词典助手，提供准确的单词释义和例句。');
+                let wordInfo = { phonetic: '', meaning: '', example: '' };
+
+                try {
+                    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        wordInfo = JSON.parse(jsonMatch[0]);
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse AI response as JSON:', aiResponse);
+                }
+
+                const exampleText = wordInfo.example ? wordInfo.example.split(' - ')[0] || wordInfo.example.split('-')[0] || wordInfo.example : '';
+
+                content.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 12px;">${word.word} <button onclick="speak('${word.word}', true)" style="font-size: 24px; background: none; border: none; cursor: pointer; margin-left: 8px;" title="单词发音">🔊</button></div>
+                        <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;">${wordInfo.phonetic || ''}</div>
+                        <div style="font-size: 24px; color: #1f2937; margin-bottom: 12px;">${wordInfo.meaning || ''}</div>
+                        <div style="font-size: 16px; color: #9ca3af; font-style: italic;">${wordInfo.example || ''} ${exampleText ? `<button onclick="speak('${exampleText.replace(/'/g, "\\'")}', false)" style="font-size: 14px; background: none; border: none; cursor: pointer; margin-left: 4px;" title="例句发音">🔊</button>` : ''}</div>
+                    </div>
+                `;
+
+                currentLearningWord = { ...word, ...wordInfo, id: Date.now() };
+            } catch (error) {
+                console.error('Failed to get word info:', error);
+                content.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 12px;">${word.word}</div>
+                        <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;"></div>
+                        <div style="font-size: 24px; color: #1f2937; margin-bottom: 12px;">暂无释义</div>
+                        <div style="font-size: 16px; color: #9ca3af; font-style: italic;">暂无例句</div>
+                    </div>
+                `;
+                currentLearningWord = { ...word, id: Date.now() };
+            }
+        }
+
+        async function loadLessons() {
+            const level = parseInt(document.getElementById('lesson-level').value);
+            const list = document.getElementById('lessons-list');
+
+            if (!window.currentLoadedWords || window.currentLoadedWords.length === 0) {
+                list.innerHTML = '<div style="text-align: center; padding: 20px; color: #f59e0b;">⚠️ 请先在「单词学习」页面加载单词，然后再生成课文</div>';
+                return;
+            }
+
+            const wordLevel = window.currentLoadedLevel || level;
+            const targetLevel = wordLevel;
+
+            const levelLengths = {
+                1: { min: 50, max: 70, desc: '非常简单，小学3-4年级水平' },
+                2: { min: 80, max: 100, desc: '简单，小学5-6年级水平' },
+                3: { min: 120, max: 150, desc: '中等，初中1-2年级水平' },
+                4: { min: 180, max: 220, desc: '较难，初中3年级-高中1年级水平' },
+                5: { min: 250, max: 300, desc: '困难，高中及以上水平' }
+            };
+
+            const levelConfig = levelLengths[targetLevel] || levelLengths[3];
+            const wordsList = window.currentLoadedWords.map(w => w.word).join(', ');
+
+            list.innerHTML = '<div style="text-align: center; padding: 20px;">⏳ 正在根据单词生成课文...</div>';
+
+            try {
+                const messages = [
+                    {
+                        role: 'system',
+                        content: '你是一位专业的英语老师，请根据用户提供的单词生成一篇符合指定难度的课文。'
+                    },
+                    {
+                        role: 'user',
+                        content: `请使用以下单词生成一篇英语课文：${wordsList}
+
+要求：
+1. 课文难度：${levelConfig.desc}
+2. 课文长度：${levelConfig.min}-${levelConfig.max}词
+3. 必须自然地使用提供的单词，不要生硬堆砌
+4. 主题要连贯，内容积极向上
+5. 请直接输出课文内容，不要包含其他解释文字`
+                    }
+                ];
+
+                const response = await fetch(AI_CONFIG.apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AI_CONFIG.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: AI_CONFIG.model,
+                        messages: messages,
+                        max_tokens: 1000,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const passage = data.choices[0].message.content.trim();
+
+                const wordSet = new Set(window.currentLoadedWords.map(w => w.word.toLowerCase()));
+                const words = passage.split(/\s+/).filter(w => wordSet.has(w.toLowerCase()) || wordSet.has(w.toLowerCase().replace(/[.,!?;]/g, '')));
+                const uniqueWords = [...new Set(words)];
+
+                let highlightedPassage = passage;
+                uniqueWords.forEach(w => {
+                    const regex = new RegExp(`\\b${w}\\b`, 'gi');
+                    highlightedPassage = highlightedPassage.replace(regex, `<span style="background-color: #fef08a; padding: 0 4px; border-radius: 2px;" title="点击发音" onclick="speak('${w}', true)">${w} 🔊</span>`);
+                });
+
+                list.innerHTML = `
+                    <div class="word-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3>📖 课文 - Level ${targetLevel}</h3>
+                            <button onclick="speak('${passage.replace(/'/g, "\\'")}', false)" style="font-size: 18px; background: none; border: none; cursor: pointer;" title="朗读课文">🔊</button>
+                        </div>
+                        <p style="margin: 12px 0; line-height: 1.8; font-size: 16px;">${highlightedPassage}</p>
+                        <h4>关键词汇：</h4>
+                        <div style="margin: 8px 0; display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${uniqueWords.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; cursor: pointer;" onclick="speak('${w}', true)" title="点击发音">${w} 🔊</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Failed to generate passage:', error);
+                list.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">❌ 生成课文失败: ' + error.message + '</div>';
+            }
         }
 
         function startLearning(wordId) {
@@ -1477,11 +1808,14 @@
             if (!word) return;
             currentLearningWord = word;
 
-            document.getElementById('learning-word-title').innerHTML = `${word.word} <button class="speak-btn" onclick="speak('${word.word}')" title="发音">🔊</button>`;
+            const exampleText2 = word.example ? word.example.split(' - ')[0] || word.example.split('-')[0] || word.example : '';
+            document.getElementById('learning-word-title').innerHTML = `${word.word} <button class="speak-btn" onclick="speak('${word.word}', true)" title="发音">🔊</button>`;
             document.getElementById('learning-word-content').innerHTML = `
-                <div class="phonetic">${word.phonetic}</div>
-                <div class="meaning">${word.meaning}</div>
-                <div class="example">${word.example}</div>
+                <div style="text-align: center;">
+                    <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;">${word.phonetic || ''}</div>
+                    <div style="font-size: 24px; color: #1f2937; margin-bottom: 12px;">${word.meaning || ''}</div>
+                    <div style="font-size: 16px; color: #9ca3af; font-style: italic;">${word.example || ''} ${exampleText2 ? `<button onclick="speak('${exampleText2.replace(/'/g, "\\'")}', false)" style="font-size: 14px; background: none; border: none; cursor: pointer; margin-left: 4px;" title="例句发音">🔊</button>` : ''}</div>
+                </div>
             `;
             currentRating = 0;
             document.querySelectorAll('.star').forEach(s => s.classList.remove('selected'));
@@ -1493,6 +1827,42 @@
             document.querySelectorAll('.star').forEach((s, i) => {
                 s.classList.toggle('selected', i < rating);
             });
+        }
+
+        function addToVocab() {
+            if (!currentLearningWord) {
+                showToast('⚠️ 没有正在学习的单词');
+                return;
+            }
+
+            const vocabKey = getUserKey('english-learning-ai-words');
+            const existingVocab = JSON.parse(localStorage.getItem(vocabKey) || '[]');
+            const wordExists = existingVocab.some(w => w.word === currentLearningWord.word);
+
+            if (wordExists) {
+                showToast('⚠️ 该单词已在生词本中');
+                return;
+            }
+
+            const newWord = {
+                id: Date.now(),
+                word: currentLearningWord.word,
+                phonetic: currentLearningWord.phonetic || '',
+                meaning: currentLearningWord.meaning || '',
+                example: currentLearningWord.example || '',
+                exampleTranslation: currentLearningWord.exampleTranslation || '',
+                status: 'new',
+                repetitions: 0,
+                interval: 1,
+                easeFactor: 2.5,
+                nextReviewDate: new Date().toISOString(),
+                addedDate: new Date().toISOString()
+            };
+
+            existingVocab.push(newWord);
+            localStorage.setItem(vocabKey, JSON.stringify(existingVocab));
+
+            showToast('✅ 已添加到生词本');
         }
 
         function submitRating() {
@@ -2128,9 +2498,64 @@
         async function generateAIWords() {
             const level = currentUser.level || 1;
             const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
-            const levelInfo = VOCABULARY_LEVELS[level];
             const loadingDiv = document.getElementById('ai-words-loading');
             const resultDiv = document.getElementById('ai-words-result');
+
+            const VOCABULARY_BY_LEVEL = {
+                1: VOCABULARY_A1 || [],
+                2: VOCABULARY_A2 || [],
+                3: VOCABULARY_B1 || [],
+                4: VOCABULARY_B2 || [],
+                5: VOCABULARY_C1 || []
+            };
+
+            const VOCABULARY_LEVELS = {
+                1: { wordCount: VOCABULARY_A1.length || 500, name: '入门级' },
+                2: { wordCount: VOCABULARY_A2.length || 500, name: '基础级' },
+                3: { wordCount: VOCABULARY_B1.length || 700, name: '进阶级' },
+                4: { wordCount: VOCABULARY_B2.length || 700, name: '高级' },
+                5: { wordCount: VOCABULARY_C1.length || 1200, name: '精通级' }
+            };
+
+            const levelInfo = VOCABULARY_LEVELS[level];
+
+            const TOPIC_KEYWORDS = {
+                '日常用品': ['book', 'pen', 'desk', 'chair', 'bed', 'door', 'window', 'light', 'table', 'cup', 'glass', 'phone', 'bag', 'box', 'key', 'clock', 'watch', 'mirror', 'sofa', 'pillow', 'blanket', 'towel', 'soap', 'kitchen', 'bedroom', 'living', 'room', 'floor', 'wall', 'roof'],
+                '食物': ['food', 'water', 'milk', 'bread', 'rice', 'meat', 'beef', 'pork', 'chicken', 'fish', 'egg', 'fruit', 'apple', 'banana', 'orange', 'vegetable', 'carrot', 'potato', 'tomato', 'cake', 'cookie', 'tea', 'coffee', 'juice', 'meal', 'breakfast', 'lunch', 'dinner', 'eat', 'drink', 'hungry'],
+                '动物': ['dog', 'cat', 'bird', 'fish', 'horse', 'cow', 'pig', 'sheep', 'rabbit', 'snake', 'turtle', 'frog', 'butterfly', 'bee', 'ant', 'tiger', 'lion', 'bear', 'elephant', 'giraffe', 'zebra', 'monkey', 'mouse', 'rat', 'deer', 'fox', 'wolf', 'owl', 'eagle', 'penguin'],
+                '天气': ['sun', 'rain', 'snow', 'wind', 'cloud', 'sky', 'weather', 'hot', 'cold', 'warm', 'cool', 'dry', 'wet', 'storm', 'thunder', 'lightning', 'rainbow', 'fog', 'temperature', 'climate', 'spring', 'summer', 'autumn', 'winter', 'day', 'night', 'morning', 'afternoon', 'evening'],
+                '家庭': ['father', 'mother', 'sister', 'brother', 'son', 'daughter', 'child', 'baby', 'grandfather', 'grandmother', 'aunt', 'uncle', 'cousin', 'family', 'parent', 'relative', 'married', 'wife', 'husband', 'love', 'home', 'house', 'together', 'alone'],
+                '颜色': ['red', 'blue', 'green', 'yellow', 'black', 'white', 'brown', 'pink', 'purple', 'orange', 'gray', 'grey', 'gold', 'silver', 'color', 'bright', 'dark', 'light'],
+                '身体部位': ['head', 'face', 'eye', 'nose', 'mouth', 'teeth', 'tooth', 'tongue', 'ear', 'hair', 'neck', 'shoulder', 'arm', 'hand', 'finger', 'thumb', 'leg', 'knee', 'foot', 'feet', 'toe', 'body', 'skin', 'bone', 'heart', 'brain', 'stomach', 'back', 'chest'],
+                '衣服': ['shirt', 'pants', 'shoes', 'socks', 'hat', 'cap', 'coat', 'jacket', 'dress', 'skirt', 'blouse', 'sweater', 'tie', 'scarf', 'gloves', 'boots', 'sandals', 'jeans', 'shorts'],
+                '学校生活': ['school', 'class', 'student', 'teacher', 'lesson', 'book', 'exam', 'test', 'study', 'learn', 'homework', 'library', 'classroom', 'desk', 'pen', 'pencil', 'notebook', 'paper', 'eraser', 'ruler', 'bag', 'grade', 'mark', 'report', 'course', 'subject', 'math', 'science', 'history'],
+                '旅行': ['travel', 'trip', 'journey', 'vacation', 'holiday', 'tour', 'train', 'bus', 'plane', 'car', 'boat', 'road', 'city', 'town', 'country', 'hotel', 'map', 'ticket', 'passport', 'luggage', 'suitcase', 'destination', 'departure', 'arrival', 'station', 'airport'],
+                '运动': ['sport', 'game', 'football', 'basketball', 'tennis', 'swim', 'running', 'jump', 'play', 'team', 'player', 'score', 'win', 'lose', 'match', 'competition', 'coach', 'referee', 'fan', 'gym', 'stadium', 'court', 'field', 'ball', 'racket'],
+                '节日': ['festival', 'holiday', 'Christmas', 'New Year', 'birthday', 'anniversary', 'celebration', 'party', 'gift', 'cake', 'music', 'dance', 'song', 'firework', 'decoration', 'candle'],
+                '职业': ['job', 'work', 'office', 'company', 'manager', 'employee', 'boss', 'worker', 'doctor', 'nurse', 'surgeon', 'dentist', 'teacher', 'professor', 'police', 'fireman', 'farmer', 'driver', 'pilot', 'engineer', 'architect', 'designer', 'artist', 'writer', 'journalist'],
+                '爱好': ['hobby', 'read', 'write', 'draw', 'paint', 'music', 'sing', 'dance', 'film', 'movie', 'game', 'computer', 'photography', 'camera', 'travel', 'hiking', 'camping', 'fishing', 'cooking', 'baking', 'gardening'],
+                '季节': ['spring', 'summer', 'autumn', 'winter', 'season', 'month', 'year', 'day', 'week', 'time', 'date', 'hour', 'minute', 'today', 'yesterday', 'tomorrow', 'now', 'then', 'soon', 'later', 'early', 'late'],
+                '自然': ['nature', 'tree', 'flower', 'plant', 'garden', 'park', 'forest', 'river', 'lake', 'sea', 'ocean', 'beach', 'mountain', 'hill', 'valley', 'plain', 'desert', 'island', 'waterfall', 'cave', 'rock', 'sand', 'soil', 'grass', 'leaf', 'branch', 'root', 'sun', 'moon', 'star'],
+                '科技': ['computer', 'internet', 'phone', 'mobile', 'app', 'software', 'hardware', 'digital', 'online', 'network', 'technology', 'device', 'laptop', 'tablet', 'smartphone', 'screen', 'keyboard', 'mouse', 'camera', 'video', 'audio', 'email', 'website', 'search', 'program', 'code', 'developer'],
+                '文化': ['culture', 'art', 'music', 'theater', 'museum', 'gallery', 'history', 'tradition', 'custom', 'festival', 'celebration', 'dance', 'painting', 'sculpture', 'literature', 'book', 'novel', 'poem', 'story', 'legend', 'religion', 'language', 'architecture'],
+                '环境': ['environment', 'pollution', 'climate', 'weather', 'earth', 'water', 'air', 'land', 'nature', 'protect', 'green', 'recycle', 'waste', 'energy', 'power', 'electricity', 'solar', 'wind', 'global', 'warming', 'wildlife', 'biodiversity', 'conservation'],
+                '健康': ['health', 'medicine', 'doctor', 'hospital', 'clinic', 'sick', 'ill', 'disease', 'treatment', 'therapy', 'drug', 'pill', 'injection', 'vaccine', 'operation', 'surgery', 'emergency', 'ambulance', 'nurse', 'patient', 'symptom', 'pain', 'fever', 'exercise', 'fitness', 'diet', 'nutrition', 'sleep', 'stress'],
+                '娱乐': ['movie', 'film', 'music', 'show', 'concert', 'theater', 'game', 'sport', 'book', 'story', 'news', 'media', 'television', 'tv', 'radio', 'broadcast', 'channel', 'program', 'series', 'documentary', 'comedy', 'drama', 'actor', 'actress', 'singer', 'musician', 'band', 'album', 'song'],
+                '社交': ['friend', 'friendship', 'meet', 'talk', 'conversation', 'communicate', 'social', 'network', 'community', 'group', 'team', 'organization', 'party', 'gathering', 'event', 'celebration', 'relation', 'relationship', 'bond', 'connection', 'contact', 'acquaintance', 'colleague', 'neighbor', 'support', 'help', 'share', 'give', 'take', 'receive', 'invite', 'welcome'],
+                '教育': ['education', 'school', 'university', 'college', 'student', 'teacher', 'professor', 'study', 'learn', 'exam', 'test', 'course', 'degree', 'diploma', 'certificate', 'knowledge', 'skill', 'ability', 'talent', 'intelligence', 'research', 'thesis', 'scholar', 'academic', 'graduate', 'campus', 'library', 'laboratory', 'lecture', 'seminar'],
+                '工作': ['work', 'job', 'career', 'profession', 'office', 'business', 'company', 'corporation', 'firm', 'manager', 'employee', 'employer', 'boss', 'leader', 'director', 'executive', 'staff', 'team', 'project', 'task', 'assignment', 'meeting', 'conference', 'presentation', 'report', 'document', 'email', 'collaboration', 'deadline', 'schedule', 'progress', 'achievement', 'goal', 'target', 'strategy', 'plan', 'idea', 'innovation', 'problem', 'solution', 'challenge', 'opportunity', 'success', 'failure', 'risk', 'salary', 'wage', 'bonus'],
+                '商业': ['business', 'company', 'market', 'economy', 'finance', 'money', 'investment', 'investor', 'stock', 'share', 'bond', 'fund', 'profit', 'loss', 'revenue', 'income', 'expense', 'cost', 'sale', 'buy', 'sell', 'trade', 'commerce', 'industry', 'manufacturing', 'production', 'service', 'consumer', 'customer', 'client', 'supplier', 'partner', 'contract', 'agreement', 'deal', 'negotiation', 'price', 'value', 'quality', 'brand', 'product', 'goods', 'retail', 'wholesale', 'advertising', 'marketing', 'promotion'],
+                '政治': ['politics', 'government', 'state', 'country', 'nation', 'law', 'policy', 'leader', 'politician', 'election', 'vote', 'voter', 'power', 'authority', 'democracy', 'constitution', 'parliament', 'congress', 'senate', 'assembly', 'ministry', 'department', 'agency', 'official', 'diplomacy', 'foreign', 'treaty', 'peace', 'conflict', 'security', 'defense', 'military', 'army', 'navy', 'police', 'justice', 'court', 'judge', 'lawyer', 'trial', 'crime', 'punishment'],
+                '科学': ['science', 'research', 'study', 'experiment', 'technology', 'discovery', 'innovation', 'theory', 'fact', 'knowledge', 'data', 'information', 'analysis', 'method', 'system', 'principle', 'law', 'rule', 'hypothesis', 'conclusion', 'evidence', 'proof', 'observation', 'measurement', 'calculation', 'formula', 'equation', 'model', 'simulation', 'computer', 'software', 'instrument', 'equipment', 'lab', 'scientist', 'researcher', 'field', 'branch', 'biology', 'chemistry', 'physics', 'mathematics', 'engineering', 'medicine', 'psychology', 'sociology', 'economics', 'space', 'astronomy', 'geology', 'genetics', 'biotechnology', 'artificial', 'intelligence', 'ai', 'robotics'],
+                '艺术': ['art', 'painting', 'music', 'literature', 'theater', 'dance', 'sculpture', 'design', 'creative', 'beauty', 'aesthetic', 'artist', 'painter', 'sculptor', 'musician', 'composer', 'singer', 'dancer', 'actor', 'actress', 'writer', 'poet', 'novelist', 'director', 'producer', 'photographer', 'cinematographer', 'graphic', 'designer', 'architect', 'craft', 'gallery', 'museum', 'exhibition', 'show', 'performance', 'concert', 'opera', 'ballet', 'play', 'film', 'animation', 'cartoon', 'illustration', 'drawing', 'sketch', 'portrait', 'landscape', 'abstract', 'modern', 'contemporary', 'classical', 'traditional', 'style', 'movement', 'technique', 'medium', 'material', 'color', 'form', 'shape', 'line', 'texture', 'light', 'shadow'],
+                '媒体': ['media', 'news', 'newspaper', 'television', 'tv', 'radio', 'internet', 'web', 'website', 'blog', 'vlog', 'social', 'network', 'platform', 'app', 'communication', 'information', 'content', 'article', 'story', 'report', 'journalist', 'reporter', 'editor', 'publisher', 'broadcast', 'channel', 'program', 'series', 'show', 'documentary', 'advertisement', 'ad', 'commercial', 'publicity', 'promotion', 'marketing', 'press', 'journalism', 'photography', 'video', 'audio', 'podcast', 'streaming', 'live', 'feed', 'trending', 'viral', 'post', 'tweet', 'share', 'like', 'comment', 'follow', 'subscribe'],
+                '国际关系': ['international', 'global', 'world', 'country', 'nation', 'diplomacy', 'trade', 'peace', 'conflict', 'war', 'alliance', 'agreement', 'treaty', 'organization', 'union', 'community', 'cooperation', 'collaboration', 'development', 'aid', 'assistance', 'foreign', 'policy', 'embassy', 'consulate', 'ambassador', 'diplomat', 'immigration', 'emigration', 'refugee', 'asylum', 'border', 'customs', 'tariff', 'import', 'export', 'exchange', 'currency', 'tourism', 'culture', 'language', 'education', 'health', 'environment', 'climate', 'security', 'defense', 'human', 'rights', 'law', 'justice'],
+                '数字': ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred', 'thousand', 'million', 'number', 'count', 'amount', 'many', 'few', 'some', 'all', 'each', 'every', 'more', 'less', 'most', 'least'],
+                '历史': ['history', 'past', 'present', 'future', 'time', 'period', 'era', 'age', 'century', 'decade', 'year', 'date', 'event', 'occurrence', 'incident', 'development', 'change', 'evolution', 'revolution', 'war', 'peace', 'conflict', 'battle', 'victory', 'defeat', 'king', 'queen', 'emperor', 'ruler', 'leader', 'politician', 'hero', 'figure', 'civilization', 'culture', 'tradition', 'custom', 'heritage', 'legacy', 'ancient', 'modern', 'medieval', 'classical'],
+                '地理': ['geography', 'earth', 'world', 'continent', 'country', 'nation', 'state', 'province', 'region', 'area', 'city', 'town', 'village', 'capital', 'border', 'boundary', 'coast', 'shore', 'beach', 'sea', 'ocean', 'lake', 'river', 'stream', 'canal', 'waterfall', 'mountain', 'hill', 'valley', 'plain', 'plateau', 'desert', 'forest', 'jungle', 'prairie', 'wetland', 'island', 'peninsula', 'archipelago', 'climate', 'weather', 'temperature', 'rain', 'snow', 'wind', 'storm'],
+                '经济': ['economy', 'economic', 'finance', 'financial', 'money', 'currency', 'bank', 'banking', 'credit', 'debit', 'loan', 'interest', 'investment', 'investor', 'stock', 'share', 'bond', 'fund', 'market', 'exchange', 'trade', 'commerce', 'industry', 'manufacturing', 'production', 'service', 'consumer', 'customer', 'client', 'supply', 'demand', 'price', 'cost', 'expense', 'income', 'revenue', 'profit', 'loss', 'growth', 'development', 'inflation', 'deflation', 'recession', 'boom', 'slump', 'crisis', 'policy', 'government', 'tax', 'budget', 'spending', 'saving', 'wealth', 'poverty', 'equality', 'inequality'],
+                '学术研究': ['academic', 'research', 'study', 'investigation', 'exploration', 'discovery', 'innovation', 'theory', 'hypothesis', 'experiment', 'observation', 'measurement', 'analysis', 'method', 'system', 'principle', 'evidence', 'proof', 'conclusion', 'finding', 'result', 'outcome', 'effect', 'impact', 'significance', 'importance', 'relevance', 'validity', 'reliability', 'accuracy', 'precision', 'data', 'information', 'knowledge', 'understanding', 'insight', 'perspective', 'viewpoint', 'argument', 'debate', 'discussion', 'review', 'assessment', 'evaluation', 'criticism', 'interpretation', 'explanation', 'description', 'documentation', 'publication', 'journal', 'article', 'paper', 'thesis', 'dissertation', 'proposal', 'grant', 'funding', 'collaboration', 'cooperation', 'team', 'group', 'laboratory', 'lab', 'institute', 'center', 'university', 'college', 'faculty', 'staff', 'student', 'graduate', 'postgraduate', 'doctoral', 'scholar', 'expert', 'specialist', 'professor', 'lecturer', 'researcher']
+            };
 
             const LEVEL_TOPICS = {
                 1: ['日常用品', '食物', '动物', '天气', '家庭', '颜色', '数字', '身体部位'],
@@ -2141,7 +2566,14 @@
             };
 
             const topics = LEVEL_TOPICS[level] || LEVEL_TOPICS[1];
-            const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+            const topicSelect = document.getElementById('ai-words-topic');
+            let selectedTopic = 'random';
+            if (topicSelect) {
+                selectedTopic = topicSelect.value;
+            }
+
+            let topic = selectedTopic === 'random' ? topics[Math.floor(Math.random() * topics.length)] : selectedTopic;
+            const topicKeywords = TOPIC_KEYWORDS[topic] || [];
 
             if (!VOCABULARY_BY_LEVEL || !VOCABULARY_BY_LEVEL[level]) {
                 resultDiv.innerHTML = `<p style="color: #ef4444; text-align: center;">词汇数据加载失败，请刷新页面</p>`;
@@ -2154,7 +2586,7 @@
             }
 
             if (!generatedWordsHistory[level]) {
-                generatedWordsHistory[level] = [...VOCABULARY_BY_LEVEL[level].map(w => w.word)];
+                generatedWordsHistory[level] = [];
             }
 
             const currentHistory = generatedWordsHistory[level];
@@ -2186,64 +2618,68 @@
             resultDiv.innerHTML = '';
 
             try {
-                const excludeWords = combinedHistory.length > 30 ?
-                    combinedHistory.slice(-30).join(', ') :
-                    combinedHistory.join(', ');
-                const excludeNote = combinedHistory.length > 30 ?
-                    `（最近30个，共${combinedHistory.length}个已生成单词，必须全部避开）` :
-                    '';
-                let targetCount = 12;
-                if (currentHistory.length > 400) {
-                    targetCount = 50;
-                } else if (currentHistory.length > 300) {
-                    targetCount = 40;
-                } else if (currentHistory.length > 200) {
-                    targetCount = 30;
-                } else if (currentHistory.length > 100) {
-                    targetCount = 20;
-                }
-                const prompt = `请为英语水平为"${levelDesc}"的学习者生成${targetCount}个适合该水平的英语单词，主题为"${randomTopic}"。要求：1. 这些单词必须是该水平特有的词汇，不能是更低水平已经学过的词汇；2. 这些单词要围绕同一个主题，相互之间有逻辑关联，能够自然地组合成一篇课文；3. 包含名词、动词、形容词等不同词性的单词；4. 严格避免使用以下已生成的单词${excludeNote}：${excludeWords || '无'}，确保生成的单词与已生成单词完全不重复；5. 确保生成的单词难度符合该水平，不要使用太简单的基础词汇，也不要使用太难的高级词汇；6. 返回JSON格式，包含id、word（单词）、phonetic（音标）、meaning（中文释义）、example（例句）、exampleTranslation（例句中文翻译）、tips（记忆技巧）。确保返回纯JSON，不要包含其他文字。
+                const targetCount = 12;
 
-示例JSON格式：
-[
-    {"id": 1, "word": "apple", "phonetic": "/ˈæpl/", "meaning": "苹果", "example": "I eat an apple every day.", "exampleTranslation": "我每天吃一个苹果。", "tips": "a+pple，想象苹果砸在头上"},
-    {"id": 2, "word": "book", "phonetic": "/bʊk/", "meaning": "书", "example": "This is a good book.", "exampleTranslation": "这是一本好书。", "tips": "b+ook，书看起来像打开的ook"}
-]`;
+                const allLevelWords = VOCABULARY_BY_LEVEL[level];
+                const availableWords = allLevelWords.filter(w => !combinedHistory.includes(w.word));
 
-                let aiWordCache = [];
-                let retryCount = 0;
-                const maxRetries = 3;
-
-                while (retryCount < maxRetries) {
-                    const response = await callAI(prompt, '你是一个专业的英语词汇生成助手。请严格按照要求的JSON格式返回数据，不要添加任何额外说明文字，不要包含markdown代码块标记。');
-
-                    let cleanResponse = response.trim();
-                    if (cleanResponse.startsWith('```json')) {
-                        cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-                    } else if (cleanResponse.startsWith('```')) {
-                        cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
-                    }
-
-                    aiWordCache = JSON.parse(cleanResponse);
-
-                    if (!Array.isArray(aiWordCache)) {
-                        retryCount++;
-                        continue;
-                    }
-
-                    const newWords = aiWordCache.filter(w => !combinedHistory.includes(w.word));
-
-                    if (newWords.length > 0) {
-                        aiWordCache = newWords;
-                        break;
-                    }
-
-                    retryCount++;
-                }
-
-                if (!aiWordCache || aiWordCache.length === 0) {
-                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">AI生成失败，请点击"生成单词"重试</p>`;
+                if (availableWords.length === 0) {
+                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">该等级词汇已全部覆盖</p>`;
+                    loadingDiv.style.display = 'none';
                     return;
+                }
+
+                let filteredWords = availableWords;
+                if (topicKeywords.length > 0) {
+                    filteredWords = availableWords.filter(w => topicKeywords.includes(w.word.toLowerCase()));
+                }
+
+                if (filteredWords.length === 0) {
+                    filteredWords = availableWords;
+                }
+
+                const shuffled = filteredWords.sort(() => Math.random() - 0.5);
+                const selectedWords = shuffled.slice(0, Math.min(targetCount, filteredWords.length));
+
+                aiWordCache = [];
+
+                for (let i = 0; i < selectedWords.length; i++) {
+                    const w = selectedWords[i];
+                    let wordInfo = { phonetic: '', meaning: '', example: '', exampleTranslation: '', tips: '' };
+
+                    try {
+                        const prompt = `请提供单词 "${w.word}" 的详细信息，包括：
+1. 音标（英式和美式）
+2. 中文释义（常用含义）
+3. 一个简单的例句（带中文翻译）
+4. 一个实用的记忆技巧
+
+请用JSON格式返回，格式如下：
+{"phonetic": "/音标/", "meaning": "中文释义", "example": "例句", "exampleTranslation": "中文翻译", "tips": "记忆技巧"}`;
+
+                        const aiResponse = await callAI(prompt, '你是一个专业的英语词典助手，提供准确的单词释义和例句。');
+
+                        try {
+                            const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+                            if (jsonMatch) {
+                                wordInfo = JSON.parse(jsonMatch[0]);
+                            }
+                        } catch (e) {
+                            console.warn('Failed to parse AI response as JSON:', aiResponse);
+                        }
+                    } catch (e) {
+                        console.warn('Failed to get word info for:', w.word, e);
+                    }
+
+                    aiWordCache.push({
+                        id: i + 1,
+                        word: w.word,
+                        phonetic: wordInfo.phonetic || '',
+                        meaning: wordInfo.meaning || '',
+                        example: wordInfo.example || '',
+                        exampleTranslation: wordInfo.exampleTranslation || '',
+                        tips: wordInfo.tips || ''
+                    });
                 }
 
                 aiWordCache.forEach(w => {
@@ -2253,8 +2689,8 @@
                 });
 
                 saveGeneratedWordsHistory();
-                lastWordTopic = randomTopic;
-                saveAIWordCache(randomTopic);
+                lastWordTopic = topic;
+                saveAIWordCache(topic);
 
                 chatMessages = [];
                 chatInitialized = false;
@@ -2270,17 +2706,25 @@
                 const newCoveredCount = currentHistory.length;
                 const newProgress = Math.round((newCoveredCount / totalCount) * 100);
 
+                const displayCount = 12;
+                const displayedWords = aiWordCache.slice(0, displayCount);
+
                 resultDiv.innerHTML = `
                     <div style="margin-bottom: 16px; padding: 12px; background: #f0fdf4; border-radius: 8px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span>📚 本次生成主题：${randomTopic} · 共 ${aiWordCache.length} 个单词（可用于生成课文）</span>
+                            <span>📚 本次生成主题：${topic} · 共 ${aiWordCache.length} 个单词（可用于生成课文）</span>
                             <span style="font-weight: bold; color: #10b981;">覆盖进度：${newCoveredCount}/${totalCount} (${newProgress}%)</span>
                         </div>
                         <div style="height: 8px; background: #d1fae5; border-radius: 4px; overflow: hidden;">
                             <div style="height: 100%; background: #10b981; width: ${newProgress}%; border-radius: 4px;"></div>
                         </div>
+                        ${aiWordCache.length > displayCount ? `
+                            <div style="margin-top: 8px; text-align: center;">
+                                <span style="font-size: 14px; color: #6b7280;">已显示 ${displayCount}/${aiWordCache.length} 个单词</span>
+                            </div>
+                        ` : ''}
                     </div>
-                    ${aiWordCache.map((w, idx) => `
+                    ${displayedWords.map((w, idx) => `
                         <div class="word-card">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div class="word">${w.word}</div>
@@ -2299,13 +2743,62 @@
                             <button class="btn btn-success" onclick="addAIWord(${idx})" style="margin-top: 12px;">添加到生词本</button>
                         </div>
                     `).join('')}
+                    ${aiWordCache.length > displayCount ? `
+                        <div style="text-align: center; margin-top: 16px;">
+                            <button class="btn btn-outline" onclick="showMoreAIWords(${displayCount})">查看更多单词</button>
+                        </div>
+                    ` : ''}
                 `;
             } catch (error) {
                 console.error('AI单词生成失败:', error);
-                generateFallbackAIWords(randomTopic);
+                generateFallbackAIWords(topic);
             } finally {
                 loadingDiv.style.display = 'none';
             }
+        }
+
+        function showMoreAIWords(startIndex) {
+            const displayCount = 12;
+            const resultDiv = document.getElementById('ai-words-result');
+            const newDisplayedWords = aiWordCache.slice(startIndex, startIndex + displayCount);
+            const remainingCount = aiWordCache.length - startIndex - displayCount;
+
+            const newCards = newDisplayedWords.map((w, idx) => `
+                <div class="word-card">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="word">${w.word}</div>
+                        <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
+                    </div>
+                    <div class="phonetic">${w.phonetic}</div>
+                    <div class="meaning">${w.meaning}</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="example">${w.example}</div>
+                        <button class="speak-btn" onclick="speak('${w.example.replace(/'/g, "\\'")}')" title="例句发音" style="padding: 2px 6px;">🔊</button>
+                    </div>
+                    <div class="example" style="color: #6b7280; font-size: 14px;">${w.exampleTranslation || ''}</div>
+                    <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
+                        💡 记忆技巧：${w.tips}
+                    </div>
+                    <button class="btn btn-success" onclick="addAIWord(${startIndex + idx})" style="margin-top: 12px;">添加到生词本</button>
+                </div>
+            `).join('');
+
+            const moreBtn = resultDiv.querySelector('.btn-outline[onclick*="showMoreAIWords"]');
+            if (moreBtn) {
+                moreBtn.remove();
+            }
+
+            resultDiv.innerHTML += newCards;
+
+            if (remainingCount > 0) {
+                resultDiv.innerHTML += `
+                    <div style="text-align: center; margin-top: 16px;">
+                        <button class="btn btn-outline" onclick="showMoreAIWords(${startIndex + displayCount})">查看更多单词</button>
+                    </div>
+                `;
+            }
+
+            resultDiv.scrollTop = resultDiv.scrollHeight;
         }
 
         function generateFallbackAIWords(topic) {
@@ -2334,6 +2827,58 @@
             const combinedHistory = [...allLowerLevelWords, ...currentHistory];
             const availableWords = allWords.filter(w => !combinedHistory.includes(w.word));
 
+            const TOPIC_KEYWORDS = {
+                '日常用品': ['book', 'pen', 'desk', 'chair', 'bed', 'door', 'window', 'light', 'table', 'cup', 'glass', 'phone', 'bag', 'box', 'key', 'clock', 'watch', 'mirror', 'sofa', 'pillow', 'blanket', 'towel', 'soap', 'kitchen', 'bedroom', 'living', 'room', 'floor', 'wall', 'roof'],
+                '食物': ['food', 'water', 'milk', 'bread', 'rice', 'meat', 'beef', 'pork', 'chicken', 'fish', 'egg', 'fruit', 'apple', 'banana', 'orange', 'vegetable', 'carrot', 'potato', 'tomato', 'cake', 'cookie', 'tea', 'coffee', 'juice', 'meal', 'breakfast', 'lunch', 'dinner', 'eat', 'drink', 'hungry'],
+                '动物': ['animal', 'cat', 'dog', 'bird', 'fish', 'tiger', 'lion', 'elephant', 'zebra', 'giraffe', 'monkey', 'panda', 'bear', 'rabbit', 'horse', 'cow', 'sheep', 'pig', 'chicken', 'duck', 'goose', 'snake', 'frog', 'butterfly', 'bee', 'ant', 'spider', 'turtle', 'dolphin', 'whale'],
+                '天气': ['weather', 'sun', 'rain', 'snow', 'wind', 'cloud', 'storm', 'thunder', 'lightning', 'fog', 'mist', 'hail', 'temperature', 'hot', 'cold', 'warm', 'cool', 'dry', 'wet', 'humid', 'clear', 'overcast', 'forecast', 'climate', 'season'],
+                '家庭': ['family', 'father', 'mother', 'brother', 'sister', 'parent', 'child', 'son', 'daughter', 'husband', 'wife', 'grandfather', 'grandmother', 'grandparent', 'uncle', 'aunt', 'cousin', 'nephew', 'niece', 'relative', 'home', 'house', 'apartment', 'room'],
+                '颜色': ['color', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'black', 'white', 'gray', 'brown', 'gold', 'silver', 'dark', 'light', 'bright', 'pale', 'deep', 'vivid', 'colorful', 'rainbow', 'paint', 'dye'],
+                '数字': ['number', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'thirty', 'forty', 'fifty', 'hundred', 'thousand', 'million', 'billion', 'zero', 'count', 'add', 'subtract', 'multiply', 'divide'],
+                '身体部位': ['body', 'head', 'face', 'hair', 'eye', 'ear', 'nose', 'mouth', 'lip', 'tooth', 'tongue', 'neck', 'shoulder', 'arm', 'hand', 'finger', 'thumb', 'fist', 'elbow', 'wrist', 'chest', 'back', 'waist', 'hip', 'leg', 'foot', 'toe', 'knee', 'ankle', 'skin', 'bone', 'muscle', 'blood'],
+                '学校生活': ['school', 'classroom', 'teacher', 'student', 'class', 'lesson', 'subject', 'homework', 'exam', 'test', 'grade', 'score', 'book', 'pen', 'paper', 'desk', 'chair', 'blackboard', 'whiteboard', 'notebook', 'pencil', 'ruler', 'eraser', 'bag', 'uniform', 'bell', 'break', 'lunch', 'recess', 'playground', 'library', 'gym', 'laboratory', 'college', 'university', 'campus'],
+                '旅行': ['travel', 'trip', 'journey', 'vacation', 'holiday', 'tour', 'sightseeing', 'destination', 'place', 'city', 'country', 'airport', 'plane', 'train', 'bus', 'car', 'boat', 'ship', 'hotel', 'resort', 'ticket', 'passport', 'baggage', 'luggage', 'guide', 'map', 'route', 'direction', 'distance', 'arrive', 'depart', 'leave', 'visit', 'explore', 'adventure'],
+                '运动': ['sport', 'game', 'play', 'run', 'jump', 'swim', 'walk', 'cycle', 'bike', 'football', 'basketball', 'tennis', 'volleyball', 'badminton', 'table', 'tennis', 'ping', 'pong', 'gym', 'exercise', 'fitness', 'training', 'practice', 'match', 'competition', 'champion', 'winner', 'loser', 'score', 'goal', 'team', 'player', 'coach', 'referee'],
+                '节日': ['festival', 'holiday', 'celebration', 'party', 'birthday', 'Christmas', 'New', 'Year', 'Easter', 'Thanksgiving', 'Halloween', 'Valentine', 'Day', 'festival', 'traditional', 'custom', 'culture', 'decorate', 'gift', 'present', 'card', 'cake', 'candle', 'firework', 'parade', 'dance', 'music', 'song'],
+                '职业': ['job', 'work', 'career', 'profession', 'occupation', 'employee', 'employer', 'boss', 'manager', 'worker', 'teacher', 'doctor', 'nurse', 'engineer', 'scientist', 'artist', 'writer', 'actor', 'actress', 'police', 'officer', 'fireman', 'firefighter', 'driver', 'pilot', 'chef', 'cook', 'waiter', 'waitress', 'salesman', 'businessman', 'businesswoman', 'secretary'],
+                '爱好': ['hobby', 'interest', 'activity', 'game', 'sport', 'music', 'song', 'dance', 'art', 'painting', 'drawing', 'sketch', 'craft', 'photography', 'reading', 'book', 'movie', 'film', 'TV', 'show', 'program', 'internet', 'computer', 'game', 'play', 'chess', 'puzzle', 'collect', 'garden', 'plant', 'pet', 'animal'],
+                '衣服': ['clothes', 'shirt', 'pants', 'trousers', 'dress', 'skirt', 'coat', 'jacket', 'sweater', 'shirt', 'T-shirt', 'jeans', 'shorts', 'socks', 'shoes', 'boots', 'sandals', 'hat', 'cap', 'scarf', 'gloves', 'belt', 'bag', 'purse', 'wallet', 'jewelry', 'watch', 'tie', 'uniform', 'dress', 'formal', 'casual', 'fashion', 'style', 'size', 'color'],
+                '季节': ['season', 'spring', 'summer', 'autumn', 'fall', 'winter', 'weather', 'temperature', 'rain', 'sun', 'snow', 'wind', 'flower', 'tree', 'leaf', 'fruit', 'harvest', 'holiday', 'vacation', 'activity', 'festival'],
+                '科技': ['technology', 'computer', 'internet', 'network', 'software', 'hardware', 'program', 'application', 'app', 'website', 'web', 'page', 'online', 'digital', 'device', 'smartphone', 'phone', 'mobile', 'tablet', 'laptop', 'desktop', 'keyboard', 'mouse', 'screen', 'display', 'camera', 'video', 'audio', 'sound', 'data', 'information', 'storage', 'memory', 'processor', 'chip', 'sensor', 'robot', 'AI', 'artificial', 'intelligence', 'machine', 'learning', 'algorithm', 'cloud', 'server', 'database', 'security', 'password'],
+                '文化': ['culture', 'art', 'music', 'dance', 'theater', 'cinema', 'film', 'movie', 'literature', 'book', 'novel', 'poetry', 'story', 'painting', 'sculpture', 'architecture', 'design', 'fashion', 'style', 'custom', 'tradition', 'festival', 'celebration', 'language', 'dialect', 'food', 'cuisine', 'religion', 'belief', 'value', 'norm', 'society', 'community', 'heritage', 'history', 'museum', 'gallery'],
+                '历史': ['history', 'past', 'time', 'period', 'era', 'century', 'decade', 'year', 'event', 'war', 'battle', 'revolution', 'empire', 'kingdom', 'dynasty', 'monarch', 'king', 'queen', 'emperor', 'leader', 'ruler', 'civilization', 'culture', 'society', 'people', 'nation', 'country', 'city', 'building', 'monument', 'artifact', 'document', 'record', 'archaeology', 'museum', 'historian'],
+                '地理': ['geography', 'earth', 'world', 'continent', 'country', 'nation', 'state', 'province', 'region', 'area', 'city', 'town', 'village', 'capital', 'border', 'boundary', 'coast', 'shore', 'beach', 'sea', 'ocean', 'lake', 'river', 'stream', 'canal', 'waterfall', 'mountain', 'hill', 'valley', 'plain', 'plateau', 'desert', 'forest', 'jungle', 'prairie', 'wetland', 'island', 'peninsula', 'archipelago', 'climate', 'weather', 'temperature', 'rain', 'snow', 'wind', 'storm'],
+                '环境': ['environment', 'nature', 'earth', 'world', 'planet', 'ecosystem', 'ecology', 'pollution', 'waste', 'recycle', 'energy', 'power', 'green', 'sustainable', 'conservation', 'protection', 'wildlife', 'animal', 'plant', 'tree', 'forest', 'ocean', 'river', 'lake', 'air', 'water', 'land', 'soil', 'climate', 'change', 'global', 'warming', 'carbon', 'emission', 'natural', 'resource', 'biodiversity'],
+                '健康': ['health', 'healthy', 'ill', 'sick', 'disease', 'illness', 'symptom', 'treatment', 'medicine', 'drug', 'pill', 'tablet', 'injection', 'vaccine', 'doctor', 'nurse', 'hospital', 'clinic', 'emergency', 'ambulance', 'operation', 'surgery', 'diagnosis', 'check', 'up', 'examination', 'test', 'scan', 'blood', 'pressure', 'heart', 'rate', 'temperature', 'diet', 'exercise', 'fitness', 'nutrition', 'vitamin', 'mineral'],
+                '娱乐': ['entertainment', 'fun', 'enjoy', 'relax', 'game', 'play', 'music', 'song', 'dance', 'movie', 'film', 'cinema', 'TV', 'show', 'program', 'theater', 'drama', 'comedy', 'concert', 'festival', 'party', 'celebration', 'club', 'bar', 'restaurant', 'cafe', 'book', 'reading', 'magazine', 'newspaper', 'internet', 'online', 'video', 'game', 'sport', 'hobby'],
+                '社交': ['social', 'society', 'community', 'people', 'friend', 'friendship', 'relationship', 'family', 'group', 'team', 'club', 'organization', 'network', 'connection', 'communication', 'conversation', 'chat', 'talk', 'discussion', 'meeting', 'gathering', 'party', 'event', 'celebration', 'culture', 'tradition', 'custom', 'value', 'norm', 'behavior', 'manners', 'etiquette'],
+                '商业': ['business', 'company', 'corporation', 'enterprise', 'firm', 'office', 'work', 'job', 'employee', 'employer', 'boss', 'manager', 'executive', 'director', 'shareholder', 'investor', 'investment', 'finance', 'money', 'bank', 'account', 'credit', 'debit', 'loan', 'interest', 'profit', 'loss', 'income', 'revenue', 'expense', 'cost', 'price', 'market', 'trade', 'commerce', 'industry', 'manufacturing', 'production', 'service', 'customer', 'client', 'supplier', 'product', 'goods', 'sale', 'purchase', 'contract', 'agreement'],
+                '教育': ['education', 'school', 'classroom', 'teacher', 'student', 'learning', 'study', 'knowledge', 'skill', 'ability', 'lesson', 'course', 'subject', 'curriculum', 'program', 'degree', 'diploma', 'certificate', 'exam', 'test', 'grade', 'score', 'homework', 'assignment', 'project', 'research', 'paper', 'thesis', 'college', 'university', 'campus', 'library', 'laboratory', 'professor', 'lecturer', 'tutor', 'mentor'],
+                '政治': ['politics', 'government', 'state', 'nation', 'country', 'leader', 'president', 'prime', 'minister', 'king', 'queen', 'emperor', 'dictator', 'democracy', 'dictatorship', 'republic', 'monarchy', 'parliament', 'congress', 'senate', 'assembly', 'law', 'policy', 'regulation', 'rule', 'order', 'power', 'authority', 'control', 'decision', 'election', 'vote', 'party', 'opposition', 'reform', 'revolution', 'war', 'peace', 'treaty', 'agreement', 'diplomacy', 'foreign', 'relation'],
+                '经济': ['economy', 'economic', 'finance', 'financial', 'money', 'currency', 'bank', 'banking', 'credit', 'debit', 'loan', 'interest', 'investment', 'investor', 'stock', 'share', 'bond', 'fund', 'market', 'exchange', 'trade', 'commerce', 'industry', 'manufacturing', 'production', 'service', 'consumer', 'customer', 'client', 'supply', 'demand', 'price', 'cost', 'expense', 'income', 'revenue', 'profit', 'loss', 'growth', 'development', 'inflation', 'deflation', 'recession', 'boom', 'slump', 'crisis', 'policy', 'government', 'tax', 'budget', 'spending', 'saving', 'wealth', 'poverty', 'equality', 'inequality'],
+                '科学': ['science', 'scientific', 'research', 'study', 'experiment', 'observation', 'discovery', 'invention', 'innovation', 'theory', 'hypothesis', 'principle', 'law', 'formula', 'equation', 'data', 'information', 'knowledge', 'technology', 'engineering', 'computer', 'mathematics', 'physics', 'chemistry', 'biology', 'geology', 'astronomy', 'medicine', 'psychology', 'sociology', 'anthropology', 'environment', 'climate', 'nature', 'life', 'organism', 'cell', 'gene', 'dna', 'evolution'],
+                '艺术': ['art', 'artist', 'artistic', 'painting', 'drawing', 'sketch', 'sculpture', 'architecture', 'design', 'graphic', 'fashion', 'style', 'music', 'song', 'dance', 'theater', 'drama', 'comedy', 'opera', 'ballet', 'cinema', 'film', 'movie', 'photography', 'literature', 'book', 'novel', 'poetry', 'story', 'writer', 'creative', 'imagination', 'expression', 'beauty', 'aesthetic', 'gallery', 'museum', 'exhibition'],
+                '媒体': ['media', 'news', 'newspaper', 'magazine', 'journal', 'article', 'report', 'press', 'journalist', 'reporter', 'editor', 'publisher', 'television', 'TV', 'radio', 'broadcast', 'program', 'show', 'channel', 'internet', 'website', 'web', 'blog', 'social', 'network', 'platform', 'content', 'information', 'communication', 'advertisement', 'advertising', 'public', 'relation', 'marketing', 'promotion', 'celebrity', 'star', 'influence', 'trend'],
+                '国际关系': ['international', 'global', 'world', 'country', 'nation', 'diplomacy', 'trade', 'peace', 'conflict', 'war', 'alliance', 'agreement', 'treaty', 'organization', 'union', 'community', 'cooperation', 'collaboration', 'development', 'aid', 'assistance', 'foreign', 'policy', 'embassy', 'consulate', 'ambassador', 'diplomat', 'immigration', 'emigration', 'refugee', 'asylum', 'border', 'customs', 'tariff', 'import', 'export', 'exchange', 'currency', 'finance', 'economy', 'market', 'business', 'investment', 'tourism', 'travel', 'culture', 'language', 'education', 'health', 'environment', 'climate', 'security', 'defense', 'human', 'rights', 'law', 'justice'],
+                '哲学': ['philosophy', 'philosophical', 'thought', 'idea', 'concept', 'theory', 'principle', 'belief', 'value', 'ethic', 'morality', 'exist', 'existence', 'life', 'death', 'mind', 'conscious', 'knowledge', 'truth', 'reality', 'nature', 'being', 'essence', 'reason', 'logic', 'argument', 'debate', 'discussion', 'wisdom', 'intellect', 'rational', 'critical', 'thinking', 'analysis', 'interpretation', 'meaning', 'purpose', 'freedom', 'determinism', 'free', 'will'],
+                '心理学': ['psychology', 'psychological', 'mind', 'mental', 'brain', 'cognition', 'perception', 'attention', 'memory', 'learning', 'thinking', 'reason', 'emotion', 'feeling', 'mood', 'motivation', 'personality', 'character', 'trait', 'behavior', 'social', 'interaction', 'relationship', 'group', 'culture', 'development', 'childhood', 'adolescence', 'adulthood', 'aging', 'health', 'illness', 'disorder', 'therapy', 'counseling', 'treatment', 'research', 'experiment', 'study', 'theory', 'concept'],
+                '社会学': ['sociology', 'social', 'society', 'community', 'group', 'organization', 'institution', 'culture', 'tradition', 'custom', 'norm', 'value', 'belief', 'behavior', 'interaction', 'relationship', 'network', 'connection', 'structure', 'system', 'class', 'status', 'role', 'identity', 'gender', 'race', 'ethnic', 'family', 'education', 'work', 'economy', 'politics', 'religion', 'media', 'technology', 'environment', 'health', 'deviance', 'crime', 'justice'],
+                '法律': ['law', 'legal', 'justice', 'court', 'judge', 'lawyer', 'attorney', 'advocate', 'solicitor', 'barrister', 'police', 'officer', 'detective', 'crime', 'criminal', 'victim', 'offender', 'punishment', 'sentence', 'prison', 'jail', 'trial', 'hearing', 'appeal', 'evidence', 'proof', 'witness', 'testimony', 'document', 'contract', 'agreement', 'regulation', 'rule', 'policy', 'constitution', 'statute', 'legislation', 'parliament', 'government', 'right', 'privilege', 'duty', 'obligation'],
+                '医学': ['medicine', 'medical', 'health', 'disease', 'illness', 'symptom', 'diagnosis', 'treatment', 'therapy', 'surgery', 'operation', 'doctor', 'physician', 'surgeon', 'nurse', 'hospital', 'clinic', 'emergency', 'ambulance', 'paramedic', 'pharmacy', 'pharmacist', 'drug', 'medication', 'pill', 'tablet', 'injection', 'vaccine', 'antibiotic', 'painkiller', 'anesthetic', 'radiology', 'pathology', 'laboratory', 'test', 'scan', 'x-ray', 'mri', 'ct', 'blood', 'pressure', 'heart', 'rate', 'temperature', 'diet', 'nutrition', 'exercise'],
+                '工程': ['engineering', 'engineer', 'technology', 'science', 'design', 'build', 'construct', 'structure', 'system', 'machine', 'device', 'tool', 'equipment', 'material', 'component', 'part', 'assembly', 'manufacturing', 'production', 'process', 'method', 'technique', 'innovation', 'invention', 'research', 'development', 'project', 'plan', 'blueprint', 'model', 'simulation', 'analysis', 'calculation', 'software', 'computer', 'program', 'algorithm', 'data', 'information'],
+                '文学': ['literature', 'literary', 'book', 'novel', 'story', 'tale', 'fable', 'myth', 'legend', 'poetry', 'poem', 'verse', 'prose', 'drama', 'play', 'theater', 'fiction', 'nonfiction', 'biography', 'autobiography', 'memoir', 'essay', 'article', 'journal', 'magazine', 'newspaper', 'writer', 'author', 'novelist', 'poet', 'dramatist', 'editor', 'publisher', 'character', 'plot', 'theme', 'style', 'language', 'expression', 'imagination', 'creativity', 'classic', 'modern', 'contemporary'],
+                '学术研究': ['academic', 'research', 'study', 'investigation', 'exploration', 'discovery', 'innovation', 'theory', 'hypothesis', 'experiment', 'observation', 'measurement', 'analysis', 'method', 'system', 'principle', 'evidence', 'proof', 'conclusion', 'finding', 'result', 'outcome', 'effect', 'impact', 'significance', 'importance', 'relevance', 'validity', 'reliability', 'accuracy', 'precision', 'data', 'information', 'knowledge', 'understanding', 'insight', 'perspective', 'viewpoint', 'argument', 'debate', 'discussion', 'review', 'assessment', 'evaluation', 'criticism', 'interpretation', 'explanation', 'description', 'documentation', 'publication', 'journal', 'article', 'paper', 'thesis', 'dissertation', 'proposal', 'grant', 'funding', 'collaboration', 'cooperation', 'team', 'group', 'laboratory', 'lab', 'institute', 'center', 'university', 'college', 'faculty', 'staff', 'student', 'graduate', 'postgraduate', 'doctoral', 'scholar', 'expert', 'specialist', 'professor', 'lecturer', 'researcher']
+            };
+
+            let topicFilteredWords = availableWords;
+            if (topic && TOPIC_KEYWORDS[topic]) {
+                const keywords = TOPIC_KEYWORDS[topic];
+                topicFilteredWords = availableWords.filter(w =>
+                    keywords.includes(w.word.toLowerCase()) ||
+                    (w.example && keywords.some(k => w.example.toLowerCase().includes(k.toLowerCase())))
+                );
+            }
+
             const levelInfo = VOCABULARY_LEVELS[level];
             const totalCount = levelInfo.wordCount;
 
@@ -2348,13 +2893,18 @@
                 return;
             }
 
-            if (availableWords.length === 0) {
-                resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">备用题库已用尽，请尝试使用AI生成新单词</p>`;
-                return;
+            if (topicFilteredWords.length === 0) {
+                if (topic && TOPIC_KEYWORDS[topic]) {
+                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">当前主题"${topic}"在备用题库中没有匹配的单词，将使用随机单词</p>`;
+                    topicFilteredWords = availableWords;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: #f59e0b; text-align: center;">备用题库已用尽，请尝试使用AI生成新单词</p>`;
+                    return;
+                }
             }
 
-            const shuffled = [...availableWords].sort(() => Math.random() - 0.5);
-            const selected = shuffled.slice(0, Math.min(12, availableWords.length));
+            const shuffled = [...topicFilteredWords].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, Math.min(12, topicFilteredWords.length));
 
             aiWordCache = selected.map((w, idx) => ({
                 id: idx + 1,
@@ -3561,14 +4111,26 @@ ${structuredWords || '暂无今日学习单词'}
 
                         const aiWords = aiWordCache.length > 0 ? aiWordCache.map(w => w.word).join(', ') : '';
 
-                        const prompt = `请开启关于"${currentChatTopic}"的对话。你是一个友好的聊天伙伴，与用户进行自然对话。
+                        const prompt = `请开启关于"${currentChatTopic}"的对话。你是一个热情友好的聊天伙伴，与用户进行轻松自然的对话。
+
 【当前等级】：Level ${level}
 【等级描述】：${levelDesc}
 【语言规则】：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。
 ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` : ''}
-【对话风格】：自然、轻松、友好。先分享一个简单想法，再适当提问，不要一直问问题。每次回复2-3句话。
-请用英语回复。`;
-                        callAI(prompt, `你是一个友好的英语对话伙伴，与用户进行自然对话。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，先分享想法再适当提问。`).then(response => {
+
+【对话风格】：
+1. 像朋友聊天一样自然，使用表情符号（如😄, 🌟, ❤️）增加亲切感
+2. 先分享自己的经历或想法，再自然地问一个开放性问题
+3. 不要连续问问题，要先表达观点再提问
+4. 使用轻松活泼的语气，不要太正式
+5. 每次回复3-4句话，让对话有继续下去的空间
+
+【示例风格】：
+- "I love talking about ${currentChatTopic}! 😊 My favorite thing is... What about you?"
+- "Yesterday I tried... It was fun! Have you ever...?"
+
+请用英语回复，开始一段有趣的对话。`;
+                        callAI(prompt, `你是一个热情友好的英语对话伙伴，像朋友一样聊天。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。对话风格：自然轻松，使用表情符号，先分享经历再提问，不要连续追问，每次回复3-4句话。`).then(response => {
                             chatMessages.push({ role: 'assistant', content: response });
                             container.innerHTML += `
                         <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
@@ -3630,20 +4192,38 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
                 let systemPrompt = '';
 
                 if (currentChatTopic === '自由对话') {
-                    prompt = `请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
+                    prompt = `请用英语回复，保持对话自然流畅。你是一个热情友好的聊天伙伴。
+
 【当前等级】：Level ${level}
 【等级描述】：${levelDesc}
 【语言规则】：${rules}。难度要低于当前等级。
-【注意】：不要主导对话，不要主动改变话题，跟随用户的话题进行回应。每次回复1-2句话，简短自然。`;
-                    systemPrompt = `你是一个友好的英语对话伙伴。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级。不要主导对话，跟随用户的话题进行回应，简短自然，每次回复1-2句话。`;
+
+【对话风格】：
+1. 像朋友一样聊天，使用表情符号增加亲切感
+2. 回应时先表达理解或共鸣，再分享自己的观点或经历
+3. 不要连续问问题，要先表达再提问
+4. 使用轻松活泼的语气，不要太正式
+5. 根据用户的话题自然回应，不要强行改变话题
+
+请用英语回复。`;
+                    systemPrompt = `你是一个热情友好的英语对话伙伴，像朋友一样聊天。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级。对话风格：自然轻松，使用表情符号，先表达理解再分享观点，不要连续追问，每次回复2-3句话。`;
                 } else {
-                    prompt = `请用英语回复，保持对话自然。你是一个友好的聊天伙伴。
+                    prompt = `请用英语回复，保持对话自然流畅。你是一个热情友好的聊天伙伴。
+
 【当前等级】：Level ${level}
 【等级描述】：${levelDesc}
 【语言规则】：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。
 ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` : ''}
-【注意】：不要重复之前已经说过的话或问过的问题，根据对话历史自然推进话题。`;
-                    systemPrompt = `你是一个友好的英语对话伙伴。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。自然延续对话，每次回复2-3句话，可以分享观点或提问。不要重复之前说过的话。`;
+
+【对话风格】：
+1. 像朋友一样聊天，使用表情符号增加亲切感
+2. 回应时先表达理解或共鸣，再分享自己的观点或经历
+3. 不要连续问问题，要先表达再提问
+4. 使用轻松活泼的语气，不要太正式
+5. 根据对话历史自然推进话题，不要重复之前说过的话
+
+请用英语回复。`;
+                    systemPrompt = `你是一个热情友好的英语对话伙伴，像朋友一样聊天。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。对话风格：自然轻松，使用表情符号，先表达理解再分享观点，不要连续追问，每次回复2-3句话。`;
                 }
 
                 const response = await callAI(prompt, systemPrompt, chatMessages);
