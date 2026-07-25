@@ -1,5 +1,4 @@
-export default 
-[
+const VOCABULARY_A2 = [
   {
     "word": "abroad",
     "level": "A2"
@@ -2108,4 +2107,4 @@ export default
     "word": "worthy",
     "level": "A2"
   }
-]；
+];
