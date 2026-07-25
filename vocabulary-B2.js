@@ -1,4 +1,4 @@
-export default [
+const VOCABULARY_B2 = [
 {"word":"abandon","level":"B2"},
 {"word":"abroad","level":"B2"},
 {"word":"absolute","level":"B2"},
@@ -632,4 +632,4 @@ export default [
 {"word":"witness","level":"B2"},
 {"word":"wonder","level":"B2"},
 {"word":"worthy","level":"B2"}
-]；
+];
