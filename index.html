@@ -526,15 +526,24 @@
                 <div class="card">
                     <h2>📚 单词学习</h2>
                     <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                        <select id="word-level" class="input" style="width: auto;" onchange="updateWordTopicDropdown()">
+                        <select id="word-level" class="input" style="width: auto;">
                             <option value="1">Level 1 - 入门 (小学3-4年级/CEFR A1)</option>
                             <option value="2">Level 2 - 基础 (小学5-6年级/CEFR A2)</option>
                             <option value="3">Level 3 - 进阶 (初中1-2年级/CEFR B1)</option>
                             <option value="4">Level 4 - 高级 (初中3-高中1年级/CEFR B2)</option>
                             <option value="5">Level 5 - 精通 (高中及以上/CEFR C1)</option>
                         </select>
-                        <select id="word-topic" class="input" style="width: auto;" onchange="updateTopicDisplay()">
+                        <select id="word-topic" class="input" style="width: auto;">
                             <option value="">🎲 随机主题</option>
+                            <option value="日常交流">🗣️ 日常交流</option>
+                            <option value="时间日期">📅 时间日期</option>
+                            <option value="地点方位">📍 地点方位</option>
+                            <option value="人物关系">👥 人物关系</option>
+                            <option value="情感表达">😊 情感表达</option>
+                            <option value="饮食健康">🍎 饮食健康</option>
+                            <option value="学习教育">📚 学习教育</option>
+                            <option value="工作职场">💼 工作职场</option>
+                            <option value="剩余单词">📋 剩余单词</option>
                         </select>
                         <div style="display: flex; align-items: center; gap: 4px;">
                             <span style="font-size: 14px;">每次加载:</span>
@@ -803,7 +812,12 @@
         </div>
     </div>
 
-    <script src="vocabulary-topics.js"></script>
+    <script src="vocabulary-topics-A1.js"></script>
+    <script src="vocabulary-topics-A2.js"></script>
+    <script src="vocabulary-topics-B1.js"></script>
+    <script src="vocabulary-topics-B2.js"></script>
+    <script src="vocabulary-topics-C1.js"></script>
+    <script src="level-topics-index.js"></script>
     <script src="vocabulary-A1.js"></script>
     <script src="vocabulary-A2.js"></script>
     <script src="vocabulary-B1.js"></script>
@@ -813,8 +827,20 @@
         const AI_CONFIG = {
             apiKey: 'sk-a3a7d3678f8148b2b487c879a034a2d4',
             apiUrl: 'https://api.deepseek.com/v1/chat/completions',
-            model: 'deepseek-chat'
+            model: 'deepseek-v4-flash'
         };
+
+        const LEVEL_TOPICS_MAP = {
+            1: VOCABULARY_TOPICS_A1 || {},
+            2: VOCABULARY_TOPICS_A2 || {},
+            3: VOCABULARY_TOPICS_B1 || {},
+            4: VOCABULARY_TOPICS_B2 || {},
+            5: VOCABULARY_TOPICS_C1 || {}
+        };
+
+        function getLevelTopics(level) {
+            return LEVEL_TOPICS_MAP[level] || VOCABULARY_TOPICS_A1 || {};
+        }
 
         const LEVEL_DESCRIPTIONS = {
             1: '非常简单，小学3-4年级水平，使用最基础的日常词汇（如apple, book, happy），简单句型（主谓宾结构），每篇课文不超过50词',
@@ -858,6 +884,12 @@
 
                 messages.push({ role: 'user', content: prompt });
 
+                console.log('AI API Request:', {
+                    url: AI_CONFIG.apiUrl,
+                    model: AI_CONFIG.model,
+                    messages: messages
+                });
+
                 const response = await fetch(AI_CONFIG.apiUrl, {
                     method: 'POST',
                     headers: {
@@ -872,14 +904,32 @@
                     })
                 });
 
+                console.log('AI API Response:', {
+                    status: response.status,
+                    statusText: response.statusText
+                });
+
                 if (!response.ok) {
-                    throw new Error(`API request failed: ${response.status}`);
+                    let errorText = '';
+                    try {
+                        const errorData = await response.json();
+                        errorText = errorData.error ? (errorData.error.message || JSON.stringify(errorData.error)) : JSON.stringify(errorData);
+                    } catch (e) {
+                        errorText = await response.text();
+                    }
+                    console.error('AI API Error Response:', errorText);
+                    throw new Error(`API request failed: ${response.status} - ${errorText}`);
                 }
 
                 const data = await response.json();
+                console.log('AI API Data:', data);
+                
+                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                    throw new Error('API response format error: ' + JSON.stringify(data));
+                }
                 return data.choices[0].message.content;
             } catch (error) {
-                console.error('AI API Error:', error);
+                console.error('AI API Error:', error.message || error);
                 throw error;
             }
         }
@@ -1164,7 +1214,6 @@
                     levelDisplay.textContent = `Level ${currentUser.level || 1}`;
                 }
             }
-            setTimeout(updateWordTopicDropdown, 100);
         }
 
         function changeLevel() {
@@ -1201,7 +1250,6 @@
                     lessonLevelSelect.value = selected;
                 }
 
-                updateWordTopicDropdown();
                 alert(`等级已修改为 Level ${selected}`);
             } else if (selected !== null) {
                 alert('请输入 1-5 之间的数字');
@@ -1224,7 +1272,6 @@
             if (tab === 'wrong-answers') loadWrongAnswers();
             if (tab === 'ai-chat') startChatWithTopic();
             if (tab === 'ai-words') updateAIWordsTopicDropdown();
-            if (tab === 'words') updateWordTopicDropdown();
         }
 
         function updateAIWordsTopicDropdown() {
@@ -1248,33 +1295,6 @@
                 });
             }
         }
-
-        function updateWordTopicDropdown() {
-            console.log('updateWordTopicDropdown called');
-            const levelSelect = document.getElementById('word-level');
-            console.log('levelSelect:', levelSelect);
-            const level = parseInt(levelSelect.value) || 1;
-            console.log('current level:', level);
-            const LEVEL_TOPICS = {
-                1: ['日常用品', '食物', '动物', '天气', '家庭', '颜色', '数字', '身体部位'],
-                2: ['学校生活', '旅行', '运动', '节日', '职业', '爱好', '衣服', '季节'],
-                3: ['科技', '文化', '历史', '地理', '环境', '健康', '娱乐', '社交'],
-                4: ['商业', '教育', '政治', '经济', '科学', '艺术', '媒体', '国际关系'],
-                5: ['哲学', '心理学', '社会学', '法律', '医学', '工程', '文学', '学术研究']
-            };
-            const topics = LEVEL_TOPICS[level] || LEVEL_TOPICS[1];
-            const topicSelect = document.getElementById('word-topic');
-            if (topicSelect) {
-                let options = '<option value="">🎲 随机主题</option>';
-                topics.forEach(t => {
-                    options += '<option value="' + t + '">' + t + '</option>';
-                });
-                options += '<option value="剩余单词">📋 剩余单词</option>';
-                topicSelect.innerHTML = options;
-            }
-        }
-
-        function updateTopicDisplay() { }
 
         function loadOverview() {
             if (!currentUser) return;
@@ -1535,19 +1555,13 @@
                 }
 
                 let filteredWords = availableWords;
+                const levelTopics = getLevelTopics(level);
 
                 if (!topic || topic === '') {
-                    const LEVEL_TOPICS = {
-                        1: ['日常用品', '食物', '动物', '天气', '家庭', '颜色', '数字', '身体部位'],
-                        2: ['学校生活', '旅行', '运动', '节日', '职业', '爱好', '衣服', '季节'],
-                        3: ['科技', '文化', '历史', '地理', '环境', '健康', '娱乐', '社交'],
-                        4: ['商业', '教育', '政治', '经济', '科学', '艺术', '媒体', '国际关系'],
-                        5: ['哲学', '心理学', '社会学', '法律', '医学', '工程', '文学', '学术研究']
-                    };
-                    const levelTopics = LEVEL_TOPICS[level] || LEVEL_TOPICS[1];
-                    const randomTopic = levelTopics[Math.floor(Math.random() * levelTopics.length)];
+                    const topicNames = Object.keys(levelTopics);
+                    const randomTopic = topicNames[Math.floor(Math.random() * topicNames.length)];
                     topicName = '🎲 ' + randomTopic;
-                    const topicWords = VOCABULARY_TOPICS[randomTopic] || [];
+                    const topicWords = levelTopics[randomTopic] || [];
                     const topicSet = new Set(topicWords);
                     filteredWords = availableWords.filter(w => topicSet.has(w.word));
 
@@ -1558,7 +1572,7 @@
                     }
                 } else if (topic !== '剩余单词') {
                     topicName = topic;
-                    const topicWords = VOCABULARY_TOPICS[topic] || [];
+                    const topicWords = levelTopics[topic] || [];
                     const topicSet = new Set(topicWords);
                     filteredWords = availableWords.filter(w => topicSet.has(w.word));
 
@@ -1570,7 +1584,7 @@
                 } else {
                     topicName = '📋 剩余单词';
                     const allTopicWords = new Set();
-                    Object.values(VOCABULARY_TOPICS).forEach(words => words.forEach(w => allTopicWords.add(w)));
+                    Object.values(levelTopics).forEach(words => words.forEach(w => allTopicWords.add(w)));
                     filteredWords = availableWords.filter(w => !allTopicWords.has(w.word));
                 }
 
@@ -1579,7 +1593,6 @@
 
                 window.currentLoadedWords = loadedWords;
                 window.currentLoadedLevel = level;
-                window.currentLoadedTopic = topicName;
 
                 loadedWords.forEach(w => loadedSet.add(w.word));
 
@@ -1650,9 +1663,39 @@
             window.currentLoadedWords = loadedWords;
         }
 
+        function parseWordInfo(text) {
+            const result = { phonetic: '', meaning: '', example: '' };
+
+            const phoneticMatch = text.match(/Phonetic.*?([\/\[].*?[\/\]])/i);
+            if (phoneticMatch) {
+                result.phonetic = phoneticMatch[1];
+            }
+
+            const meaningMatch = text.match(/Chinese Meaning\s*[:：]\s*(.+?)(?=\n-|\n\*|\n\n|$)/i);
+            if (meaningMatch) {
+                result.meaning = meaningMatch[1].trim();
+            }
+
+            const exampleMatch = text.match(/Example Sentence\s*[:：]\s*(.+?)(?=\n-|\n\*|\n\n|$)/i);
+            if (exampleMatch) {
+                const example = exampleMatch[1].trim().replace(/[*"]/g, '');
+                const translationMatch = text.match(/Translation\s*[:：]\s*(.+?)(?=\n-|\n\*|\n\n|$)/i);
+                if (translationMatch) {
+                    result.example = example + ' - ' + translationMatch[1].trim();
+                } else {
+                    result.example = example;
+                }
+            }
+
+            return result;
+        }
+
         async function startLearningFromAPI(index) {
             const word = window.currentLoadedWords && window.currentLoadedWords[index];
-            if (!word) return;
+            if (!word) {
+                alert('❌ 错误：无法获取单词数据！\nwindow.currentLoadedWords: ' + JSON.stringify(window.currentLoadedWords));
+                return;
+            }
 
             const modal = document.getElementById('learning-modal');
             const title = document.getElementById('learning-word-title');
@@ -1662,7 +1705,8 @@
             content.innerHTML = `
                 <div style="text-align: center;">
                     <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 12px;">${word.word}</div>
-                    <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;">⏳ 正在获取单词信息...</div>
+                    <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;">⏳ 正在调用AI获取单词信息...</div>
+                    <div style="font-size: 12px; color: #9ca3af;">索引: ${index}, API: ${AI_CONFIG.apiUrl}</div>
                 </div>
             `;
 
@@ -1671,24 +1715,39 @@
             modal.classList.remove('hidden');
 
             try {
-                const prompt = `请提供单词 "${word.word}" 的详细信息，包括：
-1. 音标（英式和美式）
-2. 中文释义（常用含义）
-3. 一个简单的例句（带中文翻译）
+                const prompt = `Please provide detailed information for the word "${word.word}", including:
+1. Phonetic transcription (IPA)
+2. Chinese meaning
+3. An example sentence with Chinese translation
 
-请用JSON格式返回，格式如下：
-{"phonetic": "/音标/", "meaning": "中文释义", "example": "例句 - 中文翻译"}`;
+Format your response as:
+- Phonetic: /ipa/
+- Chinese Meaning: meaning
+- Example Sentence: English sentence
+- Translation: Chinese translation`;
 
-                const aiResponse = await callAI(prompt, '你是一个专业的英语词典助手，提供准确的单词释义和例句。');
+                const aiResponse = await callAI(prompt, 'You are a professional English dictionary assistant, providing accurate word definitions and example sentences.');
+                
+                content.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 14px; color: #22c55e; margin-bottom: 8px;">✅ AI调用成功!</div>
+                        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 12px; text-align: left; padding: 8px; background: #f3f4f6; border-radius: 4px;">AI响应: ${aiResponse.substring(0, 100)}...</div>
+                    </div>
+                `;
+
                 let wordInfo = { phonetic: '', meaning: '', example: '' };
 
                 try {
-                    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        wordInfo = JSON.parse(jsonMatch[0]);
-                    }
+                    wordInfo = parseWordInfo(aiResponse);
                 } catch (e) {
-                    console.warn('Failed to parse AI response as JSON:', aiResponse);
+                    content.innerHTML += `<div style="font-size: 12px; color: #f59e0b;">⚠️ 解析失败: ${e.message}</div>`;
+                }
+
+                if (!wordInfo.meaning) {
+                    const simpleMatch = aiResponse.match(/(Chinese|中文).*?[:：]\s*(.+?)(?=\n|$)/i);
+                    if (simpleMatch) {
+                        wordInfo.meaning = simpleMatch[2].trim();
+                    }
                 }
 
                 const exampleText = wordInfo.example ? wordInfo.example.split(' - ')[0] || wordInfo.example.split('-')[0] || wordInfo.example : '';
@@ -1704,13 +1763,15 @@
 
                 currentLearningWord = { ...word, ...wordInfo, id: Date.now() };
             } catch (error) {
-                console.error('Failed to get word info:', error);
                 content.innerHTML = `
                     <div style="text-align: center;">
-                        <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 12px;">${word.word}</div>
-                        <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;"></div>
-                        <div style="font-size: 24px; color: #1f2937; margin-bottom: 12px;">暂无释义</div>
-                        <div style="font-size: 16px; color: #9ca3af; font-style: italic;">暂无例句</div>
+                        <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 12px;">${word.word} <button onclick="speak('${word.word}', true)" style="font-size: 24px; background: none; border: none; cursor: pointer; margin-left: 8px;" title="单词发音">🔊</button></div>
+                        <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;">${word.phonetic || ''}</div>
+                        <div style="font-size: 24px; color: #1f2937; margin-bottom: 12px;">${word.meaning || '暂无释义'}</div>
+                        <div style="font-size: 16px; color: #9ca3af; font-style: italic;">${word.example || '暂无例句'} ${word.example ? `<button onclick="speak('${word.example.replace(/'/g, "\\'").split(' - ')[0]}', false)" style="font-size: 14px; background: none; border: none; cursor: pointer; margin-left: 4px;" title="例句发音">🔊</button>` : ''}</div>
+                        <div style="font-size: 12px; color: #ef4444; margin-top: 12px; padding: 8px; background: #fef2f2; border-radius: 4px;">❌ 获取详细信息失败: ${error.message || '未知错误'}</div>
+                        <div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">API: ${AI_CONFIG.apiUrl}</div>
+                        <div style="font-size: 11px; color: #9ca3af;">模型: ${AI_CONFIG.model}</div>
                     </div>
                 `;
                 currentLearningWord = { ...word, id: Date.now() };
@@ -1728,40 +1789,36 @@
 
             const wordLevel = window.currentLoadedLevel || level;
             const targetLevel = wordLevel;
-            const topic = window.currentLoadedTopic || '未指定主题';
 
             const levelLengths = {
-                1: { min: 50, max: 70, desc: '非常简单，小学3-4年级水平' },
-                2: { min: 80, max: 100, desc: '简单，小学5-6年级水平' },
-                3: { min: 120, max: 150, desc: '中等，初中1-2年级水平' },
-                4: { min: 180, max: 220, desc: '较难，初中3年级-高中1年级水平' },
-                5: { min: 250, max: 300, desc: '困难，高中及以上水平' }
+                1: { min: 50, max: 70, desc: 'Very simple, elementary school 3-4 grade level' },
+                2: { min: 80, max: 100, desc: 'Simple, elementary school 5-6 grade level' },
+                3: { min: 120, max: 150, desc: 'Medium, junior high school 1-2 grade level' },
+                4: { min: 180, max: 220, desc: 'Moderately difficult, junior high 3-senior high 1 level' },
+                5: { min: 250, max: 300, desc: 'Difficult, senior high school and above level' }
             };
 
             const levelConfig = levelLengths[targetLevel] || levelLengths[3];
             const wordsList = window.currentLoadedWords.map(w => w.word).join(', ');
 
-            list.innerHTML = '<div style="text-align: center; padding: 20px;">⏳ 正在根据主题「' + topic + '」和单词生成课文...</div>';
+            list.innerHTML = '<div style="text-align: center; padding: 20px;">⏳ 正在根据单词生成课文...</div>';
 
             try {
                 const messages = [
                     {
                         role: 'system',
-                        content: '你是一位专业的英语老师，请根据用户提供的主题和单词生成一篇符合指定难度的课文。'
+                        content: 'You are a professional English teacher. Generate an English passage based on provided words.'
                     },
                     {
                         role: 'user',
-                        content: `请根据以下主题和单词生成一篇英语课文：
+                        content: `Generate an English passage using the following words: ${wordsList}
 
-主题：${topic}
-单词：${wordsList}
-
-要求：
-1. 课文难度：${levelConfig.desc}
-2. 课文长度：${levelConfig.min}-${levelConfig.max}词
-3. 必须自然地使用提供的单词，尽量包含所有单词
-4. 主题要连贯，内容积极向上
-5. 请直接输出课文内容，不要包含其他解释文字`
+Requirements:
+1. Difficulty level: ${levelConfig.desc}
+2. Length: ${levelConfig.min}-${levelConfig.max} words
+3. Use the provided words naturally
+4. Coherent theme, positive content
+5. Output only the passage text, no extra explanations`
                     }
                 ];
 
@@ -1802,9 +1859,6 @@
                             <h3>📖 课文 - Level ${targetLevel}</h3>
                             <button onclick="speak('${passage.replace(/'/g, "\\'")}', false)" style="font-size: 18px; background: none; border: none; cursor: pointer;" title="朗读课文">🔊</button>
                         </div>
-                        <div style="background: #fef3c7; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 14px; color: #92400e;">
-                            🎯 主题：${topic}
-                        </div>
                         <p style="margin: 12px 0; line-height: 1.8; font-size: 16px;">${highlightedPassage}</p>
                         <h4>关键词汇：</h4>
                         <div style="margin: 8px 0; display: flex; flex-wrap: wrap; gap: 8px;">
@@ -1815,7 +1869,7 @@
 
             } catch (error) {
                 console.error('Failed to generate passage:', error);
-                list.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">❌ 生成课文失败: ' + error.message + '</div>';
+                list.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">❌ 生成课文失败: ' + (error.message || '未知错误') + '<br/><br/><button class="btn btn-outline" onclick="loadLessons()">🔄 重试</button></div>';
             }
         }
 
@@ -2511,7 +2565,6 @@
             const newCount = 5;
             alert(`今日学习任务：\n- 复习单词：${reviewCount} 个\n- 新学单词：${newCount} 个`);
             document.getElementById('word-level').value = level;
-            updateWordTopicDropdown();
             switchTab('words');
             loadWords();
         }
@@ -2685,16 +2738,17 @@
                     let wordInfo = { phonetic: '', meaning: '', example: '', exampleTranslation: '', tips: '' };
 
                     try {
-                        const prompt = `请提供单词 "${w.word}" 的详细信息，包括：
-1. 音标（英式和美式）
-2. 中文释义（常用含义）
-3. 一个简单的例句（带中文翻译）
-4. 一个实用的记忆技巧
+                        const prompt = `Please provide detailed information for the word "${w.word}", including:
+1. Phonetic transcription (IPA)
+2. Chinese meaning
+3. An example sentence
+4. Example sentence translation in Chinese
+5. A useful memory tip
 
-请用JSON格式返回，格式如下：
-{"phonetic": "/音标/", "meaning": "中文释义", "example": "例句", "exampleTranslation": "中文翻译", "tips": "记忆技巧"}`;
+Format your response as JSON:
+{"phonetic": "/ipa/", "meaning": "Chinese meaning", "example": "English sentence", "exampleTranslation": "Chinese translation", "tips": "Memory tip"}`;
 
-                        const aiResponse = await callAI(prompt, '你是一个专业的英语词典助手，提供准确的单词释义和例句。');
+                        const aiResponse = await callAI(prompt, 'You are a professional English dictionary assistant, providing accurate word definitions, phonetic transcriptions, example sentences, and memory tips.');
 
                         try {
                             const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
