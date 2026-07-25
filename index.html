@@ -819,6 +819,15 @@
     <script src="vocabulary-C1.js"></script>
     <script src="vocabulary-topics.js"></script>
     <script>
+        console.log('=== 加载检查 ===');
+        console.log('VOCABULARY_A1:', typeof VOCABULARY_A1 !== 'undefined' ? '已加载 (' + VOCABULARY_A1.length + ')' : '未加载');
+        console.log('VOCABULARY_A2:', typeof VOCABULARY_A2 !== 'undefined' ? '已加载 (' + VOCABULARY_A2.length + ')' : '未加载');
+        console.log('VOCABULARY_B1:', typeof VOCABULARY_B1 !== 'undefined' ? '已加载 (' + VOCABULARY_B1.length + ')' : '未加载');
+        console.log('VOCABULARY_B2:', typeof VOCABULARY_B2 !== 'undefined' ? '已加载 (' + VOCABULARY_B2.length + ')' : '未加载');
+        console.log('VOCABULARY_C1:', typeof VOCABULARY_C1 !== 'undefined' ? '已加载 (' + VOCABULARY_C1.length + ')' : '未加载');
+        console.log('VOCABULARY_TOPICS:', typeof VOCABULARY_TOPICS !== 'undefined' ? '已加载 (' + Object.keys(VOCABULARY_TOPICS).length + ')' : '未加载');
+        console.log('=== 加载检查结束 ===');
+
         const AI_CONFIG = {
             apiKey: 'sk-a3a7d3678f8148b2b487c879a034a2d4',
             apiUrl: 'https://api.deepseek.com/v1/chat/completions',
