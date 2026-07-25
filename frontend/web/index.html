@@ -2738,16 +2738,17 @@ Requirements:
                     let wordInfo = { phonetic: '', meaning: '', example: '', exampleTranslation: '', tips: '' };
 
                     try {
-                        const prompt = `请提供单词 "${w.word}" 的详细信息，包括：
-1. 音标（英式和美式）
-2. 中文释义（常用含义）
-3. 一个简单的例句（带中文翻译）
-4. 一个实用的记忆技巧
+                        const prompt = `Please provide detailed information for the word "${w.word}", including:
+1. Phonetic transcription (IPA)
+2. Chinese meaning
+3. An example sentence
+4. Example sentence translation in Chinese
+5. A useful memory tip
 
-请用JSON格式返回，格式如下：
-{"phonetic": "/音标/", "meaning": "中文释义", "example": "例句", "exampleTranslation": "中文翻译", "tips": "记忆技巧"}`;
+Format your response as JSON:
+{"phonetic": "/ipa/", "meaning": "Chinese meaning", "example": "English sentence", "exampleTranslation": "Chinese translation", "tips": "Memory tip"}`;
 
-                        const aiResponse = await callAI(prompt, '你是一个专业的英语词典助手，提供准确的单词释义和例句。');
+                        const aiResponse = await callAI(prompt, 'You are a professional English dictionary assistant, providing accurate word definitions, phonetic transcriptions, example sentences, and memory tips.');
 
                         try {
                             const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
