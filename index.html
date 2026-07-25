@@ -526,24 +526,15 @@
                 <div class="card">
                     <h2>📚 单词学习</h2>
                     <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                        <select id="word-level" class="input" style="width: auto;">
+                        <select id="word-level" class="input" style="width: auto;" onchange="updateWordTopicDropdown()">
                             <option value="1">Level 1 - 入门 (小学3-4年级/CEFR A1)</option>
                             <option value="2">Level 2 - 基础 (小学5-6年级/CEFR A2)</option>
                             <option value="3">Level 3 - 进阶 (初中1-2年级/CEFR B1)</option>
                             <option value="4">Level 4 - 高级 (初中3-高中1年级/CEFR B2)</option>
                             <option value="5">Level 5 - 精通 (高中及以上/CEFR C1)</option>
                         </select>
-                        <select id="word-topic" class="input" style="width: auto;">
+                        <select id="word-topic" class="input" style="width: auto;" onchange="updateTopicDisplay()">
                             <option value="">🎲 随机主题</option>
-                            <option value="日常交流">🗣️ 日常交流</option>
-                            <option value="时间日期">📅 时间日期</option>
-                            <option value="地点方位">📍 地点方位</option>
-                            <option value="人物关系">👥 人物关系</option>
-                            <option value="情感表达">😊 情感表达</option>
-                            <option value="饮食健康">🍎 饮食健康</option>
-                            <option value="学习教育">📚 学习教育</option>
-                            <option value="工作职场">💼 工作职场</option>
-                            <option value="剩余单词">📋 剩余单词</option>
                         </select>
                         <div style="display: flex; align-items: center; gap: 4px;">
                             <span style="font-size: 14px;">每次加载:</span>
@@ -1173,6 +1164,7 @@
                     levelDisplay.textContent = `Level ${currentUser.level || 1}`;
                 }
             }
+            updateWordTopicDropdown();
         }
 
         function changeLevel() {
@@ -1254,6 +1246,32 @@
                 });
             }
         }
+
+        function updateWordTopicDropdown() {
+            const levelSelect = document.getElementById('word-level');
+            const level = parseInt(levelSelect.value) || 1;
+            const LEVEL_TOPICS = {
+                1: ['日常用品', '食物', '动物', '天气', '家庭', '颜色', '数字', '身体部位'],
+                2: ['学校生活', '旅行', '运动', '节日', '职业', '爱好', '衣服', '季节'],
+                3: ['科技', '文化', '历史', '地理', '环境', '健康', '娱乐', '社交'],
+                4: ['商业', '教育', '政治', '经济', '科学', '艺术', '媒体', '国际关系'],
+                5: ['哲学', '心理学', '社会学', '法律', '医学', '工程', '文学', '学术研究']
+            };
+            const topics = LEVEL_TOPICS[level] || LEVEL_TOPICS[1];
+            const topicSelect = document.getElementById('word-topic');
+            if (topicSelect) {
+                topicSelect.innerHTML = '<option value="">🎲 随机主题</option>';
+                topics.forEach(t => {
+                    const option = document.createElement('option');
+                    option.value = t;
+                    option.textContent = t;
+                    topicSelect.appendChild(option);
+                });
+                topicSelect.innerHTML += '<option value="剩余单词">📋 剩余单词</option>';
+            }
+        }
+
+        function updateTopicDisplay() { }
 
         function loadOverview() {
             if (!currentUser) return;
