@@ -1164,7 +1164,7 @@
                     levelDisplay.textContent = `Level ${currentUser.level || 1}`;
                 }
             }
-            updateWordTopicDropdown();
+            setTimeout(updateWordTopicDropdown, 100);
         }
 
         function changeLevel() {
@@ -1201,6 +1201,7 @@
                     lessonLevelSelect.value = selected;
                 }
 
+                updateWordTopicDropdown();
                 alert(`等级已修改为 Level ${selected}`);
             } else if (selected !== null) {
                 alert('请输入 1-5 之间的数字');
