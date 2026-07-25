@@ -899,13 +899,23 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`API request failed: ${response.status}`);
+                    let errorText = '';
+                    try {
+                        const errorData = await response.json();
+                        errorText = errorData.error ? (errorData.error.message || JSON.stringify(errorData.error)) : JSON.stringify(errorData);
+                    } catch (e) {
+                        errorText = await response.text();
+                    }
+                    throw new Error(`API request failed: ${response.status} - ${errorText}`);
                 }
 
                 const data = await response.json();
+                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                    throw new Error('API response format error: ' + JSON.stringify(data));
+                }
                 return data.choices[0].message.content;
             } catch (error) {
-                console.error('AI API Error:', error);
+                console.error('AI API Error:', error.message || error);
                 throw error;
             }
         }
@@ -1639,6 +1649,33 @@
             window.currentLoadedWords = loadedWords;
         }
 
+        function parseWordInfo(text) {
+            const result = { phonetic: '', meaning: '', example: '' };
+
+            const phoneticMatch = text.match(/Phonetic.*?([\/\[].*?[\/\]])/i);
+            if (phoneticMatch) {
+                result.phonetic = phoneticMatch[1];
+            }
+
+            const meaningMatch = text.match(/Chinese Meaning\s*[:：]\s*(.+?)(?=\n-|\n\*|\n\n|$)/i);
+            if (meaningMatch) {
+                result.meaning = meaningMatch[1].trim();
+            }
+
+            const exampleMatch = text.match(/Example Sentence\s*[:：]\s*(.+?)(?=\n-|\n\*|\n\n|$)/i);
+            if (exampleMatch) {
+                const example = exampleMatch[1].trim().replace(/[*"]/g, '');
+                const translationMatch = text.match(/Translation\s*[:：]\s*(.+?)(?=\n-|\n\*|\n\n|$)/i);
+                if (translationMatch) {
+                    result.example = example + ' - ' + translationMatch[1].trim();
+                } else {
+                    result.example = example;
+                }
+            }
+
+            return result;
+        }
+
         async function startLearningFromAPI(index) {
             const word = window.currentLoadedWords && window.currentLoadedWords[index];
             if (!word) return;
@@ -1660,24 +1697,31 @@
             modal.classList.remove('hidden');
 
             try {
-                const prompt = `请提供单词 "${word.word}" 的详细信息，包括：
-1. 音标（英式和美式）
-2. 中文释义（常用含义）
-3. 一个简单的例句（带中文翻译）
+                const prompt = `Please provide detailed information for the word "${word.word}", including:
+1. Phonetic transcription (IPA)
+2. Chinese meaning
+3. An example sentence with Chinese translation
 
-请用JSON格式返回，格式如下：
-{"phonetic": "/音标/", "meaning": "中文释义", "example": "例句 - 中文翻译"}`;
+Format your response as:
+- Phonetic: /ipa/
+- Chinese Meaning: meaning
+- Example Sentence: English sentence
+- Translation: Chinese translation`;
 
-                const aiResponse = await callAI(prompt, '你是一个专业的英语词典助手，提供准确的单词释义和例句。');
+                const aiResponse = await callAI(prompt, 'You are a professional English dictionary assistant, providing accurate word definitions and example sentences.');
                 let wordInfo = { phonetic: '', meaning: '', example: '' };
 
                 try {
-                    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        wordInfo = JSON.parse(jsonMatch[0]);
-                    }
+                    wordInfo = parseWordInfo(aiResponse);
                 } catch (e) {
-                    console.warn('Failed to parse AI response as JSON:', aiResponse);
+                    console.warn('Failed to parse AI response:', aiResponse);
+                }
+
+                if (!wordInfo.meaning) {
+                    const simpleMatch = aiResponse.match(/(Chinese|中文).*?[:：]\s*(.+?)(?=\n|$)/i);
+                    if (simpleMatch) {
+                        wordInfo.meaning = simpleMatch[2].trim();
+                    }
                 }
 
                 const exampleText = wordInfo.example ? wordInfo.example.split(' - ')[0] || wordInfo.example.split('-')[0] || wordInfo.example : '';
@@ -1696,10 +1740,11 @@
                 console.error('Failed to get word info:', error);
                 content.innerHTML = `
                     <div style="text-align: center;">
-                        <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 12px;">${word.word}</div>
-                        <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;"></div>
-                        <div style="font-size: 24px; color: #1f2937; margin-bottom: 12px;">暂无释义</div>
-                        <div style="font-size: 16px; color: #9ca3af; font-style: italic;">暂无例句</div>
+                        <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 12px;">${word.word} <button onclick="speak('${word.word}', true)" style="font-size: 24px; background: none; border: none; cursor: pointer; margin-left: 8px;" title="单词发音">🔊</button></div>
+                        <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;">${word.phonetic || ''}</div>
+                        <div style="font-size: 24px; color: #1f2937; margin-bottom: 12px;">${word.meaning || '暂无释义'}</div>
+                        <div style="font-size: 16px; color: #9ca3af; font-style: italic;">${word.example || '暂无例句'} ${word.example ? `<button onclick="speak('${word.example.replace(/'/g, "\\'").split(' - ')[0]}', false)" style="font-size: 14px; background: none; border: none; cursor: pointer; margin-left: 4px;" title="例句发音">🔊</button>` : ''}</div>
+                        <div style="font-size: 12px; color: #ef4444; margin-top: 12px;">⚠️ 获取详细信息失败: ${error.message || '未知错误'}</div>
                     </div>
                 `;
                 currentLearningWord = { ...word, id: Date.now() };
@@ -1719,11 +1764,11 @@
             const targetLevel = wordLevel;
 
             const levelLengths = {
-                1: { min: 50, max: 70, desc: '非常简单，小学3-4年级水平' },
-                2: { min: 80, max: 100, desc: '简单，小学5-6年级水平' },
-                3: { min: 120, max: 150, desc: '中等，初中1-2年级水平' },
-                4: { min: 180, max: 220, desc: '较难，初中3年级-高中1年级水平' },
-                5: { min: 250, max: 300, desc: '困难，高中及以上水平' }
+                1: { min: 50, max: 70, desc: 'Very simple, elementary school 3-4 grade level' },
+                2: { min: 80, max: 100, desc: 'Simple, elementary school 5-6 grade level' },
+                3: { min: 120, max: 150, desc: 'Medium, junior high school 1-2 grade level' },
+                4: { min: 180, max: 220, desc: 'Moderately difficult, junior high 3-senior high 1 level' },
+                5: { min: 250, max: 300, desc: 'Difficult, senior high school and above level' }
             };
 
             const levelConfig = levelLengths[targetLevel] || levelLengths[3];
@@ -1735,18 +1780,18 @@
                 const messages = [
                     {
                         role: 'system',
-                        content: '你是一位专业的英语老师，请根据用户提供的单词生成一篇符合指定难度的课文。'
+                        content: 'You are a professional English teacher. Generate an English passage based on provided words.'
                     },
                     {
                         role: 'user',
-                        content: `请使用以下单词生成一篇英语课文：${wordsList}
+                        content: `Generate an English passage using the following words: ${wordsList}
 
-要求：
-1. 课文难度：${levelConfig.desc}
-2. 课文长度：${levelConfig.min}-${levelConfig.max}词
-3. 必须自然地使用提供的单词，不要生硬堆砌
-4. 主题要连贯，内容积极向上
-5. 请直接输出课文内容，不要包含其他解释文字`
+Requirements:
+1. Difficulty level: ${levelConfig.desc}
+2. Length: ${levelConfig.min}-${levelConfig.max} words
+3. Use the provided words naturally
+4. Coherent theme, positive content
+5. Output only the passage text, no extra explanations`
                     }
                 ];
 
@@ -1797,7 +1842,7 @@
 
             } catch (error) {
                 console.error('Failed to generate passage:', error);
-                list.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">❌ 生成课文失败: ' + error.message + '</div>';
+                list.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">❌ 生成课文失败: ' + (error.message || '未知错误') + '<br/><br/><button class="btn btn-outline" onclick="loadLessons()">🔄 重试</button></div>';
             }
         }
 
