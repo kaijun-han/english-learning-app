@@ -1083,6 +1083,20 @@
             }
 
             loadAIWordCache();
+
+            const savedLoadedWords = localStorage.getItem('english-learning-loaded-words');
+            if (savedLoadedWords) {
+                const loadedData = JSON.parse(savedLoadedWords);
+                window.loadedWordsSets = {};
+                for (const [level, words] of Object.entries(loadedData.sets)) {
+                    window.loadedWordsSets[level] = new Set(words);
+                }
+                window.loadCount = loadedData.loadCount || 0;
+            } else {
+                window.loadedWordsSets = {};
+                window.loadCount = 0;
+            }
+
             const savedUser = localStorage.getItem('english-learning-user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
@@ -1498,6 +1512,7 @@
             window.loadedWordsSets = {};
             window.loadCount = 0;
             window.lastLoadCount = 0;
+            localStorage.removeItem('english-learning-loaded-words');
             alert('已重置加载记录，可以重新开始学习！');
             const panel = document.getElementById('level-info-panel');
             if (panel) {
@@ -1605,6 +1620,16 @@
                 loadedWords.forEach(w => loadedSet.add(w.word));
 
                 window.loadCount = (window.loadCount || 0) + 1;
+
+                const savedData = {
+                    sets: {},
+                    loadCount: window.loadCount
+                };
+                for (const [lvl, wordsSet] of Object.entries(window.loadedWordsSets)) {
+                    savedData.sets[lvl] = Array.from(wordsSet);
+                }
+                localStorage.setItem('english-learning-loaded-words', JSON.stringify(savedData));
+
                 const totalLoadedInSession = loadedSet.size;
 
                 const levelWordIds = allWords.map(w => w.word);
