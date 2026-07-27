@@ -3307,48 +3307,52 @@ Format your response as JSON:
             const learning = aiWords.filter(w => w.status === 'learning');
             const newWords = aiWords.filter(w => w.status === 'new');
 
-            const statsDiv = document.getElementById('vocab-stats');
-            statsDiv.innerHTML = `
-                <div style="padding: 12px; background: #eff6ff; border-radius: 8px;">
-                    <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${dueForReview.length}</div>
-                    <div style="font-size: 12px; color: #6b7280;">待复习</div>
+            const container = document.getElementById('tab-vocab').querySelector('.card');
+            container.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2>📖 生词本</h2>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-success" onclick="startVocabReview()">🎯 开始复习</button>
+                        <button class="btn btn-primary" onclick="startVocabQuiz()">📝 AI测验</button>
+                    </div>
                 </div>
-                <div style="padding: 12px; background: #f0fdf4; border-radius: 8px;">
-                    <div style="font-size: 24px; font-weight: bold; color: #10b981;">${mastered.length}</div>
-                    <div style="font-size: 12px; color: #6b7280;">已掌握</div>
+                <div id="vocab-stats" style="display: flex; gap: 16px; margin-bottom: 16px;">
+                    <div style="padding: 12px; background: #eff6ff; border-radius: 8px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${dueForReview.length}</div>
+                        <div style="font-size: 12px; color: #6b7280;">待复习</div>
+                    </div>
+                    <div style="padding: 12px; background: #f0fdf4; border-radius: 8px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #10b981;">${mastered.length}</div>
+                        <div style="font-size: 12px; color: #6b7280;">已掌握</div>
+                    </div>
+                    <div style="padding: 12px; background: #fffbeb; border-radius: 8px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${learning.length}</div>
+                        <div style="font-size: 12px; color: #6b7280;">学习中</div>
+                    </div>
+                    <div style="padding: 12px; background: #fef2f2; border-radius: 8px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #ef4444;">${newWords.length}</div>
+                        <div style="font-size: 12px; color: #6b7280;">新词</div>
+                    </div>
                 </div>
-                <div style="padding: 12px; background: #fffbeb; border-radius: 8px;">
-                    <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${learning.length}</div>
-                    <div style="font-size: 12px; color: #6b7280;">学习中</div>
-                </div>
-                <div style="padding: 12px; background: #fef2f2; border-radius: 8px;">
-                    <div style="font-size: 24px; font-weight: bold; color: #ef4444;">${newWords.length}</div>
-                    <div style="font-size: 12px; color: #6b7280;">新词</div>
+                <div id="vocab-list">
+                    ${aiWords.length === 0 ? '<p style="color: #9ca3af; text-align: center;">生词本为空，请先添加单词</p>' : aiWords.map(w => `
+                        <div class="word-card" style="margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="word">${w.word}</div>
+                                <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
+                                <span style="font-size: 12px; padding: 2px 6px; background: ${getStatusColor(w.status)}; color: white; border-radius: 4px;">${getStatusLabel(w.status)}</span>
+                            </div>
+                            <div class="phonetic">${w.phonetic}</div>
+                            <div class="meaning">${w.meaning}</div>
+                            <div class="example">${w.example}</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; color: #6b7280;">
+                                <span>重复次数：${w.repetitions}次</span>
+                                <span>下次复习：${formatDate(w.nextReviewDate)}</span>
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
             `;
-
-            const listDiv = document.getElementById('vocab-list');
-            if (aiWords.length === 0) {
-                listDiv.innerHTML = '<p style="color: #9ca3af; text-align: center;">生词本为空，请先添加单词</p>';
-                return;
-            }
-
-            listDiv.innerHTML = aiWords.map(w => `
-                <div class="word-card" style="margin-bottom: 12px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <div class="word">${w.word}</div>
-                        <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
-                        <span style="font-size: 12px; padding: 2px 6px; background: ${getStatusColor(w.status)}; color: white; border-radius: 4px;">${getStatusLabel(w.status)}</span>
-                    </div>
-                    <div class="phonetic">${w.phonetic}</div>
-                    <div class="meaning">${w.meaning}</div>
-                    <div class="example">${w.example}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; color: #6b7280;">
-                        <span>重复次数：${w.repetitions}次</span>
-                        <span>下次复习：${formatDate(w.nextReviewDate)}</span>
-                    </div>
-                </div>
-            `).join('');
         }
 
         function getStatusColor(status) {
@@ -3525,9 +3529,52 @@ Format your response as JSON:
             const answers = window.vocabQuizAnswers;
             const words = window.vocabQuizWords;
 
-            let score = 0;
+            let correct = 0;
+            let resultHtml = '';
+
             quizData.forEach((q, i) => {
-                if (answers[i] === q.answer) score++;
+                const userAnswerIdx = answers[i];
+                const userAnswer = userAnswerIdx !== null ? q.options[userAnswerIdx] : '未作答';
+                const isCorrect = userAnswerIdx === q.answer;
+
+                if (isCorrect) {
+                    correct++;
+                    document.getElementById(`vocab-quiz-${i}-${userAnswerIdx}`).classList.add('correct');
+                } else {
+                    if (userAnswerIdx !== null) {
+                        document.getElementById(`vocab-quiz-${i}-${userAnswerIdx}`).classList.add('wrong');
+                    }
+                    if (q.answer !== null) {
+                        document.getElementById(`vocab-quiz-${i}-${q.answer}`).classList.add('correct');
+                    }
+                    addToWrongAnswers(q.question, userAnswer, q.options[q.answer] || '', q.options, '');
+                }
+
+                const resultDiv = document.createElement('div');
+                resultDiv.style.cssText = 'margin-top: 8px; padding: 10px; border-radius: 6px;';
+
+                if (isCorrect) {
+                    resultDiv.style.background = '#d1fae5';
+                    resultDiv.style.color = '#065f46';
+                    resultDiv.innerHTML = `<span style="font-weight: bold;">✓ 回答正确！</span>`;
+                } else {
+                    resultDiv.style.background = '#fef2f2';
+                    resultDiv.style.color = '#991b1b';
+                    resultDiv.innerHTML = `
+                        <div><span style="font-weight: bold;">✗ 回答错误</span></div>
+                        <div style="margin-top: 4px; font-size: 13px;">
+                            <span style="color: #ef4444;">您的答案：${userAnswer}</span>
+                        </div>
+                        <div style="font-size: 13px;">
+                            <span style="color: #10b981;">正确答案：${q.options[q.answer] || ''}</span>
+                        </div>
+                    `;
+                }
+
+                const questionDiv = document.querySelector(`#vocab-quiz-questions > div:nth-child(${i + 1})`);
+                if (questionDiv) {
+                    questionDiv.appendChild(resultDiv);
+                }
             });
 
             quizData.forEach((q, i) => {
@@ -3538,17 +3585,23 @@ Format your response as JSON:
                 }
             });
 
+            document.querySelector('#vocab-quiz-questions + button')?.remove();
+
+            const total = quizData.length;
+            const percentage = Math.round((correct / total) * 100);
+
             const container = document.getElementById('tab-vocab').querySelector('.card');
-            container.innerHTML = `
-                <div style="text-align: center;">
-                    <div style="font-size: 64px;">${score === quizData.length ? '🎉' : '💪'}</div>
+            container.innerHTML += `
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                    <div style="font-size: 64px;">${correct === total ? '🎉' : '💪'}</div>
                     <h2>测验完成！</h2>
-                    <p style="font-size: 24px; font-weight: bold; color: #667eea;">得分：${score}/${quizData.length}</p>
+                    <p style="font-size: 24px; font-weight: bold; color: #667eea;">得分：${correct}/${total} (${percentage}%)</p>
                     <button class="btn btn-primary" onclick="loadVocab()" style="margin-top: 16px;">返回生词本</button>
                 </div>
             `;
 
-            showToast(`测验完成！得分：${score}/${quizData.length}`);
+            showToast(`测验完成！得分：${correct}/${total}`);
+            loadWrongAnswers();
         }
 
         function showToast(message) {
