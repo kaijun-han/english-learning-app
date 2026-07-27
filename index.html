@@ -923,7 +923,7 @@
 
                 const data = await response.json();
                 console.log('AI API Data:', data);
-                
+
                 if (!data.choices || !data.choices[0] || !data.choices[0].message) {
                     throw new Error('API response format error: ' + JSON.stringify(data));
                 }
@@ -1162,6 +1162,9 @@
         }
 
         function clearUIData() {
+            console.log('[DEBUG] clearUIData called - THIS WILL CLEAR CHAT!');
+            console.trace('[DEBUG] clearUIData stack trace');
+
             const elements = ['ai-words-result', 'ai-lesson-result', 'saved-lessons-list', 'vocab-list', 'word-list', 'lesson-list', 'quiz-container', 'wrong-answers-list', 'chat-messages'];
             elements.forEach(id => {
                 const el = document.getElementById(id);
@@ -1257,6 +1260,9 @@
         }
 
         function switchTab(tab) {
+            console.log('[DEBUG] switchTab called, tab:', tab);
+            console.log('[DEBUG] Before switch - chatMessages.length:', chatMessages.length, ', chatInitialized:', chatInitialized);
+
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             const btns = document.querySelectorAll('.nav-btn');
             const tabNames = ['home', 'words', 'lessons', 'ai-words', 'ai-lessons', 'ai-quiz', 'ai-chat', 'vocab', 'wrong-answers', 'progress'];
@@ -1272,6 +1278,8 @@
             if (tab === 'wrong-answers') loadWrongAnswers();
             if (tab === 'ai-chat') restoreChatState();
             if (tab === 'ai-words') updateAIWordsTopicDropdown();
+
+            console.log('[DEBUG] After switch - chatMessages.length:', chatMessages.length, ', chatInitialized:', chatInitialized);
         }
 
         function updateAIWordsTopicDropdown() {
@@ -1727,7 +1735,7 @@ Format your response as:
 - Translation: Chinese translation`;
 
                 const aiResponse = await callAI(prompt, 'You are a professional English dictionary assistant, providing accurate word definitions and example sentences.');
-                
+
                 content.innerHTML = `
                     <div style="text-align: center;">
                         <div style="font-size: 14px; color: #22c55e; margin-bottom: 8px;">✅ AI调用成功!</div>
@@ -4127,7 +4135,14 @@ ${structuredWords || '暂无今日学习单词'}
             const container = document.getElementById('chat-messages');
             const topicSelect = document.getElementById('chat-topic');
 
+            console.log('[DEBUG] restoreChatState called');
+            console.log('[DEBUG] chatInitialized:', chatInitialized);
+            console.log('[DEBUG] chatMessages.length:', chatMessages.length);
+            console.log('[DEBUG] container:', container ? 'found' : 'null');
+            console.log('[DEBUG] topicSelect:', topicSelect ? 'found' : 'null');
+
             if (chatInitialized && chatMessages.length > 0) {
+                console.log('[DEBUG] Restoring chat with', chatMessages.length, 'messages');
                 container.innerHTML = chatMessages.map(msg => {
                     const align = msg.role === 'user' ? 'justify-content: flex-end' : 'justify-content: flex-start';
                     const bg = msg.role === 'user' ? '#667eea' : '#f3f4f6';
@@ -4151,6 +4166,7 @@ ${structuredWords || '暂无今日学习单词'}
                     }
                 }
             } else {
+                console.log('[DEBUG] No chat to restore, calling startChatWithTopic');
                 startChatWithTopic();
             }
         }
