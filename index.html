@@ -576,6 +576,7 @@
                         </select>
                         <button class="btn btn-primary" onclick="loadLessons()">加载课文</button>
                     </div>
+                    <div id="saved-lessons-list-lessons" style="margin-bottom: 20px;"></div>
                     <div id="lessons-list"></div>
                 </div>
             </div>
@@ -2038,11 +2039,25 @@ Requirements:
                     highlightedPassage = highlightedPassage.replace(regex, `<span style="background-color: #fef08a; padding: 0 4px; border-radius: 2px;" title="点击发音" onclick="speak('${w}', true)">${w} 🔊</span>`);
                 });
 
+                const lessonData = {
+                    id: Date.now(),
+                    title: `课文 - Level ${targetLevel}`,
+                    level: targetLevel,
+                    content: passage,
+                    keyWords: uniqueWords,
+                    savedAt: Date.now()
+                };
+
+                window.currentLesson = lessonData;
+
                 list.innerHTML = `
                     <div class="word-card">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <h3>📖 课文 - Level ${targetLevel}</h3>
-                            <button onclick="speak('${passage.replace(/'/g, "\\'")}', false)" style="font-size: 18px; background: none; border: none; cursor: pointer;" title="朗读课文">🔊</button>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="speak('${passage.replace(/'/g, "\\'")}', false)" style="font-size: 18px; background: none; border: none; cursor: pointer;" title="朗读课文">🔊</button>
+                                <button onclick="saveLessonFromLessons()" class="btn btn-success" style="font-size: 14px;">💾 保存课文</button>
+                            </div>
                         </div>
                         <p style="margin: 12px 0; line-height: 1.8; font-size: 16px;">${highlightedPassage}</p>
                         <h4>关键词汇：</h4>
@@ -2051,6 +2066,8 @@ Requirements:
                         </div>
                     </div>
                 `;
+
+                loadSavedLessonsForLessons();
 
             } catch (error) {
                 console.error('Failed to generate passage:', error);
@@ -3694,6 +3711,138 @@ Format your response as JSON:
             localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
             showToast('✅ 课文已保存');
             loadSavedLessons();
+        }
+
+        function saveLessonFromLessons() {
+            if (!window.currentLesson) {
+                showToast('没有可保存的课文');
+                return;
+            }
+
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+            const existingIndex = savedLessons.findIndex(l => l.title === window.currentLesson.title && l.level === window.currentLesson.level);
+
+            if (existingIndex >= 0) {
+                const [updatedLesson] = savedLessons.splice(existingIndex, 1);
+                savedLessons.unshift(updatedLesson);
+            } else {
+                window.currentLesson.id = Date.now();
+                savedLessons.unshift(window.currentLesson);
+            }
+
+            localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
+            showToast('✅ 课文已保存');
+            loadSavedLessonsForLessons();
+        }
+
+        function loadSavedLessonsForLessons() {
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+            const container = document.getElementById('saved-lessons-list-lessons');
+
+            if (savedLessons.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const DISPLAY_LIMIT = 3;
+            const displayedLessons = savedLessons.slice(0, DISPLAY_LIMIT);
+            const moreLessons = savedLessons.slice(DISPLAY_LIMIT);
+
+            let html = `
+                <div style="margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 12px;">📚 已保存课文（${savedLessons.length}篇）</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${displayedLessons.map(lesson => `
+                            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; min-width: 200px;">
+                                <div>
+                                    <span style="font-weight: bold;">${lesson.title}</span>
+                                    <span style="font-size: 12px; color: #6b7280; margin-left: 8px;">Level ${lesson.level}</span>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button onclick="viewSavedLessonFromLessons(${lesson.id})" style="font-size: 14px; padding: 4px 8px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">查看</button>
+                                    <button onclick="deleteSavedLessonFromLessons(${lesson.id})" style="font-size: 14px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">删除</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+            `;
+
+            if (moreLessons.length > 0) {
+                html += `
+                    <div style="margin-top: 12px;">
+                        <button onclick="showMoreSavedLessonsFromLessons()" style="font-size: 14px; padding: 6px 12px; background: #f1f5f9; color: #64748b; border: none; border-radius: 4px; cursor: pointer;">查看全部 ${moreLessons.length} 篇课文 ▼</button>
+                    </div>
+                    <div id="more-lessons-list-lessons" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+                        ${moreLessons.map(lesson => `
+                            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <span style="font-weight: bold;">${lesson.title}</span>
+                                    <span style="font-size: 12px; color: #6b7280; margin-left: 8px;">Level ${lesson.level}</span>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button onclick="viewSavedLessonFromLessons(${lesson.id})" style="font-size: 14px; padding: 4px 8px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">查看</button>
+                                    <button onclick="deleteSavedLessonFromLessons(${lesson.id})" style="font-size: 14px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">删除</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function showMoreSavedLessonsFromLessons() {
+            const moreDiv = document.getElementById('more-lessons-list-lessons');
+            if (moreDiv) {
+                moreDiv.style.display = moreDiv.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function viewSavedLessonFromLessons(lessonId) {
+            const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+            const lesson = savedLessons.find(l => l.id == lessonId);
+            if (!lesson) return;
+
+            window.currentLesson = lesson;
+
+            const passage = lesson.content;
+            const uniqueWords = lesson.keyWords || [];
+
+            let highlightedPassage = passage;
+            uniqueWords.forEach(w => {
+                const regex = new RegExp(`\\b${w}\\b`, 'gi');
+                highlightedPassage = highlightedPassage.replace(regex, `<span style="background-color: #fef08a; padding: 0 4px; border-radius: 2px;" title="点击发音" onclick="speak('${w}', true)">${w} 🔊</span>`);
+            });
+
+            const list = document.getElementById('lessons-list');
+            list.innerHTML = `
+                <div class="word-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>📖 ${lesson.title}</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="speak('${passage.replace(/'/g, "\\'")}', false)" style="font-size: 18px; background: none; border: none; cursor: pointer;" title="朗读课文">🔊</button>
+                            <button onclick="saveLessonFromLessons()" class="btn btn-success" style="font-size: 14px;">💾 保存课文</button>
+                        </div>
+                    </div>
+                    <p style="margin: 12px 0; line-height: 1.8; font-size: 16px;">${highlightedPassage}</p>
+                    <h4>关键词汇：</h4>
+                    <div style="margin: 8px 0; display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${uniqueWords.map(w => `<span style="background: #eef2ff; padding: 4px 8px; border-radius: 4px; cursor: pointer;" onclick="speak('${w}', true)" title="点击发音">${w} 🔊</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function deleteSavedLessonFromLessons(lessonId) {
+            if (!confirm('确定要删除这篇课文吗？')) return;
+
+            let savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
+            savedLessons = savedLessons.filter(l => l.id != lessonId);
+            localStorage.setItem(getUserKey('english-learning-saved-lessons'), JSON.stringify(savedLessons));
+            showToast('✅ 课文已删除');
+            loadSavedLessonsForLessons();
         }
 
         function loadSavedLessons() {
