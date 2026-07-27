@@ -2783,17 +2783,6 @@ Format your response as JSON:
                 lastWordTopic = topic;
                 saveAIWordCache(topic);
 
-                chatMessages = [];
-                chatInitialized = false;
-                const chatContainer = document.getElementById('chat-messages');
-                if (chatContainer) {
-                    chatContainer.innerHTML = '';
-                }
-                const topicSelect = document.getElementById('chat-topic');
-                if (topicSelect) {
-                    topicSelect.value = '';
-                }
-
                 const newCoveredCount = currentHistory.length;
                 const newProgress = Math.round((newCoveredCount / totalCount) * 100);
 
