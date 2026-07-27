@@ -1270,7 +1270,7 @@
             if (tab === 'vocab') loadVocab();
             if (tab === 'ai-lessons') loadSavedLessons();
             if (tab === 'wrong-answers') loadWrongAnswers();
-            if (tab === 'ai-chat') startChatWithTopic();
+            if (tab === 'ai-chat') restoreChatState();
             if (tab === 'ai-words') updateAIWordsTopicDropdown();
         }
 
@@ -4132,6 +4132,38 @@ ${structuredWords || '暂无今日学习单词'}
                 lessons: todayLessons,
                 cachedWords: aiWordCache
             };
+        }
+
+        function restoreChatState() {
+            const container = document.getElementById('chat-messages');
+            const topicSelect = document.getElementById('chat-topic');
+
+            if (chatInitialized && chatMessages.length > 0) {
+                container.innerHTML = chatMessages.map(msg => {
+                    const align = msg.role === 'user' ? 'justify-content: flex-end' : 'justify-content: flex-start';
+                    const bg = msg.role === 'user' ? '#667eea' : '#f3f4f6';
+                    const color = msg.role === 'user' ? 'white' : '#1f2937';
+                    const borderRadius = msg.role === 'user' ? '16px 16px 0 16px' : '16px 16px 16px 0';
+                    return `
+                        <div style="display: flex; ${align}; margin-bottom: 12px;">
+                            <div style="background: ${bg}; color: ${color}; padding: 12px 16px; border-radius: ${borderRadius}; max-width: 80%;">
+                                ${msg.content}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                container.scrollTop = container.scrollHeight;
+
+                if (topicSelect) {
+                    if (currentChatTopic === '自由对话') {
+                        topicSelect.value = '自由对话';
+                    } else {
+                        topicSelect.value = '';
+                    }
+                }
+            } else {
+                startChatWithTopic();
+            }
         }
 
         function startChatWithTopic() {
