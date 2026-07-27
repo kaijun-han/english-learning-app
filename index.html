@@ -1092,10 +1092,14 @@
                     window.loadedWordsSets[level] = new Set(words);
                 }
                 window.loadCount = loadedData.loadCount || 0;
+                console.log('[DEBUG] Loaded saved words from localStorage:', JSON.stringify(loadedData));
             } else {
                 window.loadedWordsSets = {};
                 window.loadCount = 0;
+                console.log('[DEBUG] No saved words found in localStorage');
             }
+            console.log('[DEBUG] After init - loadedWordsSets:', window.loadedWordsSets);
+            console.log('[DEBUG] After init - loadCount:', window.loadCount);
 
             const savedUser = localStorage.getItem('english-learning-user');
             if (savedUser) {
@@ -1552,6 +1556,10 @@
                 window.loadedWordsSets[level] = new Set();
             }
             const loadedSet = window.loadedWordsSets[level];
+            
+            console.log('[DEBUG] loadWords called for level:', level);
+            console.log('[DEBUG] loadedSet size before adding:', loadedSet.size);
+            console.log('[DEBUG] window.loadCount:', window.loadCount);
 
             const panel = document.getElementById('level-info-panel');
             const content = document.getElementById('level-info-content');
