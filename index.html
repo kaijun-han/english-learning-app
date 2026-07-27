@@ -2045,7 +2045,8 @@ Requirements:
                     level: targetLevel,
                     content: passage,
                     keyWords: uniqueWords,
-                    savedAt: Date.now()
+                    savedAt: Date.now(),
+                    source: 'lessons'
                 };
 
                 window.currentLesson = lessonData;
@@ -3739,18 +3740,20 @@ Format your response as JSON:
             const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
             const container = document.getElementById('saved-lessons-list-lessons');
 
-            if (savedLessons.length === 0) {
+            const lessonsLessons = savedLessons.filter(l => l.source === 'lessons');
+
+            if (lessonsLessons.length === 0) {
                 container.innerHTML = '';
                 return;
             }
 
             const DISPLAY_LIMIT = 3;
-            const displayedLessons = savedLessons.slice(0, DISPLAY_LIMIT);
-            const moreLessons = savedLessons.slice(DISPLAY_LIMIT);
+            const displayedLessons = lessonsLessons.slice(0, DISPLAY_LIMIT);
+            const moreLessons = lessonsLessons.slice(DISPLAY_LIMIT);
 
             let html = `
                 <div style="margin-bottom: 16px;">
-                    <h4 style="margin-bottom: 12px;">📚 已保存课文（${savedLessons.length}篇）</h4>
+                    <h4 style="margin-bottom: 12px;">📚 已保存课文（${lessonsLessons.length}篇）</h4>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                         ${displayedLessons.map(lesson => `
                             <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; min-width: 200px;">
@@ -3849,18 +3852,20 @@ Format your response as JSON:
             const savedLessons = JSON.parse(localStorage.getItem(getUserKey('english-learning-saved-lessons')) || '[]');
             const container = document.getElementById('saved-lessons-list');
 
-            if (savedLessons.length === 0) {
+            const aiLessons = savedLessons.filter(l => l.source !== 'lessons');
+
+            if (aiLessons.length === 0) {
                 container.innerHTML = '';
                 return;
             }
 
             const DISPLAY_LIMIT = 3;
-            const displayedLessons = savedLessons.slice(0, DISPLAY_LIMIT);
-            const moreLessons = savedLessons.slice(DISPLAY_LIMIT);
+            const displayedLessons = aiLessons.slice(0, DISPLAY_LIMIT);
+            const moreLessons = aiLessons.slice(DISPLAY_LIMIT);
 
             let html = `
                 <div style="margin-bottom: 16px;">
-                    <h4 style="margin-bottom: 12px;">📚 已保存课文（${savedLessons.length}篇）</h4>
+                    <h4 style="margin-bottom: 12px;">📚 已保存课文（${aiLessons.length}篇）</h4>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                         ${displayedLessons.map(lesson => `
                             <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; min-width: 200px;">
