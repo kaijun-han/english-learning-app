@@ -30,7 +30,7 @@ const VOCABULARY_TOPICS_A1 = {
   ],
   "工作与职业": [
     "job", "office", "doctor", "nurse", "driver", "farmer", "police",
-    "soldier", "teacher", "student", "worker", "manager", "business"
+    "soldier", "teacher", "worker", "manager", "business"
   ],
   "交通与旅行": [
     "car", "bus", "train", "bicycle", "bike", "boat", "plane", "airport",
@@ -51,7 +51,7 @@ const VOCABULARY_TOPICS_A1 = {
     "today", "tomorrow", "yesterday", "now", "then", "soon"
   ],
   "天气与季节": [
-    "weather", "rain", "snow", "sun", "wind", "cloud", "hot", "cold",
+    "weather", "rain", "snow", "sun", "wind", "hot", "cold",
     "warm", "cool", "summer", "winter", "spring", "fall", "season"
   ],
   "日常活动与动词": [
@@ -73,11 +73,11 @@ const VOCABULARY_TOPICS_A1 = {
   ],
   "方向与位置": [
     "up", "down", "left", "right", "in", "on", "at", "under", "above",
-    "below", "between", "next", "behind", "front", "inside", "outside",
+    "below", "between", "behind", "front", "inside", "outside",
     "near", "far"
   ],
   "社交用语": [
-    "hello", "hi", "goodbye", "thank", "sorry", "please", "excuse",
+    "hello", "hi", "goodbye", "sorry", "please",
     "yes", "no", "OK", "welcome"
   ]
 };
