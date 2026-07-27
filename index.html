@@ -1808,8 +1808,13 @@ Return ONLY the JSON array, no other text.`;
                     }
                 });
 
+                const generateBtnHtml = `
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <button class="btn btn-primary" onclick="generateAllWordInfo()" style="flex: 1;">✨ 生成释义（批量获取12个单词的注音、释义、例句）</button>
+                    </div>
+                `;
                 const list = document.getElementById('words-list');
-                list.innerHTML = generateBtn + words.map((w, index) => `
+                list.innerHTML = generateBtnHtml + words.map((w, index) => `
                     <div class="word-card">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div style="background: #667eea; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">${index + 1}</div>
