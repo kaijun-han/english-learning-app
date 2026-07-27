@@ -1114,7 +1114,6 @@
                 if (lessonLevelSelect) {
                     lessonLevelSelect.value = currentUser.level || 1;
                 }
-                loadWords();
                 loadLessons();
             }
         }
@@ -1143,7 +1142,6 @@
                 if (lessonLevelSelect) {
                     lessonLevelSelect.value = currentUser.level || 1;
                 }
-                loadWords();
                 loadLessons();
             } else {
                 alert('用户名或密码错误');
@@ -1556,7 +1554,7 @@
                 window.loadedWordsSets[level] = new Set();
             }
             const loadedSet = window.loadedWordsSets[level];
-            
+
             console.log('[DEBUG] loadWords called for level:', level);
             console.log('[DEBUG] loadedSet size before adding:', loadedSet.size);
             console.log('[DEBUG] window.loadCount:', window.loadCount);
