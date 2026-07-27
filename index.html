@@ -1685,17 +1685,23 @@
                 return;
             }
 
-            list.innerHTML = loadedWords.map((w, index) => `
+            const generateBtn = `
+                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                    <button class="btn btn-primary" onclick="generateAllWordInfo()" style="flex: 1;">✨ 生成释义（批量获取12个单词的注音、释义、例句）</button>
+                </div>
+            `;
+
+            list.innerHTML = generateBtn + loadedWords.map((w, index) => `
                 <div class="word-card">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div style="background: #667eea; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">${index + 1}</div>
                         <div class="word">${w.word}</div>
                         <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
                     </div>
-                    <div class="phonetic"></div>
-                    <div class="meaning"></div>
-                    <div class="example"></div>
-                    <button class="btn btn-success" onclick="startLearningFromAPI(${index})" style="margin-top: 12px;">开始学习</button>
+                    <div class="phonetic" style="font-size: 14px; color: #6b7280; font-style: italic;">${w.phonetic || ''}</div>
+                    <div class="meaning" style="font-size: 16px; color: #1f2937;">${w.meaning || ''}</div>
+                    <div class="example" style="font-size: 14px; color: #9ca3af; font-style: italic;">${w.example || ''} ${w.example ? `<button onclick="speak('${w.example.replace(/'/g, "\\'").split(' - ')[0] || w.example}', false)" style="font-size: 12px; background: none; border: none; cursor: pointer; margin-left: 4px;" title="例句发音">🔊</button>` : ''}</div>
+                    <button class="btn btn-success" onclick="startLearningFromLocal(${index})" style="margin-top: 12px;">开始学习</button>
                 </div>
             `).join('');
 
@@ -1727,6 +1733,128 @@
             }
 
             return result;
+        }
+
+        async function generateAllWordInfo() {
+            const words = window.currentLoadedWords;
+            if (!words || words.length === 0) {
+                alert('请先加载单词！');
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="generateAllWordInfo()"]');
+            if (btn) {
+                btn.innerHTML = '⏳ 正在批量生成...';
+                btn.disabled = true;
+            }
+
+            try {
+                const wordList = words.map(w => w.word).join(', ');
+
+                const prompt = `Please provide detailed information for these words: ${wordList}
+
+For EACH word, provide:
+1. Phonetic transcription (IPA)
+2. Chinese meaning
+3. An example sentence with Chinese translation
+
+Format your response as a JSON array:
+[
+  {
+    "word": "word1",
+    "phonetic": "/ipa/",
+    "meaning": "Chinese meaning",
+    "example": "English sentence - Chinese translation"
+  },
+  {
+    "word": "word2",
+    "phonetic": "/ipa/",
+    "meaning": "Chinese meaning",
+    "example": "English sentence - Chinese translation"
+  }
+]
+
+Return ONLY the JSON array, no other text.`;
+
+                const aiResponse = await callAI(prompt, 'You are a professional English dictionary assistant. Provide accurate word definitions in JSON format.');
+
+                let wordInfoList = [];
+                try {
+                    const jsonMatch = aiResponse.match(/\[.*\]/s);
+                    if (jsonMatch) {
+                        wordInfoList = JSON.parse(jsonMatch[0]);
+                    }
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                }
+
+                if (!Array.isArray(wordInfoList)) {
+                    wordInfoList = [];
+                }
+
+                const wordInfoMap = {};
+                wordInfoList.forEach(info => {
+                    if (info.word) {
+                        wordInfoMap[info.word.toLowerCase()] = info;
+                    }
+                });
+
+                words.forEach((w, index) => {
+                    const info = wordInfoMap[w.word.toLowerCase()];
+                    if (info) {
+                        words[index].phonetic = info.phonetic || '';
+                        words[index].meaning = info.meaning || '';
+                        words[index].example = info.example || '';
+                    }
+                });
+
+                loadWords();
+
+                if (btn) {
+                    btn.innerHTML = '✨ 生成释义（批量获取12个单词的注音、释义、例句）';
+                    btn.disabled = false;
+                }
+
+                alert(`✅ 成功生成 ${wordInfoList.length} 个单词的释义！`);
+            } catch (error) {
+                console.error('批量生成失败:', error);
+                if (btn) {
+                    btn.innerHTML = '✨ 生成释义（批量获取12个单词的注音、释义、例句）';
+                    btn.disabled = false;
+                }
+                alert('❌ 批量生成失败: ' + error.message);
+            }
+        }
+
+        function startLearningFromLocal(index) {
+            const word = window.currentLoadedWords && window.currentLoadedWords[index];
+            if (!word) {
+                alert('❌ 错误：无法获取单词数据！');
+                return;
+            }
+
+            const modal = document.getElementById('learning-modal');
+            const title = document.getElementById('learning-word-title');
+            const content = document.getElementById('learning-word-content');
+
+            title.textContent = `单词学习 - ${word.word}`;
+
+            const exampleText = word.example ? word.example.split(' - ')[0] || word.example.split('-')[0] || word.example : '';
+
+            content.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 12px;">${word.word} <button onclick="speak('${word.word}', true)" style="font-size: 24px; background: none; border: none; cursor: pointer; margin-left: 8px;" title="单词发音">🔊</button></div>
+                    <div style="font-size: 18px; color: #6b7280; font-style: italic; margin-bottom: 16px;">${word.phonetic || ''}</div>
+                    <div style="font-size: 24px; color: #1f2937; margin-bottom: 12px;">${word.meaning || '暂无释义'}</div>
+                    <div style="font-size: 16px; color: #9ca3af; font-style: italic;">${word.example || '暂无例句'} ${exampleText ? `<button onclick="speak('${exampleText.replace(/'/g, "\\'")}', false)" style="font-size: 14px; background: none; border: none; cursor: pointer; margin-left: 4px;" title="例句发音">🔊</button>` : ''}</div>
+                </div>
+            `;
+
+            currentRating = 0;
+            document.querySelectorAll('.star').forEach(s => s.classList.remove('selected'));
+            modal.classList.remove('hidden');
+
+            currentLearningWord = { ...word, id: Date.now() };
         }
 
         async function startLearningFromAPI(index) {
