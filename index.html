@@ -1808,7 +1808,20 @@ Return ONLY the JSON array, no other text.`;
                     }
                 });
 
-                loadWords();
+                const list = document.getElementById('words-list');
+                list.innerHTML = generateBtn + words.map((w, index) => `
+                    <div class="word-card">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="background: #667eea; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">${index + 1}</div>
+                            <div class="word">${w.word}</div>
+                            <button class="speak-btn" onclick="speak('${w.word}', true)" title="发音">🔊</button>
+                        </div>
+                        <div class="phonetic" style="font-size: 14px; color: #6b7280; font-style: italic;">${w.phonetic || ''}</div>
+                        <div class="meaning" style="font-size: 16px; color: #1f2937;">${w.meaning || ''}</div>
+                        <div class="example" style="font-size: 14px; color: #9ca3af; font-style: italic;">${w.example || ''} ${w.example ? `<button onclick="speak('${w.example.replace(/'/g, "\\'").split(' - ')[0] || w.example}', false)" style="font-size: 12px; background: none; border: none; cursor: pointer; margin-left: 4px;" title="例句发音">🔊</button>` : ''}</div>
+                        <button class="btn btn-success" onclick="startLearningFromLocal(${index})" style="margin-top: 12px;">开始学习</button>
+                    </div>
+                `).join('');
 
                 if (btn) {
                     btn.innerHTML = '✨ 生成释义（批量获取12个单词的注音、释义、例句）';
