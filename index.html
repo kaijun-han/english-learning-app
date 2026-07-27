@@ -4139,14 +4139,10 @@ ${structuredWords || '暂无今日学习单词'}
             const container = document.getElementById('chat-messages');
 
             const newTopic = topicSelect.value;
-            const shouldSwitch = (newTopic === '自由对话' && currentChatTopic !== '自由对话') ||
-                (newTopic !== '自由对话' && currentChatTopic === '自由对话');
 
-            if (shouldSwitch && chatInitialized) {
-                chatMessages = [];
-                container.innerHTML = '';
-                chatInitialized = false;
-            }
+            chatMessages = [];
+            container.innerHTML = '';
+            chatInitialized = false;
 
             if (newTopic === '自由对话') {
                 currentChatTopic = '自由对话';
