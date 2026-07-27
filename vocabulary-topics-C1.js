@@ -115,5 +115,47 @@ const VOCABULARY_TOPICS_C1 = {
     "rational", "realize", "reason", "recall", "reflect", "relevance",
     "resolve", "sense", "speculate", "subjective", "synthesize",
     "theorize", "understand", "visualize"
+  ],
+  "法律与秩序": [
+    "appeal", "breach", "civil", "custody", "dispute", "evidence",
+    "legislation", "offence", "penalty", "precedent", "proof",
+    "prosecute", "trial", "victim", "witness"
+  ],
+  "科技与创新": [
+    "domain", "infrastructure", "innovation", "protocol", "spectrum",
+    "virtual"
+  ],
+  "环境与生态": [
+    "climate", "emission", "environment", "fuel", "global", "pollution",
+    "recycle", "resource"
+  ],
+  "健康与医疗": [
+    "chronic", "medication", "mental", "prescription", "prevention",
+    "symptom", "therapy", "treatment"
+  ],
+  "艺术与文化": [
+    "classic", "composition", "heritage", "literature", "performance",
+    "tradition"
+  ],
+  "教育学习": [
+    "curriculum", "discipline", "educate", "practice", "qualification",
+    "revision", "scholarship", "subject"
+  ],
+  "商业与金融": [
+    "account", "bond", "budget", "credit", "debt", "economy",
+    "expense", "finance", "fund", "income", "inflation", "invest",
+    "market", "profit", "revenue", "stock", "tax", "trade", "venture",
+    "wage", "yield"
+  ],
+  "旅行与交通": [
+    "terminal", "transport", "travel"
+  ],
+  "家庭与关系": [
+    "bond", "generation"
+  ],
+  "抽象概念": [
+    "behavior", "cause", "condition", "consequence", "factor",
+    "identity", "phase", "scale", "state", "status", "structure",
+    "trend", "value", "variation"
   ]
 };
