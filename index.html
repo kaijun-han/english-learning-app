@@ -2607,14 +2607,6 @@ Requirements:
                 5: VOCABULARY_C1 || []
             };
 
-            const VOCABULARY_LEVELS = {
-                1: { wordCount: VOCABULARY_A1.length || 500, name: '入门级' },
-                2: { wordCount: VOCABULARY_A2.length || 500, name: '基础级' },
-                3: { wordCount: VOCABULARY_B1.length || 700, name: '进阶级' },
-                4: { wordCount: VOCABULARY_B2.length || 700, name: '高级' },
-                5: { wordCount: VOCABULARY_C1.length || 1200, name: '精通级' }
-            };
-
             const levelInfo = VOCABULARY_LEVELS[level];
 
             const TOPIC_KEYWORDS = {
@@ -3978,6 +3970,14 @@ ${structuredWords || '暂无今日学习单词'}
         let chatMessages = [];
         let voiceRecognition = null;
         let isVoiceInputting = false;
+
+        const VOCABULARY_LEVELS = {
+            1: { wordCount: 500, name: '入门级', cefr: 'A1' },
+            2: { wordCount: 500, name: '基础级', cefr: 'A2' },
+            3: { wordCount: 700, name: '进阶级', cefr: 'B1' },
+            4: { wordCount: 700, name: '高级', cefr: 'B2' },
+            5: { wordCount: 1200, name: '精通级', cefr: 'C1' }
+        };
 
         function toggleVoiceInput() {
             const btn = document.getElementById('voice-btn');
