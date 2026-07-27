@@ -1292,6 +1292,7 @@
             if (tab === 'progress') loadProgress();
             if (tab === 'vocab') loadVocab();
             if (tab === 'ai-lessons') loadSavedLessons();
+            if (tab === 'lessons') loadSavedLessonsForLessons();
             if (tab === 'wrong-answers') loadWrongAnswers();
             if (tab === 'ai-chat') restoreChatState();
             if (tab === 'ai-words') updateAIWordsTopicDropdown();
@@ -2041,7 +2042,7 @@ Requirements:
 
                 const lessonData = {
                     id: Date.now(),
-                    title: `课文 - Level ${targetLevel}`,
+                    title: `课文 - Level ${targetLevel} (${new Date().toLocaleString('zh-CN')})`,
                     level: targetLevel,
                     content: passage,
                     keyWords: uniqueWords,
