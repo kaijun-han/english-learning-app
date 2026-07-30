@@ -4591,7 +4591,7 @@ ${structuredWords || '暂无今日学习单词'}
                             <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
                                 🗣️ 自由对话模式
                                 <br><small style="color: #6b7280;">难度：${levelInfo.cefr}</small>
-                                <br>Hi! What would you like to talk about today? I'm here to chat with you.
+                                <br><br>请用英语开始对话！Send me a message when you're ready. 😊
                             </div>
                         </div>
                     `;
@@ -4603,65 +4603,12 @@ ${structuredWords || '暂无今日学习单词'}
                             <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
                                 🎯 话题：${currentChatTopic}
                                 <br><small style="color: #6b7280;">难度：${levelInfo.cefr}</small>
-                                <br>Let's talk about ${currentChatTopic} in English! I'll start the conversation.
+                                <br><br>Let's talk about ${currentChatTopic}! Please start the conversation in English. 🌟
                             </div>
                         </div>
                     `;
                     chatMessages = [];
                     chatInitialized = true;
-                    setTimeout(() => {
-                        const level = currentUser.level || 1;
-                        const levelDesc = LEVEL_DESCRIPTIONS[level] || LEVEL_DESCRIPTIONS[1];
-
-                        const levelSpecificRules = {
-                            1: '使用最基础的日常词汇，简单句型（主谓宾结构），只用一般现在时，每个句子不超过8个单词',
-                            2: '使用基础日常词汇和常用短语，简单时态（一般现在时、一般过去时），每个句子不超过10个单词',
-                            3: '使用常用词汇和固定搭配，掌握基本时态和句型，每个句子不超过12个单词',
-                            4: '使用较复杂词汇和从句，掌握多种时态和语态，每个句子不超过15个单词',
-                            5: '使用高级词汇和复杂句型，包含复合句和非谓语动词，每个句子不超过18个单词'
-                        };
-
-                        const rules = levelSpecificRules[level] || levelSpecificRules[3];
-
-                        const aiWords = aiWordCache.length > 0 ? aiWordCache.map(w => w.word).join(', ') : '';
-
-                        const prompt = `请开启关于"${currentChatTopic}"的对话。你是一个热情友好的聊天伙伴，与用户进行轻松自然的对话。
-
-【当前等级】：Level ${level}
-【等级描述】：${levelDesc}
-【语言规则】：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。
-${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` : ''}
-
-【对话风格】：
-1. 像朋友聊天一样自然，使用表情符号（如😄, 🌟, ❤️）增加亲切感
-2. 先分享自己的经历或想法，再自然地问一个开放性问题
-3. 不要连续问问题，要先表达观点再提问
-4. 使用轻松活泼的语气，不要太正式
-5. 每次回复3-4句话，让对话有继续下去的空间
-
-【示例风格】：
-- "I love talking about ${currentChatTopic}! 😊 My favorite thing is... What about you?"
-- "Yesterday I tried... It was fun! Have you ever...?"
-
-请用英语回复，开始一段有趣的对话。`;
-                        callAI(prompt, `你是一个热情友好的英语对话伙伴，像朋友一样聊天。话题是"${currentChatTopic}"。当前等级：Level ${level}，${levelDesc}。语言规则：${rules}。难度要低于当前等级，尽量使用用户已学过的单词。${aiWords ? `学习单词：${aiWords}（请尽量使用这些单词）` : ''}。对话风格：自然轻松，使用表情符号，先分享经历再提问，不要连续追问，每次回复3-4句话。`).then(response => {
-                            chatMessages.push({ role: 'assistant', content: response });
-                            container.innerHTML += `
-                        <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
-                            <div style="background: #f3f4f6; color: #1f2937; padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%;">
-                                ${response}
-                            </div>
-                            <button class="speak-btn" onclick="speak('${response.replace(/'/g, "\\'")}')" title="听发音" style="margin-left: 8px;">🔊</button>
-                        </div>
-                    `;
-                            container.scrollTop = container.scrollHeight;
-                            if (document.getElementById('chat-auto-speak').checked) {
-                                speak(response);
-                            }
-                        }).catch(e => {
-                            console.error('Chat error:', e);
-                        });
-                    }, 500);
                 }
             }
 
