@@ -1117,6 +1117,22 @@
                     }
                 }
             }
+
+            // 更新AI助手浮动按钮状态
+            const aiAssistantFab = document.getElementById('ai-assistant-fab');
+            if (aiAssistantFab) {
+                if (!hasKey) {
+                    aiAssistantFab.style.background = 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)';
+                    aiAssistantFab.style.cursor = 'not-allowed';
+                    aiAssistantFab.style.boxShadow = '0 4px 15px rgba(156, 163, 175, 0.4)';
+                    aiAssistantFab.title = '请先在"设置"中配置API Key';
+                } else {
+                    aiAssistantFab.style.background = '';
+                    aiAssistantFab.style.cursor = '';
+                    aiAssistantFab.style.boxShadow = '';
+                    aiAssistantFab.title = '';
+                }
+            }
         }
 
         // 为需要API的按钮和输入框添加标记
