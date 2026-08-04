@@ -1060,30 +1060,69 @@
             }
 
             // 更新所有需要API的按钮状态
-            const apiButtons = document.querySelectorAll('[data-requires-api="true"]');
+            const apiButtons = document.querySelectorAll('button[data-requires-api="true"]');
             apiButtons.forEach(btn => {
                 btn.disabled = !hasKey;
                 btn.title = hasKey ? '' : '请先在"设置"中配置API Key';
+                if (!hasKey) {
+                    btn.style.opacity = '0.6';
+                    btn.style.cursor = 'not-allowed';
+                } else {
+                    btn.style.opacity = '';
+                    btn.style.cursor = '';
+                }
+            });
+
+            // 更新所有需要API的输入框状态
+            const apiInputs = document.querySelectorAll('input[data-requires-api="true"]');
+            apiInputs.forEach(input => {
+                input.disabled = !hasKey;
+                input.title = hasKey ? '' : '请先在"设置"中配置API Key';
+                if (!hasKey) {
+                    input.style.opacity = '0.6';
+                    input.style.cursor = 'not-allowed';
+                    input.style.backgroundColor = '#f3f4f6';
+                } else {
+                    input.style.opacity = '';
+                    input.style.cursor = '';
+                    input.style.backgroundColor = '';
+                }
             });
         }
 
-        // 为需要API的按钮添加标记
+        // 为需要API的按钮和输入框添加标记
         function markApiButtons() {
-            const selectors = [
+            // 需要API的按钮选择器
+            const buttonSelectors = [
                 'button[onclick="generateAllWordInfo()"]',
                 'button[onclick="generateQuiz()"]',
+                'button[onclick="loadLessons()"]',
                 'button[onclick="generateAILesson()"]',
                 'button[onclick="generateAIWords()"]',
                 'button[onclick="generateAIQuiz()"]',
                 'button[onclick="startVocabQuiz()"]',
                 'button[onclick="sendChatMessage()"]',
-                'button[onclick="sendAiAssistantMessage()"]'
+                'button[onclick="sendAiAssistantMessage()"]',
+                'button[onclick="toggleVoiceInput()"]'
             ];
 
-            selectors.forEach(selector => {
+            buttonSelectors.forEach(selector => {
                 const buttons = document.querySelectorAll(selector);
                 buttons.forEach(btn => {
                     btn.setAttribute('data-requires-api', 'true');
+                });
+            });
+
+            // 需要API的输入框选择器
+            const inputSelectors = [
+                '#chat-input',
+                '#ai-assistant-input'
+            ];
+
+            inputSelectors.forEach(selector => {
+                const inputs = document.querySelectorAll(selector);
+                inputs.forEach(input => {
+                    input.setAttribute('data-requires-api', 'true');
                 });
             });
 
@@ -2238,6 +2277,12 @@ Format your response as:
         }
 
         async function loadLessons() {
+            // 检查API Key是否已配置
+            if (!hasApiKey()) {
+                alert('请先在"设置"中配置DeepSeek API Key');
+                return;
+            }
+
             const level = parseInt(document.getElementById('lesson-level').value);
             const list = document.getElementById('lessons-list');
 
@@ -3735,6 +3780,12 @@ Format your response as JSON:
         }
 
         async function startVocabQuiz() {
+            // 检查API Key是否已配置
+            if (!hasApiKey()) {
+                alert('请先在"设置"中配置DeepSeek API Key');
+                return;
+            }
+
             const aiWords = JSON.parse(localStorage.getItem(getUserKey('english-learning-ai-words')) || '[]');
             const now = new Date();
             const dueWords = aiWords.filter(w => new Date(w.nextReviewDate) <= now);
@@ -4637,6 +4688,12 @@ ${structuredWords || '暂无今日学习单词'}
         };
 
         function toggleVoiceInput() {
+            // 检查API Key是否已配置
+            if (!hasApiKey()) {
+                alert('请先在"设置"中配置DeepSeek API Key');
+                return;
+            }
+
             const btn = document.getElementById('voice-btn');
 
             if (isVoiceInputting) {
