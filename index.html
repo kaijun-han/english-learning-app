@@ -1654,6 +1654,9 @@
             if (tab === 'ai-chat') restoreChatState();
             if (tab === 'ai-words') updateAIWordsTopicDropdown();
 
+            // 更新API按钮状态（确保新页面的按钮被正确标记）
+            markApiButtons();
+
             console.log('[DEBUG] After switch - chatMessages.length:', chatMessages.length, ', chatInitialized:', chatInitialized);
         }
 
@@ -3733,6 +3736,9 @@ Format your response as JSON:
                     `).join('')}
                 </div>
             `;
+
+            // 重新标记API按钮（因为页面内容被重新渲染）
+            markApiButtons();
         }
 
         function getStatusColor(status) {
@@ -5124,6 +5130,12 @@ ${aiWords ? `【学习单词】：${aiWords}（请尽量使用这些单词）` :
         let aiAssistantCurrentImage = '';
 
         function toggleAiAssistant() {
+            // 检查API Key是否已配置
+            if (!hasApiKey()) {
+                alert('请先在"设置"中配置DeepSeek API Key');
+                return;
+            }
+
             const panel = document.getElementById('ai-assistant-panel');
             panel.classList.toggle('open');
         }
